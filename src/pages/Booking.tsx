@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useData } from "@/context/DataContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 
 const steps = [
   { id: 1, title: "Select Car", icon: Car },
@@ -10,21 +15,12 @@ const steps = [
   { id: 3, title: "Schedule", icon: CalendarIcon },
 ];
 
-const carMakes = ["Toyota", "Honda", "Ford", "BMW", "Mercedes", "Audi", "Hyundai", "Kia"];
-const carModels = ["Sedan", "SUV", "Hatchback", "Convertible", "Coupe"];
-const fuelTypes = ["Petrol", "Diesel", "CNG", "Electric"];
-
-const servicesList = [
-  { id: "periodic", title: "Periodic Service", price: 1999 },
-  { id: "ac", title: "AC Service", price: 1499 },
-  { id: "batteries", title: "Battery Replacement", price: 3499 },
-  { id: "tyres", title: "Tyre Replacement", price: 999 },
-  { id: "denting", title: "Denting & Painting", price: 4999 },
-  { id: "spa", title: "Car Spa", price: 1199 },
-];
-
 export function Booking() {
+  const { services, carMakes, carModels, fuelTypes } = useData();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -33,6 +29,61 @@ export function Booking() {
     date: "",
     time: "",
   });
+
+  useEffect(() => {
+    if (location.state?.serviceId) {
+      setFormData(prev => ({ ...prev, service: location.state.serviceId }));
+    }
+    if (location.state?.vehicleDetails) {
+      setFormData(prev => ({
+        ...prev,
+        make: location.state.vehicleDetails.make,
+        model: location.state.vehicleDetails.model,
+        fuel: location.state.vehicleDetails.fuel
+      }));
+    }
+  }, [location.state]);
+
+  const calculatePrice = (basePrice: number) => {
+    let multiplier = 1;
+    const { make, model, fuel } = formData;
+
+    const selectedMake = carMakes.find(m => m.name === make);
+    if (selectedMake) multiplier *= selectedMake.multiplier;
+
+    const selectedModel = carModels.find(m => m.name === model);
+    if (selectedModel) multiplier *= selectedModel.multiplier;
+
+    const selectedFuel = fuelTypes.find(f => f.name === fuel);
+    if (selectedFuel) multiplier *= selectedFuel.multiplier;
+
+    return Math.round(basePrice * multiplier);
+  };
+
+  const getPriceBreakdown = (basePrice: number) => {
+    const { make, model, fuel } = formData;
+    const breakdown = [];
+    let currentPrice = basePrice;
+    
+    breakdown.push({ label: "Base Price", value: `₹${basePrice}` });
+
+    const selectedMake = carMakes.find(m => m.name === make);
+    if (selectedMake && selectedMake.multiplier !== 1) {
+      breakdown.push({ label: `${make} Surcharge`, value: `x${selectedMake.multiplier}` });
+    }
+
+    const selectedModel = carModels.find(m => m.name === model);
+    if (selectedModel && selectedModel.multiplier !== 1) {
+      breakdown.push({ label: `${model} Surcharge`, value: `x${selectedModel.multiplier}` });
+    }
+
+    const selectedFuel = fuelTypes.find(f => f.name === fuel);
+    if (selectedFuel && selectedFuel.multiplier !== 1) {
+      breakdown.push({ label: `${fuel} Surcharge`, value: `x${selectedFuel.multiplier}` });
+    }
+
+    return breakdown;
+  };
 
   const handleNext = () => {
     if (currentStep < 3) setCurrentStep(currentStep + 1);
@@ -48,6 +99,10 @@ export function Booking() {
     if (currentStep === 3) return formData.date && formData.time;
     return false;
   };
+
+  const filteredMakes = carMakes.filter(make => 
+    make.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -103,41 +158,65 @@ export function Booking() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Select Make</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {carMakes.map((make) => (
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input 
+                        placeholder="Search car make..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1">
+                      {filteredMakes.map((make) => (
                         <button
-                          key={make}
-                          onClick={() => setFormData({ ...formData, make })}
+                          key={make.name}
+                          onClick={() => setFormData({ ...formData, make: make.name })}
                           className={cn(
                             "p-3 rounded-lg border text-sm font-medium transition-all hover:border-primary",
-                            formData.make === make 
+                            formData.make === make.name 
                               ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                               : "border-slate-200 text-slate-600"
                           )}
                         >
-                          {make}
+                          {make.name}
                         </button>
                       ))}
+                      {filteredMakes.length === 0 && (
+                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
+                          No car makes found matching "{searchTerm}"
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2">Select Model</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {carModels.map((model) => (
+                      {carModels.filter(m => m.make === formData.make).map((model) => (
                         <button
-                          key={model}
-                          onClick={() => setFormData({ ...formData, model })}
+                          key={model.name}
+                          onClick={() => setFormData({ ...formData, model: model.name })}
                           className={cn(
                             "p-3 rounded-lg border text-sm font-medium transition-all hover:border-primary",
-                            formData.model === model 
+                            formData.model === model.name 
                               ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                               : "border-slate-200 text-slate-600"
                           )}
                         >
-                          {model}
+                          {model.name}
                         </button>
                       ))}
+                      {formData.make && carModels.filter(m => m.make === formData.make).length === 0 && (
+                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
+                          No models found for {formData.make}
+                        </div>
+                      )}
+                      {!formData.make && (
+                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
+                          Please select a make first
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -146,16 +225,16 @@ export function Booking() {
                     <div className="flex gap-3 flex-wrap">
                       {fuelTypes.map((fuel) => (
                         <button
-                          key={fuel}
-                          onClick={() => setFormData({ ...formData, fuel })}
+                          key={fuel.name}
+                          onClick={() => setFormData({ ...formData, fuel: fuel.name })}
                           className={cn(
                             "px-4 py-2 rounded-full border text-sm font-medium transition-all hover:border-primary",
-                            formData.fuel === fuel 
+                            formData.fuel === fuel.name 
                               ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                               : "border-slate-200 text-slate-600"
                           )}
                         >
-                          {fuel}
+                          {fuel.name}
                         </button>
                       ))}
                     </div>
@@ -173,7 +252,7 @@ export function Booking() {
               >
                 <h2 className="text-xl font-semibold mb-6">Select Service</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {servicesList.map((service) => (
+                  {services.map((service) => (
                     <button
                       key={service.id}
                       onClick={() => setFormData({ ...formData, service: service.id })}
@@ -191,7 +270,31 @@ export function Booking() {
                         )}>
                           {service.title}
                         </h3>
-                        <span className="text-slate-500 text-sm">Starting from ₹{service.price}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-sm">₹{calculatePrice(service.basePrice)}</span>
+                          <Popover>
+                            <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-400 hover:text-primary">
+                                <Info className="h-3 w-3" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-60">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm border-b pb-1 mb-2">Price Breakdown</h4>
+                                {getPriceBreakdown(service.basePrice).map((item, idx) => (
+                                  <div key={idx} className="flex justify-between text-xs">
+                                    <span className="text-slate-600">{item.label}</span>
+                                    <span className="font-medium">{item.value}</span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2">
+                                  <span>Total</span>
+                                  <span>₹{calculatePrice(service.basePrice)}</span>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                       {formData.service === service.id && (
                         <CheckCircle2 className="text-primary h-5 w-5" />
@@ -253,13 +356,16 @@ export function Booking() {
                     <div className="flex justify-between">
                       <span>Service:</span>
                       <span className="font-medium text-slate-900">
-                        {servicesList.find(s => s.id === formData.service)?.title}
+                        {services.find(s => s.id === formData.service)?.title}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-slate-200 mt-2">
                       <span>Estimated Total:</span>
                       <span className="font-bold text-primary text-lg">
-                        ₹{servicesList.find(s => s.id === formData.service)?.price}
+                        ₹{(() => {
+                          const service = services.find(s => s.id === formData.service);
+                          return service ? calculatePrice(service.basePrice) : 0;
+                        })()}
                       </span>
                     </div>
                   </div>
@@ -290,7 +396,14 @@ export function Booking() {
             </Button>
           ) : (
             <Button
-              onClick={() => alert("Booking Confirmed! Thank you.")}
+              onClick={() => {
+                toast.success("Booking Confirmed! Thank you.", {
+                  description: `Your appointment is scheduled for ${formData.date} at ${formData.time}.`
+                });
+                setTimeout(() => {
+                  navigate("/");
+                }, 1500);
+              }}
               disabled={!isStepValid()}
               className="w-40 bg-green-600 hover:bg-green-700"
             >

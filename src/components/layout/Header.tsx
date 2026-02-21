@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Wrench, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useData } from "@/context/DataContext";
 
 export function Header() {
+  const { settings } = useData();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -12,7 +14,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
           <Wrench className="h-6 w-6" />
-          <span>CarMechs</span>
+          <span>{settings.logoText}</span>
         </Link>
 
         {/* Desktop Navigation */}

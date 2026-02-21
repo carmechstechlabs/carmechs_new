@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Wrench, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { useData } from "@/context/DataContext";
 
 export function Footer() {
+  const { settings } = useData();
+
   return (
     <footer className="bg-slate-950 text-slate-200">
       <div className="container mx-auto px-4 py-12">
@@ -10,7 +13,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 font-bold text-xl text-white">
               <Wrench className="h-6 w-6 text-primary" />
-              <span>CarMechs</span>
+              <span>{settings.logoText}</span>
             </Link>
             <p className="text-sm text-slate-400">
               Your trusted partner for on-demand car repair and maintenance services. Quality service at your doorstep.
@@ -101,15 +104,15 @@ export function Footer() {
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-primary shrink-0" />
-                <span>123 Auto Repair Lane, Mechanic City, MC 12345</span>
+                <span>{settings.address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-primary shrink-0" />
-                <span>+91-70034-35356</span>
+                <span>{settings.phone}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary shrink-0" />
-                <span>assist@carmechs.in</span>
+                <span>{settings.email}</span>
               </li>
             </ul>
           </div>

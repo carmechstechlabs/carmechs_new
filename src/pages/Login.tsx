@@ -1,8 +1,39 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Wrench } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Wrench, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function Login() {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate API call
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      // Mock validation
+      if (formData.email && formData.password.length >= 6) {
+        toast.success("Successfully signed in!");
+        navigate("/");
+      } else {
+        toast.error("Invalid credentials. Please try again.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
@@ -17,7 +48,7 @@ export function Login() {
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" action="#" method="POST" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
@@ -27,6 +58,8 @@ export function Login() {
                 type="email"
                 autoComplete="email"
                 required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
@@ -39,6 +72,8 @@ export function Login() {
                 type="password"
                 autoComplete="current-password"
                 required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
@@ -66,8 +101,15 @@ export function Login() {
           </div>
 
           <div>
-            <Button className="w-full" size="lg">
-              Sign in
+            <Button className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
             </Button>
           </div>
         </form>
@@ -76,6 +118,12 @@ export function Login() {
           Don't have an account?{" "}
           <Link to="/signup" className="font-medium text-primary hover:text-primary/80">
             Sign up
+          </Link>
+        </div>
+
+        <div className="text-center">
+          <Link to="/" className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
+            &larr; Return to Home
           </Link>
         </div>
       </div>

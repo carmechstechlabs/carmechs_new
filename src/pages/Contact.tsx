@@ -24,7 +24,7 @@ export function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Our Location</h3>
-                    <p className="text-slate-600">123 Auto Repair Lane, Mechanic City, MC 12345</p>
+                    <p className="text-slate-600">Newtown, Kolkata 700156</p>
                   </div>
                 </div>
 
