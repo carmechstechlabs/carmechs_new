@@ -14,14 +14,19 @@ import {
 } from "@/components/ui/select";
 
 export function Cars() {
-  const { carMakes, carModels, fuelTypes, updateCarMakes, updateCarModels, updateFuelTypes } = useData();
+  const { carMakes, carModels, fuelTypes, updateCarMakes, updateCarModels, updateFuelTypes, adminRole } = useData();
   const [activeTab, setActiveTab] = useState<'makes' | 'models' | 'fuels'>('makes');
   const [newItem, setNewItem] = useState("");
   const [newMultiplier, setNewMultiplier] = useState("1.0");
+  const [newYear, setNewYear] = useState("");
   const [selectedMake, setSelectedMake] = useState("");
-  const [editingItem, setEditingItem] = useState<{ originalName: string, name: string, multiplier: string, make?: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ originalName: string, name: string, multiplier: string, make?: string, year?: string } | null>(null);
 
   const handleAdd = () => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to add items.");
+      return;
+    }
     if (!newItem) return;
     
     const multiplier = parseFloat(newMultiplier);
@@ -38,17 +43,22 @@ export function Cars() {
     if (activeTab === 'makes') {
       updateCarMakes([...carMakes, { name: newItem, multiplier }]);
     } else if (activeTab === 'models') {
-      updateCarModels([...carModels, { name: newItem, multiplier, make: selectedMake }]);
+      updateCarModels([...carModels, { name: newItem, multiplier, make: selectedMake, year: newYear }]);
     } else {
       updateFuelTypes([...fuelTypes, { name: newItem, multiplier }]);
     }
     
     setNewItem("");
     setNewMultiplier("1.0");
+    setNewYear("");
     toast.success("Item added successfully");
   };
 
   const handleUpdate = () => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to update items.");
+      return;
+    }
     if (!editingItem || !editingItem.name) return;
 
     const multiplier = parseFloat(editingItem.multiplier);
@@ -66,7 +76,7 @@ export function Cars() {
       const updatedItem = { name: editingItem.name, multiplier };
       updateCarMakes(carMakes.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else if (activeTab === 'models') {
-      const updatedItem = { name: editingItem.name, multiplier, make: editingItem.make! };
+      const updatedItem = { name: editingItem.name, multiplier, make: editingItem.make!, year: editingItem.year };
       updateCarModels(carModels.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else {
       const updatedItem = { name: editingItem.name, multiplier };
@@ -78,6 +88,10 @@ export function Cars() {
   };
 
   const handleDelete = (itemName: string) => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to delete items.");
+      return;
+    }
     if (confirm(`Delete ${itemName}?`)) {
       if (activeTab === 'makes') {
         updateCarMakes(carMakes.filter(m => m.name !== itemName));
@@ -96,7 +110,8 @@ export function Cars() {
       originalName: item.name,
       name: item.name,
       multiplier: item.multiplier.toString(),
-      make: item.make
+      make: item.make,
+      year: item.year || ""
     });
   };
 
@@ -179,6 +194,18 @@ export function Cars() {
               </div>
             )}
 
+            {activeTab === 'models' && (
+              <div className="w-32">
+                <label className="text-sm font-medium mb-1 block">Year</label>
+                <Input 
+                  placeholder="e.g. 2020"
+                  value={editingItem ? (editingItem.year || "") : newYear}
+                  onChange={(e) => editingItem ? setEditingItem({...editingItem, year: e.target.value}) : setNewYear(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (editingItem ? handleUpdate() : handleAdd())}
+                />
+              </div>
+            )}
+
             <div className="w-32">
               <label className="text-sm font-medium mb-1 block">Multiplier</label>
               <Input 
@@ -214,7 +241,9 @@ export function Cars() {
               <div>
                 <span className="font-medium block">{item.name}</span>
                 {activeTab === 'models' && (
-                  <span className="text-xs text-slate-500 block">Make: {(item as any).make}</span>
+                  <span className="text-xs text-slate-500 block">
+                    Make: {(item as any).make} {(item as any).year ? `| Year: ${(item as any).year}` : ''}
+                  </span>
                 )}
                 <span className="text-xs text-slate-500">Multiplier: {item.multiplier}x</span>
               </div>

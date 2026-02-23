@@ -5,13 +5,14 @@ import { Wrench, Loader2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
 
-export function Login() {
+export function Signup() {
   const navigate = useNavigate();
   const { apiKeys } = useData();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isPhoneLoading, setIsPhoneLoading] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
   });
@@ -23,11 +24,11 @@ export function Login() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      if (formData.email && formData.password.length >= 6) {
-        toast.success("Successfully signed in!");
+      if (formData.name && formData.email && formData.password.length >= 6) {
+        toast.success("Successfully signed up!");
         navigate("/");
       } else {
-        toast.error("Invalid credentials. Please try again.");
+        toast.error("Please fill all fields correctly.");
       }
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
@@ -36,15 +37,16 @@ export function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     if (!apiKeys.googleClientId) {
       toast.error("Google Client ID is not configured in Admin Panel.");
       return;
     }
     setIsGoogleLoading(true);
     try {
+      // Simulate Google OAuth flow
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Successfully signed in with Google!");
+      toast.success("Successfully verified email with Google!");
       navigate("/");
     } catch (error) {
       toast.error("Google authentication failed.");
@@ -53,15 +55,16 @@ export function Login() {
     }
   };
 
-  const handlePhoneLogin = async () => {
+  const handlePhoneSignup = async () => {
     if (!apiKeys.firebaseApiKey) {
       toast.error("Firebase API Key is not configured in Admin Panel.");
       return;
     }
     setIsPhoneLoading(true);
     try {
+      // Simulate Firebase Phone Auth flow
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success("Successfully signed in with Phone!");
+      toast.success("Successfully verified phone number!");
       navigate("/");
     } catch (error) {
       toast.error("Phone verification failed.");
@@ -78,14 +81,27 @@ export function Login() {
             <Wrench className="h-8 w-8" />
             <span>CarMechs</span>
           </Link>
-          <h2 className="text-3xl font-bold text-slate-900">Welcome back</h2>
+          <h2 className="text-3xl font-bold text-slate-900">Create an account</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Please sign in to your account
+            Sign up to book and manage your services
           </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="name" className="sr-only">Full Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                placeholder="Full Name"
+              />
+            </div>
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
               <input
@@ -96,7 +112,7 @@ export function Login() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-500 text-slate-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-slate-300 placeholder-slate-500 text-slate-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
             </div>
@@ -106,7 +122,7 @@ export function Login() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -116,35 +132,15 @@ export function Login() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-primary hover:text-primary/80">
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-
           <div>
             <Button className="w-full" size="lg" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  Signing up...
                 </>
               ) : (
-                "Sign in"
+                "Sign up"
               )}
             </Button>
           </div>
@@ -163,7 +159,7 @@ export function Login() {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <Button 
               variant="outline" 
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignup}
               disabled={isGoogleLoading}
               className="w-full"
             >
@@ -178,7 +174,7 @@ export function Login() {
             </Button>
             <Button 
               variant="outline" 
-              onClick={handlePhoneLogin}
+              onClick={handlePhoneSignup}
               disabled={isPhoneLoading}
               className="w-full"
             >
@@ -195,9 +191,9 @@ export function Login() {
         </div>
         
         <div className="text-center text-sm text-slate-600 mt-6">
-          Don't have an account?{" "}
-          <Link to="/signup" className="font-medium text-primary hover:text-primary/80">
-            Sign up
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium text-primary hover:text-primary/80">
+            Sign in
           </Link>
         </div>
 

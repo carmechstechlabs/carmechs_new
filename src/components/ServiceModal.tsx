@@ -25,9 +25,16 @@ interface ServiceModalProps {
   service: Service | null;
   isOpen: boolean;
   onClose: () => void;
+  calculatedPrice?: string;
+  isVehicleSelected?: boolean;
+  vehicleDetails?: {
+    make: string;
+    model: string;
+    fuel: string;
+  };
 }
 
-export function ServiceModal({ service, isOpen, onClose }: ServiceModalProps) {
+export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehicleSelected, vehicleDetails }: ServiceModalProps) {
   if (!service) return null;
 
   return (
@@ -56,8 +63,8 @@ export function ServiceModal({ service, isOpen, onClose }: ServiceModalProps) {
             </div>
             <div className="flex items-center gap-2">
               <IndianRupee className="h-5 w-5 text-slate-500" />
-              <span className="font-medium text-slate-700">Starting from:</span>
-              <span className="text-lg font-bold text-primary">{service.price}</span>
+              <span className="font-medium text-slate-700">{isVehicleSelected ? "Your Price:" : "Starting from:"}</span>
+              <span className="text-lg font-bold text-primary">{isVehicleSelected && calculatedPrice ? calculatedPrice : service.price}</span>
             </div>
           </div>
 
@@ -81,7 +88,7 @@ export function ServiceModal({ service, isOpen, onClose }: ServiceModalProps) {
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Link to="/book" state={{ serviceId: service.id }} onClick={onClose}>
+          <Link to="/book" state={{ serviceId: service.id, vehicleDetails }} onClick={onClose}>
             <Button className="px-8">Book Now</Button>
           </Link>
         </div>

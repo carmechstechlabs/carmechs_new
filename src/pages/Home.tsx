@@ -12,6 +12,7 @@ import {
   Star 
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useData } from "@/context/DataContext";
 
 const services = [
   {
@@ -70,17 +71,27 @@ const features = [
 ];
 
 export function Home() {
+  const { uiSettings } = useData();
+
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-slate-900 text-white py-20 lg:py-32 overflow-hidden">
+      <section 
+        className="relative text-white py-20 lg:py-32 overflow-hidden"
+        style={{ backgroundColor: uiSettings.primaryColor || '#0f172a' }}
+      >
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
             alt="Car Mechanic" 
             className="w-full h-full object-cover opacity-20"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              background: `linear-gradient(to right, ${uiSettings.primaryColor || '#0f172a'}, ${uiSettings.primaryColor || '#0f172a'}CC, transparent)` 
+            }}
+          ></div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -91,12 +102,14 @@ export function Home() {
             className="max-w-2xl"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Expert Car Care <br />
-              <span className="text-primary">At Your Doorstep</span>
+              {uiSettings.heroTitle ? (
+                <span dangerouslySetInnerHTML={{ __html: uiSettings.heroTitle.replace('\n', '<br />') }} />
+              ) : (
+                <>Expert Car Care <br /><span className="text-primary">At Your Doorstep</span></>
+              )}
             </h1>
             <p className="text-lg md:text-xl text-slate-300 mb-8">
-              Experience hassle-free car service with free pickup and drop. 
-              Trusted by thousands of car owners.
+              {uiSettings.heroSubtitle || "Experience hassle-free car service with free pickup and drop. Trusted by thousands of car owners."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/book">

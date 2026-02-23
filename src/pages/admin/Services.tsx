@@ -8,18 +8,26 @@ import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function Services() {
-  const { services, updateServices } = useData();
+  const { services, updateServices, adminRole } = useData();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Service>>({});
 
   const handleEdit = (service: Service) => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to edit services.");
+      return;
+    }
     setEditingId(service.id);
     setFormData(service);
     setIsAdding(false);
   };
 
   const handleDelete = (id: string) => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to delete services.");
+      return;
+    }
     if (confirm("Are you sure you want to delete this service?")) {
       updateServices(services.filter(s => s.id !== id));
       toast.success("Service deleted successfully");
@@ -27,6 +35,10 @@ export function Services() {
   };
 
   const handleSave = () => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to save services.");
+      return;
+    }
     if (!formData.title || !formData.price || !formData.basePrice) {
       toast.error("Please fill in all required fields");
       return;
@@ -60,7 +72,10 @@ export function Services() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-slate-900">Manage Services</h1>
-        <Button onClick={() => { setIsAdding(true); setEditingId(null); setFormData({}); }}>
+        <Button 
+          onClick={() => { setIsAdding(true); setEditingId(null); setFormData({}); }}
+          disabled={adminRole !== 'admin'}
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Service
         </Button>
       </div>

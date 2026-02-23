@@ -18,6 +18,11 @@ import { Dashboard } from "@/pages/admin/Dashboard";
 import { Services as AdminServices } from "@/pages/admin/Services";
 import { Cars as AdminCars } from "@/pages/admin/Cars";
 import { SettingsPage as AdminSettings } from "@/pages/admin/Settings";
+import { Appointments as AdminAppointments } from "@/pages/admin/Appointments";
+import { Customers as AdminCustomers } from "@/pages/admin/Customers";
+import { Users as AdminUsers } from "@/pages/admin/Users";
+import { UiSettingsPage as AdminUiSettings } from "@/pages/admin/UiSettings";
+import { ApiKeysPage as AdminApiKeys } from "@/pages/admin/ApiKeys";
 
 export default function App() {
   return (
@@ -41,8 +46,13 @@ export default function App() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="appointments" element={<AdminAppointments />} />
+            <Route path="customers" element={<AdminCustomers />} />
             <Route path="services" element={<AdminServices />} />
             <Route path="cars" element={<AdminCars />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="ui-settings" element={<AdminUiSettings />} />
+            <Route path="api-keys" element={<AdminApiKeys />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Routes>

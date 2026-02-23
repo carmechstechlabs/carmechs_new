@@ -7,7 +7,12 @@ import {
   LogOut, 
   Menu, 
   X,
-  MessageCircle
+  MessageCircle,
+  Calendar,
+  Users,
+  Palette,
+  Key,
+  UsersRound
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +21,7 @@ import { useData } from "@/context/DataContext";
 import { toast } from "sonner";
 
 export function AdminLayout() {
-  const { isAdminLoggedIn, logoutAdmin } = useData();
+  const { isAdminLoggedIn, logoutAdmin, adminRole } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -31,9 +36,14 @@ export function AdminLayout() {
 
   const navItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/admin/appointments", label: "Appointments", icon: Calendar },
+    { path: "/admin/customers", label: "Customers", icon: UsersRound },
     { path: "/admin/services", label: "Services", icon: Wrench },
     { path: "/admin/cars", label: "Car Data", icon: Car },
-    { path: "/admin/settings", label: "Settings", icon: Settings },
+    { path: "/admin/users", label: "Users", icon: Users },
+    { path: "/admin/ui-settings", label: "UI Settings", icon: Palette },
+    { path: "/admin/api-keys", label: "API Keys", icon: Key },
+    { path: "/admin/settings", label: "Site Settings", icon: Settings },
   ];
 
   return (
@@ -95,9 +105,9 @@ export function AdminLayout() {
             <Menu className="h-6 w-6 text-slate-600" />
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-600">Administrator</span>
-            <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-              A
+            <span className="text-sm font-medium text-slate-600 capitalize">{adminRole === 'admin' ? 'Administrator' : 'Viewer'}</span>
+            <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white font-bold uppercase">
+              {adminRole ? adminRole[0] : 'U'}
             </div>
           </div>
         </header>

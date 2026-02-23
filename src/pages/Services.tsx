@@ -193,7 +193,14 @@ export function Services() {
       <ServiceModal 
         service={selectedService} 
         isOpen={!!selectedService} 
-        onClose={() => setSelectedService(null)} 
+        onClose={() => setSelectedService(null)}
+        calculatedPrice={selectedService && isVehicleSelected ? `₹${calculatePrice(selectedService.basePrice)}` : undefined}
+        isVehicleSelected={isVehicleSelected}
+        vehicleDetails={isVehicleSelected ? {
+          make: selectedMake,
+          model: selectedModel,
+          fuel: selectedFuel
+        } : undefined}
       />
     </div>
   );

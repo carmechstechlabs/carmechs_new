@@ -7,11 +7,15 @@ import { Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export function SettingsPage() {
-  const { settings, updateSettings } = useData();
+  const { settings, updateSettings, adminRole } = useData();
   const [formData, setFormData] = useState<Settings>(settings);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to update settings.");
+      return;
+    }
     setIsSaving(true);
     try {
       // Simulate API delay
@@ -87,7 +91,7 @@ export function SettingsPage() {
       </div>
 
       <div className="flex justify-end">
-        <Button size="lg" onClick={handleSave} disabled={isSaving}>
+        <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'}>
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

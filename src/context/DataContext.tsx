@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 // Types
 export interface Service {
@@ -21,6 +22,7 @@ export interface CarModel {
   name: string;
   multiplier: number;
   make: string;
+  year?: string;
 }
 
 export interface Settings {
@@ -31,228 +33,221 @@ export interface Settings {
   whatsapp: string;
 }
 
+export interface Appointment {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  service: string;
+  make: string;
+  model: string;
+  fuel: string;
+  date: string;
+  time: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  createdAt: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'admin' | 'viewer' | 'user';
+  verified: boolean;
+}
+
+export interface UiSettings {
+  heroTitle: string;
+  heroSubtitle: string;
+  primaryColor: string;
+}
+
+export interface ApiKeys {
+  googleClientId: string;
+  firebaseApiKey: string;
+}
+
 interface DataContextType {
   services: Service[];
   carMakes: PricingItem[];
   carModels: CarModel[];
   fuelTypes: PricingItem[];
   settings: Settings;
+  appointments: Appointment[];
+  users: User[];
+  uiSettings: UiSettings;
+  apiKeys: ApiKeys;
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
   updateFuelTypes: (fuels: PricingItem[]) => void;
   updateSettings: (settings: Settings) => void;
+  updateAppointments: (appointments: Appointment[]) => void;
+  updateUsers: (users: User[]) => void;
+  updateUiSettings: (uiSettings: UiSettings) => void;
+  updateApiKeys: (apiKeys: ApiKeys) => void;
+  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
   isAdminLoggedIn: boolean;
-  loginAdmin: () => void;
+  adminRole: 'admin' | 'viewer' | null;
+  loginAdmin: (role?: 'admin' | 'viewer') => void;
   logoutAdmin: () => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Initial Data
-const initialServices: Service[] = [
-  {
-    id: "periodic",
-    title: "Periodic Services",
-    description: "Comprehensive car service packages for complete peace of mind.",
-    features: ["Oil Change", "Filter Replacement", "Brake Check", "Fluid Top-up"],
-    price: "₹1999",
-    basePrice: 1999,
-    duration: "4-6 Hours",
-    checks: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Wiper Fluid Top-up", "Heater/Spark Plugs Checking", "Car Wash & Vacuuming", "Brake Pads & Shoes Cleaning"]
-  },
-  {
-    id: "tyres",
-    title: "Tyres & Wheels",
-    description: "Expert tyre services including alignment and balancing.",
-    features: ["Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Puncture Repair"],
-    price: "₹999",
-    basePrice: 999,
-    duration: "1-2 Hours",
-    checks: ["Automated Wheel Balancing", "Laser Wheel Alignment", "Tyre Rotation (4 Wheels)", "Tyre Health Inspection", "Air Pressure Check", "Steering Adjustment", "Suspension Check"]
-  },
-  {
-    id: "batteries",
-    title: "Batteries",
-    description: "Battery health check and replacement services.",
-    features: ["Battery Testing", "Charging System Check", "Terminal Cleaning", "Replacement"],
-    price: "₹3499",
-    basePrice: 3499,
-    duration: "30-60 Minutes",
-    checks: ["Battery Voltage Check", "Alternator Charging Check", "Terminal Cleaning & Greasing", "Distilled Water Top-up", "Battery Health Report", "Old Battery Buyback", "Warranty Registration"]
-  },
-  {
-    id: "denting",
-    title: "Denting & Painting",
-    description: "Restore your car's look with our premium painting services.",
-    features: ["Scratch Removal", "Dent Repair", "Full Body Paint", "Polishing"],
-    price: "Custom",
-    basePrice: 4999,
-    duration: "2-5 Days",
-    checks: ["Grade A Primer Application", "Premium Paint Matching", "3-Layer Painting Process", "Clear Coat Application", "Rubbing & Polishing", "Panel Dent Removal", "Rust Protection Coating"]
-  },
-  {
-    id: "ac",
-    title: "AC Service",
-    description: "Keep your car cool with our AC maintenance packages.",
-    features: ["Gas Refill", "Cooling Coil Cleaning", "Compressor Check", "Leak Test"],
-    price: "₹1499",
-    basePrice: 1499,
-    duration: "2-3 Hours",
-    checks: ["AC Gas Refill (up to 400g)", "Cooling Coil Cleaning", "Condenser Cleaning", "AC Vent Cleaning", "Compressor Oil Check", "Leakage Inspection", "Cabin Filter Cleaning"]
-  },
-  {
-    id: "spa",
-    title: "Car Spa & Cleaning",
-    description: "Deep cleaning services for interior and exterior.",
-    features: ["Interior Detailing", "Exterior Wash", "Waxing", "Upholstery Cleaning"],
-    price: "₹1199",
-    basePrice: 1199,
-    duration: "3-4 Hours",
-    checks: ["Complete Interior Vacuuming", "Dashboard Cleaning & Polishing", "Seats Dry Cleaning", "Roof & Floor Cleaning", "Exterior Foam Wash", "Tyre Dressing", "Glass Cleaning"]
-  },
-];
-
-const initialCarMakes: PricingItem[] = [
-  { name: "Toyota", multiplier: 1.1 },
-  { name: "Honda", multiplier: 1.1 },
-  { name: "Ford", multiplier: 1.1 },
-  { name: "BMW", multiplier: 2.0 },
-  { name: "Mercedes", multiplier: 2.0 },
-  { name: "Audi", multiplier: 2.0 },
-  { name: "Hyundai", multiplier: 1.0 },
-  { name: "Kia", multiplier: 1.0 }
-];
-
-const initialCarModels: CarModel[] = [
-  { name: "Corolla", make: "Toyota", multiplier: 1.1 },
-  { name: "Camry", make: "Toyota", multiplier: 1.2 },
-  { name: "Fortuner", make: "Toyota", multiplier: 1.4 },
-  { name: "City", make: "Honda", multiplier: 1.1 },
-  { name: "Civic", make: "Honda", multiplier: 1.2 },
-  { name: "Amaze", make: "Honda", multiplier: 1.0 },
-  { name: "EcoSport", make: "Ford", multiplier: 1.1 },
-  { name: "Endeavour", make: "Ford", multiplier: 1.4 },
-  { name: "3 Series", make: "BMW", multiplier: 1.5 },
-  { name: "5 Series", make: "BMW", multiplier: 1.6 },
-  { name: "X5", make: "BMW", multiplier: 1.8 },
-  { name: "C-Class", make: "Mercedes", multiplier: 1.5 },
-  { name: "E-Class", make: "Mercedes", multiplier: 1.6 },
-  { name: "A4", make: "Audi", multiplier: 1.5 },
-  { name: "Q7", make: "Audi", multiplier: 1.8 },
-  { name: "Creta", make: "Hyundai", multiplier: 1.1 },
-  { name: "Verna", make: "Hyundai", multiplier: 1.1 },
-  { name: "Seltos", make: "Kia", multiplier: 1.1 },
-  { name: "Sonet", make: "Kia", multiplier: 1.0 }
-];
-
-const initialFuelTypes: PricingItem[] = [
-  { name: "Petrol", multiplier: 1.0 },
-  { name: "Diesel", multiplier: 1.15 },
-  { name: "CNG", multiplier: 1.1 },
-  { name: "Electric", multiplier: 1.2 }
-];
-
+const initialServices: Service[] = [];
+const initialCarMakes: PricingItem[] = [];
+const initialCarModels: CarModel[] = [];
+const initialFuelTypes: PricingItem[] = [];
 const initialSettings: Settings = {
-  logoText: "CarMechs",
-  email: "assist@carmechs.in",
-  phone: "+91-70034-35356",
-  address: "Newtown, Kolkata 700156",
-  whatsapp: "+917003435356",
+  logoText: "",
+  email: "",
+  phone: "",
+  address: "",
+  whatsapp: "",
+};
+const initialUsers: User[] = [];
+const initialUiSettings: UiSettings = {
+  heroTitle: "",
+  heroSubtitle: "",
+  primaryColor: "",
+};
+const initialApiKeys: ApiKeys = {
+  googleClientId: "",
+  firebaseApiKey: "",
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [services, setServices] = useState<Service[]>(() => {
-    const saved = localStorage.getItem('services');
-    return saved ? JSON.parse(saved) : initialServices;
-  });
-
-  const [carMakes, setCarMakes] = useState<PricingItem[]>(() => {
-    const saved = localStorage.getItem('carMakes');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'object' && item !== null && 'name' in item && 'multiplier' in item)) {
-          return parsed;
-        }
-      } catch (e) {
-        console.error("Failed to parse carMakes", e);
-      }
-    }
-    return initialCarMakes;
-  });
-
-  const [carModels, setCarModels] = useState<CarModel[]>(() => {
-    const saved = localStorage.getItem('carModels');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Check if it's the new format (has 'make' property)
-        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'object' && item !== null && 'name' in item && 'multiplier' in item && 'make' in item)) {
-          return parsed;
-        }
-      } catch (e) {
-        console.error("Failed to parse carModels", e);
-      }
-    }
-    return initialCarModels;
-  });
-
-  const [fuelTypes, setFuelTypes] = useState<PricingItem[]>(() => {
-    const saved = localStorage.getItem('fuelTypes');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'object' && item !== null && 'name' in item && 'multiplier' in item)) {
-          return parsed;
-        }
-      } catch (e) {
-        console.error("Failed to parse fuelTypes", e);
-      }
-    }
-    return initialFuelTypes;
-  });
-
-  const [settings, setSettings] = useState<Settings>(() => {
-    const saved = localStorage.getItem('settings');
-    return saved ? JSON.parse(saved) : initialSettings;
-  });
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [services, setServices] = useState<Service[]>(initialServices);
+  const [carMakes, setCarMakes] = useState<PricingItem[]>(initialCarMakes);
+  const [carModels, setCarModels] = useState<CarModel[]>(initialCarModels);
+  const [fuelTypes, setFuelTypes] = useState<PricingItem[]>(initialFuelTypes);
+  const [settings, setSettings] = useState<Settings>(initialSettings);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
+  const [apiKeys, setApiKeys] = useState<ApiKeys>(initialApiKeys);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
   });
 
-  useEffect(() => {
-    localStorage.setItem('services', JSON.stringify(services));
-  }, [services]);
+  const [adminRole, setAdminRole] = useState<'admin' | 'viewer' | null>(() => {
+    return (localStorage.getItem('adminRole') as 'admin' | 'viewer' | null) || null;
+  });
 
   useEffect(() => {
-    localStorage.setItem('carMakes', JSON.stringify(carMakes));
-  }, [carMakes]);
+    const newSocket = io(); // Connect to the same host
+    setSocket(newSocket);
 
-  useEffect(() => {
-    localStorage.setItem('carModels', JSON.stringify(carModels));
-  }, [carModels]);
+    newSocket.on('initial_state', (state) => {
+      setServices(state.services);
+      setCarMakes(state.carMakes);
+      setCarModels(state.carModels);
+      setFuelTypes(state.fuelTypes);
+      setSettings(state.settings);
+      setAppointments(state.appointments);
+      setUsers(state.users);
+      setUiSettings(state.uiSettings);
+      setApiKeys(state.apiKeys);
+    });
 
-  useEffect(() => {
-    localStorage.setItem('fuelTypes', JSON.stringify(fuelTypes));
-  }, [fuelTypes]);
+    newSocket.on('services_updated', (newServices) => setServices(newServices));
+    newSocket.on('car_makes_updated', (newMakes) => setCarMakes(newMakes));
+    newSocket.on('car_models_updated', (newModels) => setCarModels(newModels));
+    newSocket.on('fuel_types_updated', (newFuels) => setFuelTypes(newFuels));
+    newSocket.on('settings_updated', (newSettings) => setSettings(newSettings));
+    newSocket.on('appointments_updated', (newAppointments) => setAppointments(newAppointments));
+    newSocket.on('users_updated', (newUsers) => setUsers(newUsers));
+    newSocket.on('ui_settings_updated', (newUiSettings) => setUiSettings(newUiSettings));
+    newSocket.on('api_keys_updated', (newApiKeys) => setApiKeys(newApiKeys));
 
-  useEffect(() => {
-    localStorage.setItem('settings', JSON.stringify(settings));
-  }, [settings]);
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('isAdminLoggedIn', String(isAdminLoggedIn));
   }, [isAdminLoggedIn]);
 
-  const updateServices = (newServices: Service[]) => setServices(newServices);
-  const updateCarMakes = (newMakes: PricingItem[]) => setCarMakes(newMakes);
-  const updateCarModels = (newModels: CarModel[]) => setCarModels(newModels);
-  const updateFuelTypes = (newFuels: PricingItem[]) => setFuelTypes(newFuels);
-  const updateSettings = (newSettings: Settings) => setSettings(newSettings);
-  const loginAdmin = () => setIsAdminLoggedIn(true);
-  const logoutAdmin = () => setIsAdminLoggedIn(false);
+  useEffect(() => {
+    if (adminRole) {
+      localStorage.setItem('adminRole', adminRole);
+    } else {
+      localStorage.removeItem('adminRole');
+    }
+  }, [adminRole]);
+
+  const updateServices = (newServices: Service[]) => {
+    setServices(newServices);
+    socket?.emit('update_services', newServices);
+  };
+  
+  const updateCarMakes = (newMakes: PricingItem[]) => {
+    setCarMakes(newMakes);
+    socket?.emit('update_car_makes', newMakes);
+  };
+  
+  const updateCarModels = (newModels: CarModel[]) => {
+    setCarModels(newModels);
+    socket?.emit('update_car_models', newModels);
+  };
+  
+  const updateFuelTypes = (newFuels: PricingItem[]) => {
+    setFuelTypes(newFuels);
+    socket?.emit('update_fuel_types', newFuels);
+  };
+  
+  const updateSettings = (newSettings: Settings) => {
+    setSettings(newSettings);
+    socket?.emit('update_settings', newSettings);
+  };
+  
+  const updateAppointments = (newAppointments: Appointment[]) => {
+    setAppointments(newAppointments);
+    socket?.emit('update_appointments', newAppointments);
+  };
+  
+  const updateUsers = (newUsers: User[]) => {
+    setUsers(newUsers);
+    socket?.emit('update_users', newUsers);
+  };
+
+  const updateUiSettings = (newUiSettings: UiSettings) => {
+    setUiSettings(newUiSettings);
+    socket?.emit('update_ui_settings', newUiSettings);
+  };
+
+  const updateApiKeys = (newApiKeys: ApiKeys) => {
+    setApiKeys(newApiKeys);
+    socket?.emit('update_api_keys', newApiKeys);
+  };
+
+  const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
+    const newAppointment: Appointment = {
+      ...appointment,
+      id: Math.random().toString(36).substring(2, 9),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    setAppointments(prev => [newAppointment, ...prev]);
+    // We emit the add_appointment event, and the server will broadcast the updated list
+    socket?.emit('add_appointment', newAppointment);
+  };
+
+  const loginAdmin = (role: 'admin' | 'viewer' = 'admin') => {
+    setIsAdminLoggedIn(true);
+    setAdminRole(role);
+  };
+  
+  const logoutAdmin = () => {
+    setIsAdminLoggedIn(false);
+    setAdminRole(null);
+  };
 
   return (
     <DataContext.Provider value={{
@@ -261,12 +256,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
       carModels,
       fuelTypes,
       settings,
+      appointments,
+      users,
+      uiSettings,
+      apiKeys,
       updateServices,
       updateCarMakes,
       updateCarModels,
       updateFuelTypes,
       updateSettings,
+      updateAppointments,
+      updateUsers,
+      updateUiSettings,
+      updateApiKeys,
+      addAppointment,
       isAdminLoggedIn,
+      adminRole,
       loginAdmin,
       logoutAdmin
     }}>

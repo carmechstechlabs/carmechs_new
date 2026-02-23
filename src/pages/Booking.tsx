@@ -16,7 +16,7 @@ const steps = [
 ];
 
 export function Booking() {
-  const { services, carMakes, carModels, fuelTypes } = useData();
+  const { services, carMakes, carModels, fuelTypes, addAppointment } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,6 +28,9 @@ export function Booking() {
     service: "",
     date: "",
     time: "",
+    name: "",
+    phone: "",
+    email: ""
   });
 
   useEffect(() => {
@@ -85,6 +88,62 @@ export function Booking() {
     return breakdown;
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.phone) {
+      toast.error("Please enter your name and phone number");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      addAppointment(formData);
+      
+      if (formData.email) {
+        const serviceTitle = services.find(s => s.id === formData.service)?.title || "Car Service";
+        
+        const response = await fetch('/api/send-confirmation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            serviceTitle
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.previewUrl) {
+          console.log("Email preview URL:", data.previewUrl);
+          toast.success("Booking Confirmed! Confirmation email sent.", {
+            description: `Your appointment is scheduled for ${formData.date} at ${formData.time}.`
+          });
+        } else {
+          toast.success("Booking Confirmed! Thank you.", {
+            description: `Your appointment is scheduled for ${formData.date} at ${formData.time}.`
+          });
+        }
+      } else {
+        toast.success("Booking Confirmed! Thank you.", {
+          description: `Your appointment is scheduled for ${formData.date} at ${formData.time}.`
+        });
+      }
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Error submitting booking:", error);
+      toast.error("There was an error processing your booking. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < 3) setCurrentStep(currentStep + 1);
   };
@@ -96,7 +155,7 @@ export function Booking() {
   const isStepValid = () => {
     if (currentStep === 1) return formData.make && formData.model && formData.fuel;
     if (currentStep === 2) return formData.service;
-    if (currentStep === 3) return formData.date && formData.time;
+    if (currentStep === 3) return formData.date && formData.time && formData.name && formData.phone;
     return false;
   };
 
@@ -315,33 +374,64 @@ export function Booking() {
                 <h2 className="text-xl font-semibold mb-6">Schedule Appointment</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <label className="block text-sm font-medium mb-3">Select Date</label>
-                    <input 
-                      type="date" 
-                      className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      value={formData.date}
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Name *</label>
+                      <Input 
+                        placeholder="Your full name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Phone *</label>
+                      <Input 
+                        placeholder="Your phone number"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Email (Optional)</label>
+                      <Input 
+                        placeholder="Your email address"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-3">Select Time Slot</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"].map((time) => (
-                        <button
-                          key={time}
-                          onClick={() => setFormData({ ...formData, time })}
-                          className={cn(
-                            "p-3 rounded-lg border text-sm font-medium transition-all hover:border-primary",
-                            formData.time === time 
-                              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-                              : "border-slate-200 text-slate-600"
-                          )}
-                        >
-                          {time}
-                        </button>
-                      ))}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Select Date *</label>
+                      <input 
+                        type="date" 
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        value={formData.date}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Select Time Slot *</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"].map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => setFormData({ ...formData, time })}
+                            className={cn(
+                              "p-2 rounded-lg border text-sm font-medium transition-all hover:border-primary",
+                              formData.time === time 
+                                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
+                                : "border-slate-200 text-slate-600"
+                            )}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -396,18 +486,11 @@ export function Booking() {
             </Button>
           ) : (
             <Button
-              onClick={() => {
-                toast.success("Booking Confirmed! Thank you.", {
-                  description: `Your appointment is scheduled for ${formData.date} at ${formData.time}.`
-                });
-                setTimeout(() => {
-                  navigate("/");
-                }, 1500);
-              }}
-              disabled={!isStepValid()}
+              onClick={handleSubmit}
+              disabled={!isStepValid() || isSubmitting}
               className="w-40 bg-green-600 hover:bg-green-700"
             >
-              Confirm Booking
+              {isSubmitting ? "Confirming..." : "Confirm Booking"}
             </Button>
           )}
         </div>

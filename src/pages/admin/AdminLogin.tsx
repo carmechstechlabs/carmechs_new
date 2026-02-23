@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Lock, Loader2 } from "lucide-react";
@@ -24,8 +24,12 @@ export function AdminLogin() {
       
       // Mock validation (admin/admin)
       if (formData.username === "admin" && formData.password === "admin") {
-        loginAdmin();
+        loginAdmin('admin');
         toast.success("Welcome back, Admin!");
+        navigate("/admin/dashboard");
+      } else if (formData.username === "viewer" && formData.password === "viewer") {
+        loginAdmin('viewer');
+        toast.success("Welcome back, Viewer!");
         navigate("/admin/dashboard");
       } else {
         toast.error("Invalid credentials.");
