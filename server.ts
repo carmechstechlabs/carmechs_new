@@ -130,7 +130,21 @@ const initialUiSettings = {
 const initialApiKeys = {
   googleClientId: "",
   firebaseApiKey: "",
+  firebaseAuthDomain: "",
+  firebaseProjectId: "",
+  firebaseStorageBucket: "",
+  firebaseMessagingSenderId: "",
+  firebaseAppId: "",
 };
+
+const initialBrands = [
+  { id: "1", name: "Toyota", imageUrl: "https://picsum.photos/seed/toyota/200/100" },
+  { id: "2", name: "Honda", imageUrl: "https://picsum.photos/seed/honda/200/100" },
+  { id: "3", name: "Ford", imageUrl: "https://picsum.photos/seed/ford/200/100" },
+  { id: "4", name: "BMW", imageUrl: "https://picsum.photos/seed/bmw/200/100" },
+  { id: "5", name: "Mercedes", imageUrl: "https://picsum.photos/seed/mercedes/200/100" },
+  { id: "6", name: "Audi", imageUrl: "https://picsum.photos/seed/audi/200/100" },
+];
 
 // In-memory state
 let state = {
@@ -143,6 +157,7 @@ let state = {
   users: initialUsers,
   uiSettings: initialUiSettings,
   apiKeys: initialApiKeys,
+  brands: initialBrands,
 };
 
 async function startServer() {
@@ -211,6 +226,11 @@ async function startServer() {
     socket.on("update_api_keys", (apiKeys) => {
       state.apiKeys = apiKeys;
       socket.broadcast.emit("api_keys_updated", apiKeys);
+    });
+
+    socket.on("update_brands", (brands) => {
+      state.brands = brands;
+      socket.broadcast.emit("brands_updated", brands);
     });
 
     socket.on("disconnect", () => {

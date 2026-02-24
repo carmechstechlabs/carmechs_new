@@ -312,11 +312,11 @@ export function Booking() {
                 <h2 className="text-xl font-semibold mb-6">Select Service</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {services.map((service) => (
-                    <button
+                    <div
                       key={service.id}
                       onClick={() => setFormData({ ...formData, service: service.id })}
                       className={cn(
-                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex justify-between items-center group",
+                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex justify-between items-center group cursor-pointer",
                         formData.service === service.id 
                           ? "border-primary bg-primary/5 ring-1 ring-primary" 
                           : "border-slate-200"
@@ -358,7 +358,7 @@ export function Booking() {
                       {formData.service === service.id && (
                         <CheckCircle2 className="text-primary h-5 w-5" />
                       )}
-                    </button>
+                    </div>
                   ))}
                 </div>
               </motion.div>

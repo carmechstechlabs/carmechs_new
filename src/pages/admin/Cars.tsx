@@ -131,8 +131,8 @@ export function Cars() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">Manage Car Data</h1>
 
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-slate-200 pb-4">
-        <div className="flex gap-2">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center border-b border-slate-200 pb-4">
+        <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -140,7 +140,7 @@ export function Cars() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 activeTab === tab.id 
                   ? "bg-primary text-white" 
-                  : "bg-white text-slate-600 hover:bg-slate-100"
+                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
               }`}
             >
               <tab.icon className="h-4 w-4" />
@@ -148,7 +148,7 @@ export function Cars() {
             </button>
           ))}
         </div>
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full md:w-64">
           <Input 
             placeholder="Search..." 
             value={searchTerm}

@@ -11,6 +11,13 @@ export interface Service {
   features: string[];
   checks: string[];
   basePrice: number; // Added for booking calculation
+  iconUrl?: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  imageUrl: string;
 }
 
 export interface PricingItem {
@@ -66,6 +73,11 @@ export interface UiSettings {
 export interface ApiKeys {
   googleClientId: string;
   firebaseApiKey: string;
+  firebaseAuthDomain: string;
+  firebaseProjectId: string;
+  firebaseStorageBucket: string;
+  firebaseMessagingSenderId: string;
+  firebaseAppId: string;
 }
 
 interface DataContextType {
@@ -78,6 +90,7 @@ interface DataContextType {
   users: User[];
   uiSettings: UiSettings;
   apiKeys: ApiKeys;
+  brands: Brand[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -87,6 +100,7 @@ interface DataContextType {
   updateUsers: (users: User[]) => void;
   updateUiSettings: (uiSettings: UiSettings) => void;
   updateApiKeys: (apiKeys: ApiKeys) => void;
+  updateBrands: (brands: Brand[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
   isAdminLoggedIn: boolean;
   adminRole: 'admin' | 'viewer' | null;
@@ -117,6 +131,11 @@ const initialUiSettings: UiSettings = {
 const initialApiKeys: ApiKeys = {
   googleClientId: "",
   firebaseApiKey: "",
+  firebaseAuthDomain: "",
+  firebaseProjectId: "",
+  firebaseStorageBucket: "",
+  firebaseMessagingSenderId: "",
+  firebaseAppId: "",
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -130,6 +149,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
   const [apiKeys, setApiKeys] = useState<ApiKeys>(initialApiKeys);
+  const [brands, setBrands] = useState<Brand[]>([]);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -153,6 +173,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setUsers(state.users);
       setUiSettings(state.uiSettings);
       setApiKeys(state.apiKeys);
+      setBrands(state.brands || []);
     });
 
     newSocket.on('services_updated', (newServices) => setServices(newServices));
@@ -164,6 +185,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('users_updated', (newUsers) => setUsers(newUsers));
     newSocket.on('ui_settings_updated', (newUiSettings) => setUiSettings(newUiSettings));
     newSocket.on('api_keys_updated', (newApiKeys) => setApiKeys(newApiKeys));
+    newSocket.on('brands_updated', (newBrands) => setBrands(newBrands));
 
     return () => {
       newSocket.disconnect();
@@ -227,6 +249,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     socket?.emit('update_api_keys', newApiKeys);
   };
 
+  const updateBrands = (newBrands: Brand[]) => {
+    setBrands(newBrands);
+    socket?.emit('update_brands', newBrands);
+  };
+
   const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
     const newAppointment: Appointment = {
       ...appointment,
@@ -260,6 +287,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       users,
       uiSettings,
       apiKeys,
+      brands,
       updateServices,
       updateCarMakes,
       updateCarModels,
@@ -269,6 +297,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateUsers,
       updateUiSettings,
       updateApiKeys,
+      updateBrands,
       addAppointment,
       isAdminLoggedIn,
       adminRole,

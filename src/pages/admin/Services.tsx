@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useData, Service } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +51,13 @@ export function Services() {
       price: formData.price || "",
       basePrice: Number(formData.basePrice) || 0,
       duration: formData.duration || "",
-      features: Array.isArray(formData.features) ? formData.features : (formData.features as unknown as string || "").split(',').map(s => s.trim()),
-      checks: Array.isArray(formData.checks) ? formData.checks : (formData.checks as unknown as string || "").split(',').map(s => s.trim()),
+      iconUrl: formData.iconUrl || "",
+      features: Array.isArray(formData.features) 
+        ? formData.features 
+        : (formData.features as string || "").split(',').map(s => s.trim()).filter(Boolean),
+      checks: Array.isArray(formData.checks) 
+        ? formData.checks 
+        : (formData.checks as string || "").split(',').map(s => s.trim()).filter(Boolean),
     };
 
     if (editingId) {
@@ -66,6 +71,21 @@ export function Services() {
     setEditingId(null);
     setIsAdding(false);
     setFormData({});
+  };
+
+  const handleIconUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 512 * 1024) { // 512KB limit
+        toast.error("Icon size should be less than 512KB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, iconUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -87,38 +107,75 @@ export function Services() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input 
-                placeholder="Service Title" 
-                value={formData.title || ""} 
-                onChange={e => setFormData({...formData, title: e.target.value})}
-              />
-              <Input 
-                placeholder="Price (Display)" 
-                value={formData.price || ""} 
-                onChange={e => setFormData({...formData, price: e.target.value})}
-              />
-              <Input 
-                placeholder="Base Price (Numeric)" 
-                type="number"
-                value={formData.basePrice || ""} 
-                onChange={e => setFormData({...formData, basePrice: Number(e.target.value)})}
-              />
-              <Input 
-                placeholder="Duration" 
-                value={formData.duration || ""} 
-                onChange={e => setFormData({...formData, duration: e.target.value})}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Service Title</label>
+                <Input 
+                  placeholder="Service Title" 
+                  value={formData.title || ""} 
+                  onChange={e => setFormData({...formData, title: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Price (Display)</label>
+                <Input 
+                  placeholder="Price (Display)" 
+                  value={formData.price || ""} 
+                  onChange={e => setFormData({...formData, price: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Base Price (Numeric)</label>
+                <Input 
+                  placeholder="Base Price (Numeric)" 
+                  type="number"
+                  value={formData.basePrice || ""} 
+                  onChange={e => setFormData({...formData, basePrice: Number(e.target.value)})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Duration</label>
+                <Input 
+                  placeholder="Duration" 
+                  value={formData.duration || ""} 
+                  onChange={e => setFormData({...formData, duration: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium">Service Icon</label>
+                <div className="flex items-center gap-4">
+                  {formData.iconUrl && (
+                    <div className="h-12 w-12 bg-white rounded border flex items-center justify-center overflow-hidden">
+                      <img src={formData.iconUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
+                    </div>
+                  )}
+                  <div className="relative flex-1">
+                    <Input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleIconUpload}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">Max size 512KB. SVG or transparent PNG recommended.</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea 
+                placeholder="Description" 
+                value={formData.description || ""} 
+                onChange={e => setFormData({...formData, description: e.target.value})}
               />
             </div>
-            <Textarea 
-              placeholder="Description" 
-              value={formData.description || ""} 
-              onChange={e => setFormData({...formData, description: e.target.value})}
-            />
-            <Textarea 
-              placeholder="Features (comma separated)" 
-              value={Array.isArray(formData.features) ? formData.features.join(", ") : formData.features} 
-              onChange={e => setFormData({...formData, features: e.target.value.split(",")})}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Features (comma separated)</label>
+              <Textarea 
+                placeholder="Features (comma separated)" 
+                value={Array.isArray(formData.features) ? formData.features.join(", ") : (formData.features || "")} 
+                onChange={e => setFormData({...formData, features: e.target.value})}
+              />
+            </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { setIsAdding(false); setEditingId(null); }}>
                 Cancel
@@ -135,13 +192,20 @@ export function Services() {
         {services.map((service) => (
           <Card key={service.id} className="hover:shadow-md transition-shadow">
             <CardContent className="flex items-center justify-between p-6">
-              <div>
-                <h3 className="text-xl font-bold">{service.title}</h3>
-                <p className="text-sm text-slate-500">{service.description}</p>
-                <div className="mt-2 flex gap-4 text-sm">
-                  <span className="font-semibold text-primary">{service.price}</span>
-                  <span className="text-slate-400">•</span>
-                  <span>{service.duration}</span>
+              <div className="flex items-center gap-4">
+                {service.iconUrl && (
+                  <div className="h-12 w-12 bg-slate-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <img src={service.iconUrl} alt={service.title} className="max-h-full max-w-full object-contain" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-xl font-bold">{service.title}</h3>
+                  <p className="text-sm text-slate-500">{service.description}</p>
+                  <div className="mt-2 flex gap-4 text-sm">
+                    <span className="font-semibold text-primary">{service.price}</span>
+                    <span className="text-slate-400">•</span>
+                    <span>{service.duration}</span>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">

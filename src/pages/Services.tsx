@@ -22,8 +22,11 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-const getIcon = (id: string) => {
-  switch (id) {
+const getIcon = (service: any) => {
+  if (service.iconUrl) {
+    return <img src={service.iconUrl} alt={service.title} className="h-10 w-10 object-contain" />;
+  }
+  switch (service.id) {
     case "periodic": return <Wrench className="h-10 w-10 text-primary" />;
     case "tyres": return <Disc className="h-10 w-10 text-primary" />;
     case "batteries": return <Battery className="h-10 w-10 text-primary" />;
@@ -121,11 +124,11 @@ export function Services() {
             <div 
               key={index} 
               className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden border border-slate-100 flex flex-col group"
-              onClick={() => setSelectedService({ ...service, icon: getIcon(service.id) })}
+              onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
             >
               <div className="p-8 flex-1">
-                <div className="mb-6 bg-primary/5 w-20 h-20 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  {getIcon(service.id)}
+                <div className="mb-6 bg-primary/5 w-20 h-20 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 transition-colors overflow-hidden">
+                  {getIcon(service)}
                 </div>
                 <h3 className="text-2xl font-bold mb-3">{service.title}</h3>
                 <p className="text-slate-600 mb-6">{service.description}</p>

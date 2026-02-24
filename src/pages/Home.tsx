@@ -71,7 +71,7 @@ const features = [
 ];
 
 export function Home() {
-  const { uiSettings } = useData();
+  const { uiSettings, services: dynamicServices, brands } = useData();
 
   return (
     <div className="flex flex-col">
@@ -138,7 +138,7 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
+            {(dynamicServices.length > 0 ? dynamicServices : services).map((service, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -147,8 +147,12 @@ export function Home() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-100"
               >
-                <div className="mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center">
-                  {service.icon}
+                <div className="mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
+                  {'iconUrl' in service && service.iconUrl ? (
+                    <img src={service.iconUrl} alt={service.title} className="max-h-10 max-w-10 object-contain" />
+                  ) : (
+                    'icon' in service ? service.icon : <Wrench className="h-8 w-8 text-primary" />
+                  )}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
                 <p className="text-slate-600 mb-4">{service.description}</p>
@@ -160,6 +164,25 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* Brands Section */}
+      {brands.length > 0 && (
+        <section className="py-16 bg-white border-y border-slate-100">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl font-bold text-slate-900">Brands We Work With</h2>
+              <p className="text-slate-500 mt-2">We service all major car brands with expert care.</p>
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+              {brands.map((brand) => (
+                <div key={brand.id} className="h-12 md:h-16 w-24 md:w-32 flex items-center justify-center">
+                  <img src={brand.imageUrl} alt={brand.name} className="max-h-full max-w-full object-contain" title={brand.name} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* How It Works */}
       <section className="py-20 bg-white">

@@ -23,6 +23,7 @@ import { Customers as AdminCustomers } from "@/pages/admin/Customers";
 import { Users as AdminUsers } from "@/pages/admin/Users";
 import { UiSettingsPage as AdminUiSettings } from "@/pages/admin/UiSettings";
 import { ApiKeysPage as AdminApiKeys } from "@/pages/admin/ApiKeys";
+import { Brands as AdminBrands } from "@/pages/admin/Brands";
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="appointments" element={<AdminAppointments />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="services" element={<AdminServices />} />
+            <Route path="brands" element={<AdminBrands />} />
             <Route path="cars" element={<AdminCars />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="ui-settings" element={<AdminUiSettings />} />
