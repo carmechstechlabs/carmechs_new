@@ -12,25 +12,32 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 font-bold text-xl text-white">
-              <Wrench className="h-6 w-6 text-primary" />
+              {settings.logoUrl ? (
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain brightness-0 invert" />
+              ) : (
+                <Wrench className="h-6 w-6 text-primary" />
+              )}
               <span>{settings.logoText}</span>
             </Link>
             <p className="text-sm text-slate-400">
-              Your trusted partner for on-demand car repair and maintenance services. Quality service at your doorstep.
+              {settings.footerDescription || "Your trusted partner for on-demand car repair and maintenance services. Quality service at your doorstep."}
             </p>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-primary transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="hover:text-primary transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="hover:text-primary transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="hover:text-primary transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </a>
+              {settings.facebook && (
+                <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {settings.twitter && (
+                <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  <Twitter className="h-5 w-5" />
+                </a>
+              )}
+              {settings.instagram && (
+                <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -63,6 +70,20 @@ export function Footer() {
                   FAQ
                 </Link>
               </li>
+              {settings.privacyPolicyUrl && (
+                <li>
+                  <Link to={settings.privacyPolicyUrl} className="hover:text-primary transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              )}
+              {settings.termsOfServiceUrl && (
+                <li>
+                  <Link to={settings.termsOfServiceUrl} className="hover:text-primary transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -119,7 +140,7 @@ export function Footer() {
         </div>
         
         <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm text-slate-500">
-          <p>&copy; {new Date().getFullYear()} CarMechs. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {settings.logoText}. All rights reserved.</p>
         </div>
       </div>
     </footer>

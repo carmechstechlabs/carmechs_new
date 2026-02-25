@@ -3,8 +3,9 @@ import { useData, Appointment } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Clock, User, Phone, Car, Wrench, Search, MoreVertical, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, Clock, User, Phone, Car, Wrench, Search, MoreVertical, CheckCircle, XCircle, CreditCard, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -171,6 +172,32 @@ export function Appointments() {
                             <span className="font-medium">{appointment.time}</span>
                           </div>
                         </div>
+                        {appointment.paymentMethod && (
+                          <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                            <CreditCard className="h-5 w-5 text-primary" />
+                            <div>
+                              <span className="block text-xs text-slate-500">Payment</span>
+                              <span className="font-medium capitalize">
+                                {appointment.paymentMethod.replace(/_/g, ' ')}
+                                <span className={cn(
+                                  "ml-2 text-[10px] px-1.5 py-0.5 rounded-full border",
+                                  appointment.paymentStatus === 'paid' ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                )}>
+                                  {appointment.paymentStatus}
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {appointment.amount && (
+                          <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                            <IndianRupee className="h-5 w-5 text-emerald-600" />
+                            <div>
+                              <span className="block text-xs text-slate-500">Amount</span>
+                              <span className="font-medium">₹{appointment.amount}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     

@@ -34,10 +34,18 @@ export interface CarModel {
 
 export interface Settings {
   logoText: string;
+  logoUrl?: string;
   email: string;
   phone: string;
   address: string;
   whatsapp: string;
+  referralRewardAmount: number;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  footerDescription?: string;
+  privacyPolicyUrl?: string;
+  termsOfServiceUrl?: string;
 }
 
 export interface Appointment {
@@ -52,6 +60,9 @@ export interface Appointment {
   date: string;
   time: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  paymentMethod?: 'razorpay' | 'paytm' | 'pay_after_service';
+  paymentStatus?: 'pending' | 'paid' | 'failed';
+  amount?: number;
   createdAt: string;
 }
 
@@ -62,12 +73,32 @@ export interface User {
   phone: string;
   role: 'admin' | 'viewer' | 'user';
   verified: boolean;
+  blocked: boolean;
+  walletBalance: number;
+  referralCode: string;
+  referredBy?: string;
+  referralsCount: number;
+}
+
+export interface Feature {
+  title: string;
+  description: string;
+  iconName: string;
 }
 
 export interface UiSettings {
   heroTitle: string;
   heroSubtitle: string;
+  heroBgImage?: string;
+  heroBgOpacity?: number;
   primaryColor: string;
+  whyChooseTitle: string;
+  whyChooseDescription: string;
+  whyChooseImage: string;
+  features: Feature[];
+  testimonialText: string;
+  testimonialAuthor: string;
+  testimonialRating: number;
 }
 
 export interface ApiKeys {
@@ -78,6 +109,10 @@ export interface ApiKeys {
   firebaseStorageBucket: string;
   firebaseMessagingSenderId: string;
   firebaseAppId: string;
+  razorpayKeyId?: string;
+  razorpayKeySecret?: string;
+  paytmMid?: string;
+  paytmMerchantKey?: string;
 }
 
 interface DataContextType {
@@ -98,10 +133,13 @@ interface DataContextType {
   updateSettings: (settings: Settings) => void;
   updateAppointments: (appointments: Appointment[]) => void;
   updateUsers: (users: User[]) => void;
+  updateUser: (userId: string, updates: Partial<User>) => void;
   updateUiSettings: (uiSettings: UiSettings) => void;
   updateApiKeys: (apiKeys: ApiKeys) => void;
   updateBrands: (brands: Brand[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
+  updateWalletBalance: (userId: string, amount: number) => void;
+  processReferral: (referralCode: string, newUserId: string) => void;
   isAdminLoggedIn: boolean;
   adminRole: 'admin' | 'viewer' | null;
   loginAdmin: (role?: 'admin' | 'viewer') => void;
@@ -117,16 +155,34 @@ const initialCarModels: CarModel[] = [];
 const initialFuelTypes: PricingItem[] = [];
 const initialSettings: Settings = {
   logoText: "",
+  logoUrl: "",
   email: "",
   phone: "",
   address: "",
   whatsapp: "",
+  referralRewardAmount: 500,
+  privacyPolicyUrl: "/privacy",
+  termsOfServiceUrl: "/terms",
 };
 const initialUsers: User[] = [];
 const initialUiSettings: UiSettings = {
   heroTitle: "",
   heroSubtitle: "",
+  heroBgImage: "",
+  heroBgOpacity: 0.5,
   primaryColor: "",
+  whyChooseTitle: "Why Choose CarMechs?",
+  whyChooseDescription: "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands.",
+  whyChooseImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+  features: [
+    { title: "Genuine Parts", description: "We use only 100% genuine OEM/OES spare parts.", iconName: "ShieldCheck" },
+    { title: "Timely Delivery", description: "We value your time and ensure on-time delivery.", iconName: "Clock" },
+    { title: "Transparent Pricing", description: "Upfront pricing with no hidden charges.", iconName: "IndianRupee" },
+    { title: "Expert Mechanics", description: "Highly trained and certified mechanics.", iconName: "Wrench" }
+  ],
+  testimonialText: "Best service I've ever had! My car runs smoother than ever.",
+  testimonialAuthor: "Alex Johnson",
+  testimonialRating: 4.9
 };
 const initialApiKeys: ApiKeys = {
   googleClientId: "",
@@ -136,6 +192,10 @@ const initialApiKeys: ApiKeys = {
   firebaseStorageBucket: "",
   firebaseMessagingSenderId: "",
   firebaseAppId: "",
+  razorpayKeyId: "",
+  razorpayKeySecret: "",
+  paytmMid: "",
+  paytmMerchantKey: "",
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -239,6 +299,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     socket?.emit('update_users', newUsers);
   };
 
+  const updateUser = (userId: string, updates: Partial<User>) => {
+    const updatedUsers = users.map(u => u.id === userId ? { ...u, ...updates } : u);
+    setUsers(updatedUsers);
+    socket?.emit('update_users', updatedUsers);
+  };
+
   const updateUiSettings = (newUiSettings: UiSettings) => {
     setUiSettings(newUiSettings);
     socket?.emit('update_ui_settings', newUiSettings);
@@ -254,11 +320,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
     socket?.emit('update_brands', newBrands);
   };
 
+  const updateWalletBalance = (userId: string, amount: number) => {
+    const updatedUsers = users.map(u => 
+      u.id === userId ? { ...u, walletBalance: (u.walletBalance || 0) + amount } : u
+    );
+    setUsers(updatedUsers);
+    socket?.emit('update_users', updatedUsers);
+  };
+
+  const processReferral = (referralCode: string, newUserId: string) => {
+    const referrer = users.find(u => u.referralCode === referralCode);
+    if (!referrer) return;
+
+    const updatedUsers = users.map(u => {
+      if (u.id === referrer.id) {
+        return { 
+          ...u, 
+          walletBalance: (u.walletBalance || 0) + settings.referralRewardAmount,
+          referralsCount: (u.referralsCount || 0) + 1
+        };
+      }
+      if (u.id === newUserId) {
+        return { ...u, referredBy: referrer.id };
+      }
+      return u;
+    });
+
+    setUsers(updatedUsers);
+    socket?.emit('update_users', updatedUsers);
+  };
+
   const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
     const newAppointment: Appointment = {
       ...appointment,
       id: Math.random().toString(36).substring(2, 9),
       status: 'pending',
+      paymentStatus: appointment.paymentMethod === 'pay_after_service' ? 'pending' : 'paid',
       createdAt: new Date().toISOString()
     };
     setAppointments(prev => [newAppointment, ...prev]);
@@ -295,10 +392,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateSettings,
       updateAppointments,
       updateUsers,
+      updateUser,
       updateUiSettings,
       updateApiKeys,
       updateBrands,
       addAppointment,
+      updateWalletBalance,
+      processReferral,
       isAdminLoggedIn,
       adminRole,
       loginAdmin,

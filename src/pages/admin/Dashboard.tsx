@@ -1,27 +1,70 @@
 import { useData } from "@/context/DataContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench, Car, Users, Calendar, Clock, CheckCircle2, XCircle, Shield } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Wrench, Car, Users, Calendar, Clock, CheckCircle2, XCircle, Shield, IndianRupee, TrendingUp, ArrowUpRight, ArrowDownRight, Gift, Wallet } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
+import { cn } from "@/lib/utils";
 
 export function Dashboard() {
-  const { services, carMakes, carModels, fuelTypes, appointments, users, brands } = useData();
+  const { services, carMakes, carModels, fuelTypes, appointments, users, brands, settings } = useData();
 
   const pendingAppointments = appointments.filter(a => a.status === 'pending').length;
   const confirmedAppointments = appointments.filter(a => a.status === 'confirmed').length;
   const completedAppointments = appointments.filter(a => a.status === 'completed').length;
   const cancelledAppointments = appointments.filter(a => a.status === 'cancelled').length;
 
-  const activeUsers = users.filter(u => u.verified).length || users.length; // Fallback to all users if none verified
+  const totalRevenue = appointments
+    .filter(a => a.status === 'completed')
+    .reduce((acc, curr) => {
+      const service = services.find(s => s.id === curr.service);
+      return acc + (service?.basePrice || 0);
+    }, 0);
+
+  const totalReferralRewards = users.reduce((acc, curr) => acc + (curr.referralsCount * settings.referralRewardAmount), 0);
+
+  const activeUsers = users.filter(u => u.verified).length || users.length;
 
   const stats = [
-    { title: "Total Appointments", value: appointments.length, icon: Calendar, color: "text-blue-600" },
-    { title: "Pending Appointments", value: pendingAppointments, icon: Clock, color: "text-amber-600" },
-    { title: "Active Users", value: activeUsers, icon: Users, color: "text-indigo-600" },
-    { title: "Total Services", value: services.length, icon: Wrench, color: "text-emerald-600" },
-    { title: "Car Makes", value: carMakes.length, icon: Car, color: "text-purple-600" },
-    { title: "Car Models", value: carModels.length, icon: Car, color: "text-pink-600" },
-    { title: "Fuel Types", value: fuelTypes.length, icon: Car, color: "text-orange-600" },
-    { title: "Brands", value: brands.length, icon: Shield, color: "text-teal-600" },
+    { 
+      title: "Total Appointments", 
+      value: appointments.length, 
+      description: "All time bookings",
+      icon: Calendar, 
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      trend: "+12.5%",
+      trendUp: true
+    },
+    { 
+      title: "Pending Tasks", 
+      value: pendingAppointments, 
+      description: "Requires attention",
+      icon: Clock, 
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      trend: "-2.1%",
+      trendUp: false
+    },
+    { 
+      title: "Active Users", 
+      value: activeUsers, 
+      description: "Verified customers",
+      icon: Users, 
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      trend: "+4.2%",
+      trendUp: true
+    },
+    { 
+      title: "Total Revenue", 
+      value: `₹${totalRevenue.toLocaleString()}`, 
+      description: "From completed services",
+      icon: IndianRupee, 
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      trend: "+18.3%",
+      trendUp: true
+    },
   ];
 
   // Create a unified recent activity feed
@@ -97,23 +140,43 @@ export function Dashboard() {
   })).slice(-7); // Last 7 days with data
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500">Welcome back! Here's what's happening today.</p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+          <Calendar className="h-4 w-4 text-slate-400" />
+          <span className="text-sm font-medium text-slate-600">
+            {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+          <Card key={index} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className={cn("p-3 rounded-xl transition-colors", stat.bgColor)}>
+                  <stat.icon className={cn("h-6 w-6", stat.color)} />
+                </div>
+                <div className={cn(
+                  "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full",
+                  stat.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                )}>
+                  {stat.trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                  {stat.trend}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-1">{stat.title}</p>
+                <h3 className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</h3>
+                <p className="text-xs text-slate-400">{stat.description}</p>
+              </div>
             </CardContent>
+            <div className={cn("h-1 w-full", stat.color.replace('text', 'bg'))} />
           </Card>
         ))}
       </div>
@@ -177,9 +240,15 @@ export function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Appointments</CardTitle>
+        <Card className="lg:col-span-2 border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Appointments</CardTitle>
+              <CardDescription>Latest service bookings from customers.</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/admin/appointments">View All</a>
+            </Button>
           </CardHeader>
           <CardContent>
             {recentAppointments.length > 0 ? (

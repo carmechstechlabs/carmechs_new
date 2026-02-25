@@ -110,21 +110,65 @@ const initialFuelTypes = [
 
 const initialSettings = {
   logoText: "CarMechs",
+  logoUrl: "",
   email: "assist@carmechs.in",
   phone: "+91-70034-35356",
   address: "Newtown, Kolkata 700156",
   whatsapp: "+917003435356",
+  referralRewardAmount: 500,
+  facebook: "https://facebook.com/carmechs",
+  instagram: "https://instagram.com/carmechs",
+  twitter: "https://twitter.com/carmechs",
+  footerDescription: "Premium car service at your doorstep. We provide expert care for your vehicle with free pickup and drop facility.",
+  privacyPolicyUrl: "/privacy",
+  termsOfServiceUrl: "/terms",
 };
 
 const initialUsers = [
-  { id: "1", name: "Admin User", email: "admin@carmechs.in", phone: "1234567890", role: "admin", verified: true },
-  { id: "2", name: "Test Viewer", email: "viewer@carmechs.in", phone: "0987654321", role: "viewer", verified: true },
+  { 
+    id: "1", 
+    name: "Admin User", 
+    email: "admin@carmechs.in", 
+    phone: "1234567890", 
+    role: "admin", 
+    verified: true,
+    blocked: false,
+    walletBalance: 1000,
+    referralCode: "ADMIN123",
+    referralsCount: 0
+  },
+  { 
+    id: "2", 
+    name: "Test Viewer", 
+    email: "viewer@carmechs.in", 
+    phone: "0987654321", 
+    role: "viewer", 
+    verified: true,
+    blocked: false,
+    walletBalance: 250,
+    referralCode: "VIEWER456",
+    referralsCount: 0
+  },
 ];
 
 const initialUiSettings = {
   heroTitle: "Expert Car Service at Your Doorstep",
   heroSubtitle: "Professional mechanics, transparent pricing, and guaranteed satisfaction.",
+  heroBgImage: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2000&auto=format&fit=crop",
+  heroBgOpacity: 0.6,
   primaryColor: "#0f172a", // slate-900
+  whyChooseTitle: "Why Choose CarMechs?",
+  whyChooseDescription: "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands.",
+  whyChooseImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+  features: [
+    { title: "Genuine Parts", description: "We use only 100% genuine OEM/OES spare parts.", iconName: "ShieldCheck" },
+    { title: "Timely Delivery", description: "We value your time and ensure on-time delivery.", iconName: "Clock" },
+    { title: "Transparent Pricing", description: "Upfront pricing with no hidden charges.", iconName: "IndianRupee" },
+    { title: "Expert Mechanics", description: "Highly trained and certified mechanics.", iconName: "Wrench" }
+  ],
+  testimonialText: "Best service I've ever had! My car runs smoother than ever.",
+  testimonialAuthor: "Alex Johnson",
+  testimonialRating: 4.9
 };
 
 const initialApiKeys = {
@@ -135,6 +179,10 @@ const initialApiKeys = {
   firebaseStorageBucket: "",
   firebaseMessagingSenderId: "",
   firebaseAppId: "",
+  razorpayKeyId: "",
+  razorpayKeySecret: "",
+  paytmMid: "",
+  paytmMerchantKey: "",
 };
 
 const initialBrands = [

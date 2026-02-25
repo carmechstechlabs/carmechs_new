@@ -7,8 +7,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, IndianRupee } from "lucide-react";
+import { CheckCircle2, Clock, IndianRupee, Info, ChevronRight } from "lucide-react";
 import { ReactNode } from "react";
+import { useData } from "@/context/DataContext";
 
 interface Service {
   id: string;
@@ -19,6 +20,7 @@ interface Service {
   price: string;
   duration: string;
   checks: string[];
+  basePrice: number;
 }
 
 interface ServiceModalProps {
@@ -35,7 +37,34 @@ interface ServiceModalProps {
 }
 
 export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehicleSelected, vehicleDetails }: ServiceModalProps) {
+  const { carMakes, carModels, fuelTypes } = useData();
   if (!service) return null;
+
+  const getBreakdown = () => {
+    if (!isVehicleSelected || !vehicleDetails) return null;
+    
+    const breakdown = [];
+    breakdown.push({ label: "Base Price", value: `₹${service.basePrice}` });
+
+    const make = carMakes.find(m => m.name === vehicleDetails.make);
+    if (make && make.multiplier !== 1) {
+      breakdown.push({ label: `${vehicleDetails.make} Surcharge`, value: `x${make.multiplier}` });
+    }
+
+    const model = carModels.find(m => m.name === vehicleDetails.model);
+    if (model && model.multiplier !== 1) {
+      breakdown.push({ label: `${vehicleDetails.model} Surcharge`, value: `x${model.multiplier}` });
+    }
+
+    const fuel = fuelTypes.find(f => f.name === vehicleDetails.fuel);
+    if (fuel && fuel.multiplier !== 1) {
+      breakdown.push({ label: `${vehicleDetails.fuel} Surcharge`, value: `x${fuel.multiplier}` });
+    }
+
+    return breakdown;
+  };
+
+  const priceBreakdown = getBreakdown();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -67,6 +96,27 @@ export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehi
               <span className="text-lg font-bold text-primary">{isVehicleSelected && calculatedPrice ? calculatedPrice : service.price}</span>
             </div>
           </div>
+
+          {isVehicleSelected && priceBreakdown && (
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 text-primary">
+                <Info className="h-4 w-4" />
+                Price Breakdown
+              </h4>
+              <div className="space-y-2">
+                {priceBreakdown.map((item, idx) => (
+                  <div key={idx} className="flex justify-between text-xs text-slate-600">
+                    <span>{item.label}</span>
+                    <span className="font-medium">{item.value}</span>
+                  </div>
+                ))}
+                <div className="pt-2 mt-2 border-t border-primary/20 flex justify-between text-sm font-bold text-primary">
+                  <span>Total Amount</span>
+                  <span>{calculatedPrice}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <h4 className="font-semibold mb-3 flex items-center gap-2">

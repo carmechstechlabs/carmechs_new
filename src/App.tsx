@@ -8,6 +8,7 @@ import { Login } from "@/pages/Login";
 import { Contact } from "@/pages/Contact";
 import { About } from "@/pages/About";
 import { FAQ } from "@/pages/FAQ";
+import { Profile } from "@/pages/Profile";
 import { NotFound } from "@/pages/NotFound";
 import { DataProvider } from "@/context/DataContext";
 
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="about" element={<About />} />
             <Route path="faq" element={<FAQ />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/login" element={<Login />} />

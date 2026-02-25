@@ -1,19 +1,26 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wrench, Menu, X } from "lucide-react";
+import { Wrench, Menu, X, User } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useData } from "@/context/DataContext";
 
 export function Header() {
-  const { settings } = useData();
+  const { settings, users } = useData();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Simulate logged in user
+  const user = users[0];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
-          <Wrench className="h-6 w-6" />
+          {settings.logoUrl ? (
+            <img src={settings.logoUrl} alt={settings.logoText} className="h-8 w-auto object-contain" />
+          ) : (
+            <Wrench className="h-6 w-6" />
+          )}
           <span>{settings.logoText}</span>
         </Link>
 
@@ -34,11 +41,22 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Log in
-            </Button>
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>{user.name}</span>
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <Link to="/login">
+              <Button variant="ghost" size="sm">
+                Log in
+              </Button>
+            </Link>
+          )}
           <Link to="/book">
             <Button size="sm">Book Service</Button>
           </Link>
@@ -92,6 +110,15 @@ export function Header() {
               >
                 Contact
               </Link>
+              {user && (
+                <Link
+                  to="/profile"
+                  className="text-sm font-medium hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  My Profile
+                </Link>
+              )}
               <div className="flex flex-col gap-2 pt-4 border-t">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full">

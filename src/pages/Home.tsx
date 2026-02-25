@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion } from "motion/react";
 import { 
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useData } from "@/context/DataContext";
+import { useState } from "react";
+import { ServiceModal } from "@/components/ServiceModal";
 
 const services = [
   {
@@ -72,6 +75,25 @@ const features = [
 
 export function Home() {
   const { uiSettings, services: dynamicServices, brands } = useData();
+  const [selectedService, setSelectedService] = useState<any>(null);
+
+  const getIcon = (service: any) => {
+    if ('iconUrl' in service && service.iconUrl) {
+      return <img src={service.iconUrl} alt={service.title} className="max-h-10 max-w-10 object-contain" />;
+    }
+    return 'icon' in service ? service.icon : <Wrench className="h-8 w-8 text-primary" />;
+  };
+
+  const getLucideIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'ShieldCheck': return <ShieldCheck className="h-6 w-6 text-primary" />;
+      case 'Clock': return <Clock className="h-6 w-6 text-primary" />;
+      case 'IndianRupee': return <IndianRupee className="h-6 w-6 text-primary" />;
+      case 'Wrench': return <Wrench className="h-6 w-6 text-primary" />;
+      case 'Star': return <Star className="h-6 w-6 text-primary" />;
+      default: return <Wrench className="h-6 w-6 text-primary" />;
+    }
+  };
 
   return (
     <div className="flex flex-col">
@@ -81,11 +103,16 @@ export function Home() {
         style={{ backgroundColor: uiSettings.primaryColor || '#0f172a' }}
       >
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" 
-            alt="Car Mechanic" 
-            className="w-full h-full object-cover opacity-20"
-          />
+          {uiSettings.heroBgImage ? (
+            <img 
+              src={uiSettings.heroBgImage} 
+              alt="Hero Background" 
+              className="w-full h-full object-cover"
+              style={{ opacity: uiSettings.heroBgOpacity || 0.2 }}
+            />
+          ) : (
+            <div className="w-full h-full bg-slate-800 opacity-20"></div>
+          )}
           <div 
             className="absolute inset-0"
             style={{ 
@@ -103,7 +130,7 @@ export function Home() {
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               {uiSettings.heroTitle ? (
-                <span dangerouslySetInnerHTML={{ __html: uiSettings.heroTitle.replace('\n', '<br />') }} />
+                <span dangerouslySetInnerHTML={{ __html: uiSettings.heroTitle.replace(/\\n/g, '<br />') }} />
               ) : (
                 <>Expert Car Care <br /><span className="text-primary">At Your Doorstep</span></>
               )}
@@ -145,14 +172,11 @@ export function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-100"
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 cursor-pointer group"
+                onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
               >
-                <div className="mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
-                  {'iconUrl' in service && service.iconUrl ? (
-                    <img src={service.iconUrl} alt={service.title} className="max-h-10 max-w-10 object-contain" />
-                  ) : (
-                    'icon' in service ? service.icon : <Wrench className="h-8 w-8 text-primary" />
-                  )}
+                <div className="mb-4 bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center overflow-hidden group-hover:bg-primary/20 transition-colors">
+                  {getIcon(service)}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
                 <p className="text-slate-600 mb-4">{service.description}</p>
@@ -219,17 +243,15 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">Why Choose CarMechs?</h2>
+              <h2 className="text-3xl font-bold mb-6">{uiSettings.whyChooseTitle || "Why Choose CarMechs?"}</h2>
               <p className="text-slate-300 mb-8">
-                We are committed to providing the best car service experience. 
-                With our team of expert mechanics and state-of-the-art workshops, 
-                your car is in safe hands.
+                {uiSettings.whyChooseDescription || "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands."}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {features.map((feature, index) => (
+                {(uiSettings.features || features).map((feature, index) => (
                   <div key={index} className="flex items-start gap-4">
                     <div className="bg-slate-800 p-3 rounded-lg shrink-0">
-                      {feature.icon}
+                      {'iconName' in feature ? getLucideIcon(feature.iconName) : (feature as any).icon}
                     </div>
                     <div>
                       <h4 className="font-semibold mb-1">{feature.title}</h4>
@@ -241,21 +263,27 @@ export function Home() {
             </div>
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" 
+                src={uiSettings.whyChooseImage || "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
                 alt="Mechanic working" 
                 className="rounded-2xl shadow-2xl"
               />
               <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl text-slate-900 max-w-xs hidden md:block">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="flex text-yellow-500">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={cn(
+                          "w-4 h-4",
+                          i < Math.floor(uiSettings.testimonialRating || 4.9) ? "fill-current" : "text-slate-300"
+                        )} 
+                      />
                     ))}
                   </div>
-                  <span className="font-bold">4.9/5</span>
+                  <span className="font-bold">{uiSettings.testimonialRating || 4.9}/5</span>
                 </div>
-                <p className="text-sm font-medium">"Best service I've ever had! My car runs smoother than ever."</p>
-                <p className="text-xs text-slate-500 mt-2">- Alex Johnson</p>
+                <p className="text-sm font-medium">"{uiSettings.testimonialText || "Best service I've ever had! My car runs smoother than ever."}"</p>
+                <p className="text-xs text-slate-500 mt-2">- {uiSettings.testimonialAuthor || "Alex Johnson"}</p>
               </div>
             </div>
           </div>
@@ -276,6 +304,12 @@ export function Home() {
           </Link>
         </div>
       </section>
+
+      <ServiceModal 
+        service={selectedService} 
+        isOpen={!!selectedService} 
+        onClose={() => setSelectedService(null)}
+      />
     </div>
   );
 }

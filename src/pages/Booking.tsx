@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,14 +13,19 @@ const steps = [
   { id: 1, title: "Select Car", icon: Car },
   { id: 2, title: "Choose Service", icon: Wrench },
   { id: 3, title: "Schedule", icon: CalendarIcon },
+  { id: 4, title: "Payment", icon: CreditCard },
 ];
 
 export function Booking() {
-  const { services, carMakes, carModels, fuelTypes, addAppointment } = useData();
+  const { services, carMakes, carModels, fuelTypes, addAppointment, users, updateWalletBalance, updateUser } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [useWallet, setUseWallet] = useState(false);
+  
+  // Simulate logged in user
+  const user = users[0];
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -30,7 +35,8 @@ export function Booking() {
     time: "",
     name: "",
     phone: "",
-    email: ""
+    email: "",
+    paymentMethod: "pay_after_service" as 'razorpay' | 'paytm' | 'pay_after_service'
   });
 
   useEffect(() => {
@@ -89,8 +95,36 @@ export function Booking() {
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const handleVerifyPhone = async () => {
+    if (otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    setIsVerifying(true);
+    // Simulate OTP verification
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    updateUser(user.id, { verified: true });
+    setShowVerification(false);
+    toast.success("Phone number verified successfully!");
+    setIsVerifying(false);
+  };
 
   const handleSubmit = async () => {
+    if (user?.blocked) {
+      toast.error("Your account has been blocked. Please contact support.");
+      return;
+    }
+
+    if (!user?.verified) {
+      setShowVerification(true);
+      toast.error("Please verify your phone number to continue");
+      return;
+    }
+
     if (!formData.name || !formData.phone) {
       toast.error("Please enter your name and phone number");
       return;
@@ -99,7 +133,30 @@ export function Booking() {
     setIsSubmitting(true);
     
     try {
-      addAppointment(formData);
+      const service = services.find(s => s.id === formData.service);
+      const totalPrice = service ? calculatePrice(service.basePrice) : 0;
+      
+      // If using wallet, we subtract from balance first
+      if (useWallet && user) {
+        if (user.walletBalance < totalPrice) {
+          toast.error("Insufficient wallet balance");
+          setIsSubmitting(false);
+          return;
+        }
+        updateWalletBalance(user.id, -totalPrice);
+      }
+
+      // Simulate Payment Gateway for Razorpay/Paytm
+      if (formData.paymentMethod === 'razorpay' || formData.paymentMethod === 'paytm') {
+        toast.info(`Redirecting to ${formData.paymentMethod === 'razorpay' ? 'Razorpay' : 'Paytm'}...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        toast.success("Payment Successful!");
+      }
+
+      addAppointment({
+        ...formData,
+        amount: totalPrice,
+      });
       
       if (formData.email) {
         const serviceTitle = services.find(s => s.id === formData.service)?.title || "Car Service";
@@ -145,7 +202,7 @@ export function Booking() {
   };
 
   const handleNext = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
@@ -156,6 +213,7 @@ export function Booking() {
     if (currentStep === 1) return formData.make && formData.model && formData.fuel;
     if (currentStep === 2) return formData.service;
     if (currentStep === 3) return formData.date && formData.time && formData.name && formData.phone;
+    if (currentStep === 4) return formData.paymentMethod;
     return false;
   };
 
@@ -172,6 +230,31 @@ export function Booking() {
         </div>
 
         {/* Progress Steps */}
+        {user?.blocked && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700">
+            <ShieldAlert className="h-6 w-6" />
+            <div>
+              <p className="font-bold">Account Blocked</p>
+              <p className="text-sm">Your account has been restricted from making new bookings. Please contact our support team for assistance.</p>
+            </div>
+          </div>
+        )}
+
+        {!user?.verified && !user?.blocked && (
+          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-amber-700">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="h-6 w-6" />
+              <div>
+                <p className="font-bold">Phone Verification Required</p>
+                <p className="text-sm">You must verify your phone number before you can confirm your booking.</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => setShowVerification(true)}>
+              Verify Now
+            </Button>
+          </div>
+        )}
+
         <div className="flex justify-between mb-12 relative">
           <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -z-10 -translate-y-1/2 rounded-full"></div>
           <div 
@@ -449,14 +532,146 @@ export function Booking() {
                         {services.find(s => s.id === formData.service)?.title}
                       </span>
                     </div>
+                    
+                    {user && user.walletBalance > 0 && (
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 mt-4">
+                        <div className="flex items-center gap-3">
+                          <Wallet className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="text-xs font-semibold uppercase text-slate-400">Pay with Wallet</p>
+                            <p className="text-sm font-bold text-slate-900">Balance: ₹{user.walletBalance}</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                      </div>
+                    )}
+
                     <div className="flex justify-between pt-2 border-t border-slate-200 mt-2">
-                      <span>Estimated Total:</span>
-                      <span className="font-bold text-primary text-lg">
+                      <span>{useWallet ? "Paid via Wallet" : "Estimated Total"}:</span>
+                      <span className={cn(
+                        "font-bold text-lg",
+                        useWallet ? "text-emerald-600" : "text-primary"
+                      )}>
                         ₹{(() => {
                           const service = services.find(s => s.id === formData.service);
                           return service ? calculatePrice(service.basePrice) : 0;
                         })()}
                       </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            {currentStep === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <h2 className="text-xl font-semibold mb-6">Select Payment Method</h2>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setFormData({ ...formData, paymentMethod: 'razorpay' })}
+                      className={cn(
+                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
+                        formData.paymentMethod === 'razorpay' 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                          : "border-slate-200"
+                      )}
+                    >
+                      <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Razorpay</p>
+                        <p className="text-xs text-slate-500">Cards, Netbanking, UPI</p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setFormData({ ...formData, paymentMethod: 'paytm' })}
+                      className={cn(
+                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
+                        formData.paymentMethod === 'paytm' 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                          : "border-slate-200"
+                      )}
+                    >
+                      <div className="h-10 w-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="h-6 w-6 text-sky-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Paytm</p>
+                        <p className="text-xs text-slate-500">Wallet, UPI, Bank</p>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setFormData({ ...formData, paymentMethod: 'pay_after_service' })}
+                      className={cn(
+                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
+                        formData.paymentMethod === 'pay_after_service' 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                          : "border-slate-200"
+                      )}
+                    >
+                      <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Pay After Service</p>
+                        <p className="text-xs text-slate-500">Pay at your doorstep</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  {user && user.walletBalance > 0 && (
+                    <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                          <Wallet className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Use Wallet Balance</p>
+                          <p className="text-xs text-slate-600">Available: ₹{user.walletBalance}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-emerald-700">Apply</span>
+                        <input 
+                          type="checkbox" 
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-8 bg-slate-900 text-white p-6 rounded-xl shadow-lg">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Amount to Pay</p>
+                        <h3 className="text-3xl font-bold">
+                          ₹{(() => {
+                            const service = services.find(s => s.id === formData.service);
+                            const total = service ? calculatePrice(service.basePrice) : 0;
+                            return useWallet ? Math.max(0, total - user.walletBalance) : total;
+                          })()}
+                        </h3>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Service</p>
+                        <p className="font-medium">{services.find(s => s.id === formData.service)?.title}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -470,16 +685,16 @@ export function Booking() {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || showVerification}
             className="w-32"
           >
             <ChevronLeft className="w-4 h-4 mr-2" /> Back
           </Button>
 
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <Button
               onClick={handleNext}
-              disabled={!isStepValid()}
+              disabled={!isStepValid() || user?.blocked || showVerification}
               className="w-32"
             >
               Next <ChevronRight className="w-4 h-4 ml-2" />
@@ -487,13 +702,84 @@ export function Booking() {
           ) : (
             <Button
               onClick={handleSubmit}
-              disabled={!isStepValid() || isSubmitting}
-              className="w-40 bg-green-600 hover:bg-green-700"
+              disabled={!isStepValid() || isSubmitting || user?.blocked || showVerification}
+              className="w-48 bg-emerald-600 hover:bg-emerald-700 h-11"
             >
-              {isSubmitting ? "Confirming..." : "Confirm Booking"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Confirm & Pay
+                </>
+              )}
             </Button>
           )}
         </div>
+
+        {/* Verification Modal */}
+        <AnimatePresence>
+          {showVerification && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8"
+              >
+                <div className="text-center mb-6">
+                  <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ShieldCheck className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900">Verify Your Phone</h3>
+                  <p className="text-slate-500 mt-2">We've sent a 6-digit code to <span className="font-semibold text-slate-900">{user.phone}</span></p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-center">Enter OTP</label>
+                    <Input 
+                      className="text-center text-2xl tracking-[0.5em] font-bold h-14"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
+                  <Button 
+                    className="w-full h-12 text-lg" 
+                    onClick={handleVerifyPhone}
+                    disabled={isVerifying || otp.length !== 6}
+                  >
+                    {isVerifying ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      "Verify & Continue"
+                    )}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full" 
+                    onClick={() => setShowVerification(false)}
+                    disabled={isVerifying}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                
+                <p className="text-center text-xs text-slate-400 mt-6">
+                  Didn't receive the code? <button className="text-primary font-semibold hover:underline">Resend OTP</button>
+                </p>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

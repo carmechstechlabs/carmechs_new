@@ -3,7 +3,7 @@ import { useData, ApiKeys } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, Loader2, Key } from "lucide-react";
+import { Save, Loader2, Key, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
 export function ApiKeysPage() {
@@ -115,6 +115,70 @@ export function ApiKeysPage() {
             </div>
             <p className="text-xs text-slate-500 mt-1">
               Required for Phone Number Verification and Firebase Auth.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Razorpay Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Key ID</label>
+              <Input 
+                type="password"
+                value={formData.razorpayKeyId || ""} 
+                onChange={(e) => setFormData({...formData, razorpayKeyId: e.target.value})}
+                placeholder="rzp_live_..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Key Secret</label>
+              <Input 
+                type="password"
+                value={formData.razorpayKeySecret || ""} 
+                onChange={(e) => setFormData({...formData, razorpayKeySecret: e.target.value})}
+                placeholder="Enter Secret Key"
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Used for processing payments via Razorpay.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Paytm Integration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Merchant ID (MID)</label>
+              <Input 
+                type="password"
+                value={formData.paytmMid || ""} 
+                onChange={(e) => setFormData({...formData, paytmMid: e.target.value})}
+                placeholder="Enter Paytm MID"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Merchant Key</label>
+              <Input 
+                type="password"
+                value={formData.paytmMerchantKey || ""} 
+                onChange={(e) => setFormData({...formData, paytmMerchantKey: e.target.value})}
+                placeholder="Enter Merchant Key"
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Used for processing payments via Paytm.
             </p>
           </CardContent>
         </Card>
