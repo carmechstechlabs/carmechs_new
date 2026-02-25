@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import nodemailer from "nodemailer";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { supabase, getInitialState, updateTable, updateConfig, addAppointment } from "./src/services/supabaseService";
 
 // Initial Data
 const initialServices = [
@@ -219,66 +220,104 @@ async function startServer() {
     }
   });
 
+  // Try to load state from Supabase, fallback to initial data if it fails or not configured
+  let currentState = { ...state };
+  try {
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const dbState = await getInitialState();
+      // Merge with initial state to ensure all keys exist
+      currentState = {
+        ...state,
+        ...dbState,
+        // Only override if data was actually found
+        services: dbState.services.length > 0 ? dbState.services : state.services,
+        carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : state.carMakes,
+        carModels: dbState.carModels.length > 0 ? dbState.carModels : state.carModels,
+        fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : state.fuelTypes,
+        settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : state.settings,
+        uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : state.uiSettings,
+        apiKeys: Object.keys(dbState.apiKeys).length > 0 ? dbState.apiKeys : state.apiKeys,
+        brands: dbState.brands.length > 0 ? dbState.brands : state.brands,
+        users: dbState.users.length > 0 ? dbState.users : state.users,
+        appointments: dbState.appointments.length > 0 ? dbState.appointments : state.appointments,
+      };
+      console.log("State loaded from Supabase");
+    }
+  } catch (error) {
+    console.error("Failed to load state from Supabase, using in-memory defaults:", error);
+  }
+
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
     
-    // Send initial state to the newly connected client
-    socket.emit("initial_state", state);
+    // Send current state to the newly connected client
+    socket.emit("initial_state", currentState);
 
     // Handle updates from clients
-    socket.on("update_services", (services) => {
-      state.services = services;
+    socket.on("update_services", async (services) => {
+      currentState.services = services;
       socket.broadcast.emit("services_updated", services);
+      await updateTable('services', services);
     });
 
-    socket.on("update_car_makes", (makes) => {
-      state.carMakes = makes;
+    socket.on("update_car_makes", async (makes) => {
+      currentState.carMakes = makes;
       socket.broadcast.emit("car_makes_updated", makes);
+      await updateTable('car_makes', makes);
     });
 
-    socket.on("update_car_models", (models) => {
-      state.carModels = models;
+    socket.on("update_car_models", async (models) => {
+      currentState.carModels = models;
       socket.broadcast.emit("car_models_updated", models);
+      await updateTable('car_models', models);
     });
 
-    socket.on("update_fuel_types", (fuels) => {
-      state.fuelTypes = fuels;
+    socket.on("update_fuel_types", async (fuels) => {
+      currentState.fuelTypes = fuels;
       socket.broadcast.emit("fuel_types_updated", fuels);
+      await updateTable('fuel_types', fuels);
     });
 
-    socket.on("update_settings", (settings) => {
-      state.settings = settings;
+    socket.on("update_settings", async (settings) => {
+      currentState.settings = settings;
       socket.broadcast.emit("settings_updated", settings);
+      await updateConfig('settings', settings);
     });
 
-    socket.on("update_appointments", (appointments) => {
-      state.appointments = appointments;
+    socket.on("update_appointments", async (appointments) => {
+      currentState.appointments = appointments;
       socket.broadcast.emit("appointments_updated", appointments);
+      await updateTable('appointments', appointments);
     });
 
-    socket.on("add_appointment", (appointment) => {
-      state.appointments = [appointment, ...state.appointments];
-      io.emit("appointments_updated", state.appointments); // Broadcast to all, including sender, or just broadcast and let sender update locally
+    socket.on("add_appointment", async (appointment) => {
+      currentState.appointments = [appointment, ...currentState.appointments];
+      io.emit("appointments_updated", currentState.appointments);
+      await addAppointment(appointment);
     });
 
-    socket.on("update_users", (users) => {
-      state.users = users;
+    socket.on("update_users", async (users) => {
+      currentState.users = users;
       socket.broadcast.emit("users_updated", users);
+      await updateTable('users', users);
     });
 
-    socket.on("update_ui_settings", (uiSettings) => {
-      state.uiSettings = uiSettings;
+    socket.on("update_ui_settings", async (uiSettings) => {
+      currentState.uiSettings = uiSettings;
       socket.broadcast.emit("ui_settings_updated", uiSettings);
+      await updateConfig('ui_settings', uiSettings);
     });
 
-    socket.on("update_api_keys", (apiKeys) => {
-      state.apiKeys = apiKeys;
+    socket.on("update_api_keys", async (apiKeys) => {
+      currentState.apiKeys = apiKeys;
       socket.broadcast.emit("api_keys_updated", apiKeys);
+      await updateConfig('api_keys', apiKeys);
     });
 
-    socket.on("update_brands", (brands) => {
-      state.brands = brands;
+    socket.on("update_brands", async (brands) => {
+      currentState.brands = brands;
       socket.broadcast.emit("brands_updated", brands);
+      await updateTable('brands', brands);
     });
 
     socket.on("disconnect", () => {
