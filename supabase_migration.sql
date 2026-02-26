@@ -15,32 +15,30 @@ CREATE TABLE IF NOT EXISTS services (
 
 -- Car Makes Table
 CREATE TABLE IF NOT EXISTS car_makes (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
+  name TEXT PRIMARY KEY,
   multiplier NUMERIC DEFAULT 1.0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Car Models Table
 CREATE TABLE IF NOT EXISTS car_models (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   make TEXT NOT NULL,
   multiplier NUMERIC DEFAULT 1.0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  PRIMARY KEY (name, make)
 );
 
 -- Fuel Types Table
 CREATE TABLE IF NOT EXISTS fuel_types (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
+  name TEXT PRIMARY KEY,
   multiplier NUMERIC DEFAULT 1.0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Appointments Table
 CREATE TABLE IF NOT EXISTS appointments (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id TEXT,
   name TEXT NOT NULL,
   email TEXT NOT NULL,

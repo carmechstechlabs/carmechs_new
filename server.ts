@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import nodemailer from "nodemailer";
@@ -223,25 +224,27 @@ async function startServer() {
   // Try to load state from Supabase, fallback to initial data if it fails or not configured
   let currentState = { ...state };
   try {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (supabase) {
       const dbState = await getInitialState();
-      // Merge with initial state to ensure all keys exist
-      currentState = {
-        ...state,
-        ...dbState,
-        // Only override if data was actually found
-        services: dbState.services.length > 0 ? dbState.services : state.services,
-        carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : state.carMakes,
-        carModels: dbState.carModels.length > 0 ? dbState.carModels : state.carModels,
-        fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : state.fuelTypes,
-        settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : state.settings,
-        uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : state.uiSettings,
-        apiKeys: Object.keys(dbState.apiKeys).length > 0 ? dbState.apiKeys : state.apiKeys,
-        brands: dbState.brands.length > 0 ? dbState.brands : state.brands,
-        users: dbState.users.length > 0 ? dbState.users : state.users,
-        appointments: dbState.appointments.length > 0 ? dbState.appointments : state.appointments,
-      };
-      console.log("State loaded from Supabase");
+      if (dbState) {
+        // Merge with initial state to ensure all keys exist
+        currentState = {
+          ...state,
+          ...dbState,
+          // Only override if data was actually found
+          services: dbState.services.length > 0 ? dbState.services : state.services,
+          carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : state.carMakes,
+          carModels: dbState.carModels.length > 0 ? dbState.carModels : state.carModels,
+          fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : state.fuelTypes,
+          settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : state.settings,
+          uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : state.uiSettings,
+          apiKeys: Object.keys(dbState.apiKeys).length > 0 ? dbState.apiKeys : state.apiKeys,
+          brands: dbState.brands.length > 0 ? dbState.brands : state.brands,
+          users: dbState.users.length > 0 ? dbState.users : state.users,
+          appointments: dbState.appointments.length > 0 ? dbState.appointments : state.appointments,
+        };
+        console.log("State loaded from Supabase");
+      }
     }
   } catch (error) {
     console.error("Failed to load state from Supabase, using in-memory defaults:", error);
@@ -340,18 +343,22 @@ async function startServer() {
     }
 
     try {
-      // Create a test account if no credentials are provided
-      // In a real app, you would use environment variables for SMTP credentials
+      const smtpHost = (process.env.SMTP_HOST || '').replace(/^["']|["']$/g, '');
+      const smtpUser = (process.env.SMTP_USER || '').replace(/^["']|["']$/g, '');
+      const smtpPass = (process.env.SMTP_PASS || '').replace(/^["']|["']$/g, '');
+      const smtpPort = (process.env.SMTP_PORT || '').replace(/^["']|["']$/g, '');
+      const smtpSecure = (process.env.SMTP_SECURE || '').replace(/^["']|["']$/g, '') === 'true';
+
       let transporter;
       
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      if (smtpHost && smtpUser && smtpPass) {
         transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || "587"),
-          secure: process.env.SMTP_SECURE === "true",
+          host: smtpHost,
+          port: parseInt(smtpPort || "587"),
+          secure: smtpSecure,
           auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: smtpUser,
+            pass: smtpPass,
           },
         });
       } else {

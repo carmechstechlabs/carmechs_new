@@ -1,16 +1,26 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wrench, Menu, X, User } from "lucide-react";
+import { Wrench, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useData } from "@/context/DataContext";
+import { toast } from "sonner";
 
 export function Header() {
-  const { settings, users } = useData();
+  const { settings, currentUser, logout } = useData();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Simulate logged in user
-  const user = users[0];
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/");
+      setIsOpen(false);
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -41,14 +51,17 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          {user ? (
-            <div className="flex items-center gap-4">
+          {currentUser ? (
+            <div className="flex items-center gap-2">
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user.name}</span>
+                  <span>{currentUser.displayName || currentUser.email?.split('@')[0] || "User"}</span>
                 </Button>
               </Link>
+              <Button variant="ghost" size="sm" onClick={handleLogout} title="Logout">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           ) : (
             <Link to="/login">
@@ -110,21 +123,32 @@ export function Header() {
               >
                 Contact
               </Link>
-              {user && (
-                <Link
-                  to="/profile"
-                  className="text-sm font-medium hover:text-primary"
-                  onClick={() => setIsOpen(false)}
-                >
-                  My Profile
-                </Link>
+              {currentUser && (
+                <>
+                  <Link
+                    to="/profile"
+                    className="text-sm font-medium hover:text-primary"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    My Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-left hover:text-primary flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </>
               )}
               <div className="flex flex-col gap-2 pt-4 border-t">
-                <Link to="/login" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full">
-                    Log in
-                  </Button>
-                </Link>
+                {!currentUser && (
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      Log in
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/book" onClick={() => setIsOpen(false)}>
                   <Button className="w-full">Book Service</Button>
                 </Link>

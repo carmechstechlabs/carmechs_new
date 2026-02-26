@@ -198,7 +198,7 @@ export function Services() {
         isOpen={!!selectedService} 
         onClose={() => setSelectedService(null)}
         calculatedPrice={selectedService && isVehicleSelected ? `₹${calculatePrice(selectedService.basePrice)}` : undefined}
-        isVehicleSelected={isVehicleSelected}
+        isVehicleSelected={!!isVehicleSelected}
         vehicleDetails={isVehicleSelected ? {
           make: selectedMake,
           model: selectedModel,

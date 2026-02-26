@@ -173,7 +173,7 @@ export function Services() {
               <Textarea 
                 placeholder="Features (comma separated)" 
                 value={Array.isArray(formData.features) ? formData.features.join(", ") : (formData.features || "")} 
-                onChange={e => setFormData({...formData, features: e.target.value})}
+                onChange={e => setFormData({...formData, features: e.target.value as any})}
               />
             </div>
             <div className="flex justify-end gap-2">

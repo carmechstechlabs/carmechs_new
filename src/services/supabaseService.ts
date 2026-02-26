@@ -1,59 +1,135 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/^["']|["']$/g, '');
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/^["']|["']$/g, '');
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
+export const supabase = (supabaseUrl && supabaseServiceKey) 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
+
+// Helper to map camelCase to snake_case for DB
+const toSnakeCase = (obj: any) => {
+  if (!obj) return obj;
+  const newObj: any = {};
+  for (const key in obj) {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    newObj[snakeKey] = obj[key];
+  }
+  return newObj;
+};
+
+// Helper to map snake_case to camelCase for App
+const toCamelCase = (obj: any) => {
+  if (!obj) return obj;
+  const newObj: any = {};
+  for (const key in obj) {
+    const camelKey = key.replace(/(_\w)/g, m => m[1].toUpperCase());
+    newObj[camelKey] = obj[key];
+  }
+  return newObj;
+};
 
 export async function getInitialState() {
-  const { data: services } = await supabase.from('services').select('*');
-  const { data: carMakes } = await supabase.from('car_makes').select('*');
-  const { data: carModels } = await supabase.from('car_models').select('*');
-  const { data: fuelTypes } = await supabase.from('fuel_types').select('*');
-  const { data: brands } = await supabase.from('brands').select('*');
-  const { data: users } = await supabase.from('users').select('*');
-  const { data: appointments } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
-  
-  const { data: config } = await supabase.from('site_config').select('*');
-  
-  const settings = config?.find(c => c.key === 'settings')?.value || {};
-  const uiSettings = config?.find(c => c.key === 'ui_settings')?.value || {};
-  const apiKeys = config?.find(c => c.key === 'api_keys')?.value || {};
+  if (!supabase) return null;
+  try {
+    const { data: services, error: sErr } = await supabase.from('services').select('*');
+    const { data: carMakes, error: cmErr } = await supabase.from('car_makes').select('*');
+    const { data: carModels, error: cmodErr } = await supabase.from('car_models').select('*');
+    const { data: fuelTypes, error: fErr } = await supabase.from('fuel_types').select('*');
+    const { data: brands, error: bErr } = await supabase.from('brands').select('*');
+    const { data: users, error: uErr } = await supabase.from('users').select('*');
+    const { data: appointments, error: aErr } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
+    const { data: config, error: cfgErr } = await supabase.from('site_config').select('*');
 
-  return {
-    services: services || [],
-    carMakes: carMakes || [],
-    carModels: carModels || [],
-    fuelTypes: fuelTypes || [],
-    settings,
-    appointments: appointments || [],
-    users: users || [],
-    uiSettings,
-    apiKeys,
-    brands: brands || [],
-  };
+    if (sErr || cmErr || cmodErr || fErr || bErr || uErr || aErr || cfgErr) {
+      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, uErr, aErr, cfgErr });
+    }
+
+    const settings = config?.find(c => c.key === 'settings')?.value || {};
+    const uiSettings = config?.find(c => c.key === 'ui_settings')?.value || {};
+    const apiKeys = config?.find(c => c.key === 'api_keys')?.value || {};
+
+    return {
+      services: (services || []).map(toCamelCase),
+      carMakes: (carMakes || []).map(toCamelCase),
+      carModels: (carModels || []).map(toCamelCase),
+      fuelTypes: (fuelTypes || []).map(toCamelCase),
+      settings,
+      appointments: (appointments || []).map(a => {
+        const camel = toCamelCase(a);
+        // Map service_title back to service for the frontend
+        return { ...camel, service: a.service_title };
+      }),
+      users: (users || []).map(toCamelCase),
+      uiSettings,
+      apiKeys,
+      brands: (brands || []).map(toCamelCase),
+    };
+  } catch (error) {
+    console.error('Unexpected error in getInitialState:', error);
+    return {
+      services: [],
+      carMakes: [],
+      carModels: [],
+      fuelTypes: [],
+      settings: {},
+      appointments: [],
+      users: [],
+      uiSettings: {},
+      apiKeys: {},
+      brands: [],
+    };
+  }
 }
 
 export async function updateTable(table: string, data: any[]) {
-  // For simplicity, we'll clear and re-insert for some tables, 
-  // or just upsert if they have IDs.
-  // This is a naive implementation for the demo.
-  if (table === 'services' || table === 'brands' || table === 'users') {
-    const { error } = await supabase.from(table).upsert(data);
+  if (!supabase) return;
+  try {
+    if (!data || data.length === 0) return;
+
+    const mappedData = data.map(item => {
+      const snake = toSnakeCase(item);
+      // Special handling for appointments to match SQL schema
+      if (table === 'appointments') {
+        return {
+          ...snake,
+          service_title: item.service,
+          service_id: item.serviceId || item.service || 'unknown'
+        };
+      }
+      return snake;
+    });
+
+    const { error } = await supabase.from(table).upsert(mappedData);
     if (error) console.error(`Error updating ${table}:`, error);
-  } else {
-    // For others, we might need more specific logic
-    const { error } = await supabase.from(table).upsert(data);
-    if (error) console.error(`Error updating ${table}:`, error);
+  } catch (error) {
+    console.error(`Unexpected error updating ${table}:`, error);
   }
 }
 
 export async function updateConfig(key: string, value: any) {
-  const { error } = await supabase.from('site_config').upsert({ key, value, updated_at: new Date() });
-  if (error) console.error(`Error updating config ${key}:`, error);
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.from('site_config').upsert({ key, value, updated_at: new Date() });
+    if (error) console.error(`Error updating config ${key}:`, error);
+  } catch (error) {
+    console.error(`Unexpected error updating config ${key}:`, error);
+  }
 }
 
 export async function addAppointment(appointment: any) {
-  const { error } = await supabase.from('appointments').insert(appointment);
-  if (error) console.error('Error adding appointment:', error);
+  if (!supabase) return;
+  try {
+    const snake = toSnakeCase(appointment);
+    const dbAppointment = {
+      ...snake,
+      service_title: appointment.service,
+      service_id: appointment.serviceId || appointment.service || 'unknown'
+    };
+    
+    const { error } = await supabase.from('appointments').insert(dbAppointment);
+    if (error) console.error('Error adding appointment:', error);
+  } catch (error) {
+    console.error('Unexpected error adding appointment:', error);
+  }
 }

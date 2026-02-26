@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase';
 
 // Types
 export interface Service {
@@ -144,6 +146,8 @@ interface DataContextType {
   adminRole: 'admin' | 'viewer' | null;
   loginAdmin: (role?: 'admin' | 'viewer') => void;
   logoutAdmin: () => void;
+  currentUser: FirebaseUser | null;
+  logout: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -218,6 +222,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [adminRole, setAdminRole] = useState<'admin' | 'viewer' | null>(() => {
     return (localStorage.getItem('adminRole') as 'admin' | 'viewer' | null) || null;
   });
+
+  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+
+  useEffect(() => {
+    if (apiKeys.firebaseApiKey) {
+      try {
+        const auth = getFirebaseAuth(apiKeys);
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          setCurrentUser(user);
+        });
+        return unsubscribe;
+      } catch (e) {
+        console.error("Firebase auth error:", e);
+      }
+    }
+  }, [apiKeys]);
+
+  const logout = async () => {
+    if (apiKeys.firebaseApiKey) {
+      try {
+        const auth = getFirebaseAuth(apiKeys);
+        await signOut(auth);
+      } catch (e) {
+        console.error("Logout error:", e);
+      }
+    }
+  };
 
   useEffect(() => {
     const newSocket = io(); // Connect to the same host
@@ -402,7 +433,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       isAdminLoggedIn,
       adminRole,
       loginAdmin,
-      logoutAdmin
+      logoutAdmin,
+      currentUser,
+      logout
     }}>
       {children}
     </DataContext.Provider>

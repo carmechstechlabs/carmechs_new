@@ -9,16 +9,18 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export function Profile() {
-  const { users, settings, processReferral, appointments, services } = useData();
-  // Simulate logged in user (using the first user for demo)
-  const user = users[0] || {
-    id: "demo",
-    name: "Demo User",
-    email: "demo@example.com",
-    phone: "1234567890",
+  const { users, settings, processReferral, appointments, services, currentUser } = useData();
+  
+  // Find the user data in our database that matches the logged-in Firebase user
+  const user = users.find(u => u.email === currentUser?.email) || {
+    id: currentUser?.uid || "demo",
+    name: currentUser?.displayName || currentUser?.email?.split('@')[0] || "User",
+    email: currentUser?.email || "guest@example.com",
+    phone: currentUser?.phoneNumber || "",
     walletBalance: 0,
-    referralCode: "DEMO123",
-    referralsCount: 0
+    referralCode: "N/A",
+    referralsCount: 0,
+    verified: !!currentUser?.emailVerified
   };
 
   const [referralInput, setReferralInput] = useState("");
