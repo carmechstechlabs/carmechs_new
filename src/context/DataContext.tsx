@@ -226,7 +226,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
-    if (apiKeys.firebaseApiKey) {
+    if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
       try {
         const auth = getFirebaseAuth(apiKeys);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -240,7 +240,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [apiKeys]);
 
   const logout = async () => {
-    if (apiKeys.firebaseApiKey) {
+    if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
       try {
         const auth = getFirebaseAuth(apiKeys);
         await signOut(auth);

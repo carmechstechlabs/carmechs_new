@@ -25,7 +25,7 @@ export function Signup() {
   });
 
   useEffect(() => {
-    if (apiKeys.firebaseApiKey && !window.recaptchaVerifier) {
+    if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId && !window.recaptchaVerifier) {
       try {
         const auth = getFirebaseAuth(apiKeys);
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
@@ -61,7 +61,7 @@ export function Signup() {
   };
 
   const handleGoogleSignup = async () => {
-    if (!apiKeys.firebaseApiKey) {
+    if (!apiKeys.firebaseApiKey || !apiKeys.firebaseProjectId) {
       toast.error("Firebase is not configured in Admin Panel.");
       return;
     }
@@ -80,7 +80,7 @@ export function Signup() {
   };
 
   const handlePhoneSignup = async () => {
-    if (!apiKeys.firebaseApiKey) {
+    if (!apiKeys.firebaseApiKey || !apiKeys.firebaseProjectId) {
       toast.error("Firebase is not configured in Admin Panel.");
       return;
     }
