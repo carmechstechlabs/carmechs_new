@@ -4,7 +4,32 @@ import { createServer as createViteServer } from "vite";
 import nodemailer from "nodemailer";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { supabase, getInitialState, updateTable, updateConfig, addAppointment } from "./src/services/supabaseService";
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 // Initial Data
 const initialServices = [
@@ -132,6 +157,7 @@ const initialUsers = [
     name: "Admin User", 
     email: "admin@carmechs.in", 
     phone: "1234567890", 
+    password: "admin",
     role: "admin", 
     verified: true,
     blocked: false,
@@ -144,6 +170,7 @@ const initialUsers = [
     name: "Test Viewer", 
     email: "viewer@carmechs.in", 
     phone: "0987654321", 
+    password: "viewer",
     role: "viewer", 
     verified: true,
     blocked: false,
@@ -329,10 +356,19 @@ async function startServer() {
   });
 
   app.use(express.json());
+  app.use("/uploads", express.static(uploadsDir));
 
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.post("/api/upload", upload.single("image"), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: imageUrl });
   });
 
   app.post("/api/send-confirmation", async (req, res) => {

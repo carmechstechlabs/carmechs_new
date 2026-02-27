@@ -3,8 +3,9 @@ import { useData, Brand } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Save, X, Upload } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function Brands() {
   const { brands, updateBrands, adminRole } = useData();
@@ -30,21 +31,6 @@ export function Brands() {
     if (confirm("Are you sure you want to delete this brand?")) {
       updateBrands(brands.filter(b => b.id !== id));
       toast.success("Brand deleted successfully");
-    }
-  };
-
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        toast.error("Image size should be less than 1MB");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imageUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -106,22 +92,11 @@ export function Brands() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Brand Logo</label>
-                <div className="flex items-center gap-4">
-                  {formData.imageUrl && (
-                    <div className="h-12 w-24 bg-white rounded border flex items-center justify-center overflow-hidden">
-                      <img src={formData.imageUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
-                    </div>
-                  )}
-                  <div className="relative flex-1">
-                    <Input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">Max size 1MB. Transparent PNG recommended.</p>
+                <ImageUpload 
+                  value={formData.imageUrl || ""}
+                  onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                />
+                <p className="text-xs text-slate-500 mt-2">Max size 5MB. Transparent PNG recommended.</p>
               </div>
             </div>
             <div className="flex justify-end gap-2">

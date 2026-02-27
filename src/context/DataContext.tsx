@@ -73,6 +73,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  password?: string; // Added for admin/staff login
   role: 'admin' | 'viewer' | 'user';
   verified: boolean;
   blocked: boolean;
@@ -88,6 +89,35 @@ export interface Feature {
   iconName: string;
 }
 
+export interface PageSection {
+  id: string;
+  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands';
+  title?: string;
+  subtitle?: string;
+  content?: string;
+  image?: string;
+  items?: any[];
+  config?: any;
+}
+
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  sections: PageSection[];
+  isPublished: boolean;
+  metaDescription?: string;
+}
+
+export interface AdminUiSettings {
+  loginTitle: string;
+  loginSubtitle: string;
+  loginBgColor: string;
+  loginAccentColor: string;
+  loginLogoUrl?: string;
+  loginTerminalId?: string;
+}
+
 export interface UiSettings {
   heroTitle: string;
   heroSubtitle: string;
@@ -101,6 +131,8 @@ export interface UiSettings {
   testimonialText: string;
   testimonialAuthor: string;
   testimonialRating: number;
+  adminLogin: AdminUiSettings;
+  pages: Page[];
 }
 
 export interface ApiKeys {
@@ -186,7 +218,38 @@ const initialUiSettings: UiSettings = {
   ],
   testimonialText: "Best service I've ever had! My car runs smoother than ever.",
   testimonialAuthor: "Alex Johnson",
-  testimonialRating: 4.9
+  testimonialRating: 4.9,
+  adminLogin: {
+    loginTitle: "Terminal 01",
+    loginSubtitle: "Security Clearance Required",
+    loginBgColor: "#050505",
+    loginAccentColor: "#fc9c0a",
+    loginTerminalId: "ID_REQ_001"
+  },
+  pages: [
+    {
+      id: "home",
+      slug: "home",
+      title: "Home",
+      isPublished: true,
+      sections: [
+        { id: "h1", type: "hero", title: "Expert Car Care At Your Doorstep", subtitle: "Experience hassle-free car service with free pickup and drop." },
+        { id: "f1", type: "features", title: "Why Choose Us" },
+        { id: "s1", type: "services", title: "Our Services" },
+        { id: "b1", type: "brands", title: "Brands We Service" }
+      ]
+    },
+    {
+      id: "about",
+      slug: "about",
+      title: "About Us",
+      isPublished: true,
+      sections: [
+        { id: "a1", type: "hero", title: "About CarMechs", subtitle: "Your trusted partner for car maintenance." },
+        { id: "a2", type: "content", title: "Our Story", content: "We started with a simple mission: to make car care easy." }
+      ]
+    }
+  ]
 };
 const initialApiKeys: ApiKeys = {
   googleClientId: "",
@@ -262,7 +325,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setSettings(state.settings);
       setAppointments(state.appointments);
       setUsers(state.users);
-      setUiSettings(state.uiSettings);
+      setUiSettings({
+        ...initialUiSettings,
+        ...state.uiSettings,
+        pages: state.uiSettings?.pages || initialUiSettings.pages,
+        adminLogin: {
+          ...initialUiSettings.adminLogin,
+          ...(state.uiSettings?.adminLogin || {})
+        }
+      });
       setApiKeys(state.apiKeys);
       setBrands(state.brands || []);
     });

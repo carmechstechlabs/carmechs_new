@@ -29,7 +29,7 @@ export function AdminLayout() {
 
   useEffect(() => {
     if (!isAdminLoggedIn) {
-      navigate("/admin/login");
+      navigate("/admin");
     }
   }, [isAdminLoggedIn, navigate]);
 
@@ -68,43 +68,48 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "bg-slate-900 text-white w-64 fixed h-full transition-all duration-300 z-30 flex flex-col",
+          "bg-[#1e1b18] text-white w-64 fixed h-full transition-all duration-300 z-30 flex flex-col border-r border-white/5",
           isSidebarOpen ? "translate-x-0" : "-translate-x-64"
         )}
       >
-        <div className="p-6 flex items-center justify-between shrink-0">
-          <span className="text-xl font-bold">Admin Panel</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 hover:bg-slate-800 rounded">
+        <div className="p-6 flex items-center justify-between shrink-0 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-xl font-black tracking-tight uppercase">Admin</span>
+          </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-1 hover:bg-white/10 rounded">
             <X className="h-6 w-6" />
           </button>
         </div>
         
-        <nav className="px-4 space-y-1 mt-4 flex-1 overflow-y-auto pb-24 scrollbar-thin scrollbar-thumb-slate-700">
+        <nav className="px-4 space-y-1 mt-6 flex-1 overflow-y-auto pb-24 scrollbar-thin scrollbar-thumb-white/10">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-sm",
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium",
                 location.pathname === item.path 
-                  ? "bg-primary text-white" 
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                  : "text-slate-400 hover:bg-white/5 hover:text-white"
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <item.icon className={cn("h-4 w-4 shrink-0", location.pathname === item.path ? "text-white" : "text-slate-500")} />
               <span>{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 shrink-0">
+        <div className="p-4 border-t border-white/5 shrink-0 bg-[#1e1b18]">
           <button 
             onClick={() => {
               logoutAdmin();
               toast.success("Logged out successfully");
-              navigate("/admin/login");
+              navigate("/admin");
             }}
-            className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white w-full transition-colors text-sm"
+            className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-400 hover:bg-red-400/10 w-full transition-all rounded-xl text-sm font-bold"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -114,19 +119,27 @@ export function AdminLayout() {
 
       {/* Main Content */}
       <div className={cn(
-        "flex-1 transition-all duration-300 min-h-screen flex flex-col",
+        "flex-1 transition-all duration-300 min-h-screen flex flex-col bg-[#fdfcfb]",
         isSidebarOpen ? "lg:ml-64" : "ml-0"
       )}>
-        <header className="bg-white shadow-sm h-16 flex items-center px-6 justify-between sticky top-0 z-10 shrink-0">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg">
-            <Menu className="h-6 w-6 text-slate-600" />
-          </button>
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center px-6 justify-between sticky top-0 z-10 shrink-0">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <Menu className="h-6 w-6 text-slate-600" />
+            </button>
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest hidden sm:block">
+              {navItems.find(item => item.path === location.pathname)?.label || "Overview"}
+            </h2>
+          </div>
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-medium text-slate-900 capitalize">{adminRole === 'admin' ? 'Administrator' : 'Viewer'}</span>
-              <span className="text-xs text-slate-500">Online</span>
+              <span className="text-sm font-bold text-[#3b2c1f] capitalize">{adminRole === 'admin' ? 'Administrator' : 'Viewer'}</span>
+              <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter flex items-center gap-1">
+                <span className="h-1 w-1 bg-emerald-500 rounded-full animate-pulse" />
+                System Active
+              </span>
             </div>
-            <div className="h-9 w-9 bg-primary rounded-full flex items-center justify-center text-white font-bold uppercase shadow-sm">
+            <div className="h-10 w-10 bg-[#1e1b18] rounded-xl flex items-center justify-center text-primary font-black uppercase shadow-inner border border-white/5">
               {adminRole ? adminRole[0] : 'U'}
             </div>
           </div>

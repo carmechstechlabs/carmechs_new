@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "@/components/layout/Layout";
 import { Home } from "@/pages/Home";
@@ -9,8 +9,9 @@ import { Contact } from "@/pages/Contact";
 import { About } from "@/pages/About";
 import { FAQ } from "@/pages/FAQ";
 import { Profile } from "@/pages/Profile";
+import { DynamicPage } from "@/pages/DynamicPage";
 import { NotFound } from "@/pages/NotFound";
-import { DataProvider } from "@/context/DataContext";
+import { DataProvider, useData } from "@/context/DataContext";
 
 // Admin
 import { AdminLogin } from "@/pages/admin/AdminLogin";
@@ -26,40 +27,54 @@ import { UiSettingsPage as AdminUiSettings } from "@/pages/admin/UiSettings";
 import { ApiKeysPage as AdminApiKeys } from "@/pages/admin/ApiKeys";
 import { Brands as AdminBrands } from "@/pages/admin/Brands";
 
+function AppRoutes() {
+  const { isAdminLoggedIn } = useData();
+
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Layout />}>
+        <Route index element={<DynamicPage />} />
+        <Route path="p/:slug" element={<DynamicPage />} />
+        <Route path="services" element={<Services />} />
+        <Route path="book" element={<Booking />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="about" element={<About />} />
+        <Route path="faq" element={<FAQ />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+      <Route path="/login" element={<Login />} />
+
+      {/* Admin Routes */}
+      <Route path="/admin">
+        <Route 
+          index 
+          element={isAdminLoggedIn ? <Navigate to="dashboard" replace /> : <AdminLogin />} 
+        />
+        <Route element={<AdminLayout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="appointments" element={<AdminAppointments />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="services" element={<AdminServices />} />
+          <Route path="brands" element={<AdminBrands />} />
+          <Route path="cars" element={<AdminCars />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="ui-settings" element={<AdminUiSettings />} />
+          <Route path="api-keys" element={<AdminApiKeys />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <DataProvider>
       <BrowserRouter>
         <Toaster position="top-center" richColors />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="services" element={<Services />} />
-            <Route path="book" element={<Booking />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="about" element={<About />} />
-            <Route path="faq" element={<FAQ />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="appointments" element={<AdminAppointments />} />
-            <Route path="customers" element={<AdminCustomers />} />
-            <Route path="services" element={<AdminServices />} />
-            <Route path="brands" element={<AdminBrands />} />
-            <Route path="cars" element={<AdminCars />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="ui-settings" element={<AdminUiSettings />} />
-            <Route path="api-keys" element={<AdminApiKeys />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </DataProvider>
   );

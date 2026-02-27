@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,10 +10,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 
 const steps = [
-  { id: 1, title: "Select Car", icon: Car },
-  { id: 2, title: "Choose Service", icon: Wrench },
+  { id: 1, title: "Vehicle", icon: Car },
+  { id: 2, title: "Service", icon: Wrench },
   { id: 3, title: "Schedule", icon: CalendarIcon },
-  { id: 4, title: "Payment", icon: CreditCard },
+  { id: 4, title: "Confirm", icon: CreditCard },
 ];
 
 export function Booking() {
@@ -222,70 +222,128 @@ export function Booking() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-4">Book a Service</h1>
-          <p className="text-slate-600">Complete the steps below to schedule your car service.</p>
+    <div className="min-h-screen bg-[#fdfcfb] pb-32">
+      {/* Hero Header */}
+      <div className="bg-slate-900 pt-40 pb-24 relative overflow-hidden mb-12">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-slate-900 to-transparent z-10" />
+        
+        <div className="container mx-auto px-4 relative z-20">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm mb-6"
+            >
+              <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Booking Terminal</span>
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none mb-6"
+            >
+              Secure Your <br /> Slot
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-lg text-white/40 font-medium max-w-xl mx-auto"
+            >
+              Configure your service parameters and schedule a precision maintenance session in under 60 seconds.
+            </motion.p>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-4xl relative z-20">
+        {/* Progress Steps */}
+        <div className="mb-16">
+          <div className="flex justify-between relative">
+            <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-200 -z-10 -translate-y-1/2 rounded-full"></div>
+            <div 
+              className="absolute top-1/2 left-0 h-[2px] bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+            ></div>
+            
+            {steps.map((step) => (
+              <div key={step.id} className="flex flex-col items-center">
+                <motion.div 
+                  initial={false}
+                  animate={{
+                    scale: currentStep >= step.id ? 1.1 : 1,
+                    backgroundColor: currentStep >= step.id ? "var(--color-primary)" : "#fff"
+                  }}
+                  className={cn(
+                    "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 shadow-xl",
+                    currentStep >= step.id 
+                      ? "border-primary text-white shadow-primary/20" 
+                      : "border-slate-200 text-slate-400 bg-white"
+                  )}
+                >
+                  {currentStep > step.id ? <Check className="w-6 h-6 stroke-[3]" /> : <step.icon className="w-6 h-6" />}
+                </motion.div>
+                <span className={cn(
+                  "text-[10px] font-black uppercase tracking-widest mt-4 transition-colors duration-300",
+                  currentStep >= step.id ? "text-slate-900" : "text-slate-400"
+                )}>
+                  {step.title}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Progress Steps */}
+        {/* Alerts */}
         {user?.blocked && (
-          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700">
-            <ShieldAlert className="h-6 w-6" />
-            <div>
-              <p className="font-bold">Account Blocked</p>
-              <p className="text-sm">Your account has been restricted from making new bookings. Please contact our support team for assistance.</p>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8 p-6 bg-red-50 border border-red-100 rounded-[2rem] flex items-center gap-4 text-red-700 shadow-xl shadow-red-900/5"
+          >
+            <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+              <ShieldAlert className="h-6 w-6" />
             </div>
-          </div>
+            <div>
+              <p className="font-black uppercase tracking-tight text-lg">Account Restricted</p>
+              <p className="text-sm font-medium opacity-80">Your access to the booking terminal has been limited. Contact support for resolution.</p>
+            </div>
+          </motion.div>
         )}
 
         {!user?.verified && !user?.blocked && (
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-amber-700">
-            <div className="flex items-center gap-3">
-              <ShieldAlert className="h-6 w-6" />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8 p-6 bg-amber-50 border border-amber-100 rounded-[2rem] flex items-center justify-between gap-4 text-amber-700 shadow-xl shadow-amber-900/5"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+                <ShieldAlert className="h-6 w-6" />
+              </div>
               <div>
-                <p className="font-bold">Phone Verification Required</p>
-                <p className="text-sm">You must verify your phone number before you can confirm your booking.</p>
+                <p className="font-black uppercase tracking-tight text-lg">Identity Verification</p>
+                <p className="text-sm font-medium opacity-80">A verified phone number is required to finalize your transmission.</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => setShowVerification(true)}>
+            <Button 
+              variant="outline" 
+              className="h-12 px-6 border-amber-200 text-amber-700 hover:bg-amber-100 rounded-xl font-black uppercase tracking-widest text-[10px]" 
+              onClick={() => setShowVerification(true)}
+            >
               Verify Now
             </Button>
-          </div>
+          </motion.div>
         )}
 
-        <div className="flex justify-between mb-12 relative">
-          <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -z-10 -translate-y-1/2 rounded-full"></div>
-          <div 
-            className="absolute top-1/2 left-0 h-1 bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-300"
-            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-          ></div>
-          
-          {steps.map((step) => (
-            <div key={step.id} className="flex flex-col items-center bg-slate-50 px-2">
-              <div 
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-300 mb-2",
-                  currentStep >= step.id 
-                    ? "bg-primary border-primary text-white" 
-                    : "bg-white border-slate-300 text-slate-400"
-                )}
-              >
-                {currentStep > step.id ? <Check className="w-6 h-6" /> : <step.icon className="w-5 h-5" />}
-              </div>
-              <span className={cn(
-                "text-sm font-medium transition-colors duration-300",
-                currentStep >= step.id ? "text-slate-900" : "text-slate-400"
-              )}>
-                {step.title}
-              </span>
-            </div>
-          ))}
-        </div>
-
         {/* Form Content */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 min-h-[400px]">
+        <div className="bg-white rounded-[3.5rem] shadow-2xl shadow-black/5 border border-slate-100 p-10 md:p-16 min-h-[500px] relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 -z-10" />
+          
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
               <motion.div
@@ -293,94 +351,91 @@ export function Booking() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-10"
               >
-                <h2 className="text-xl font-semibold mb-6">Vehicle Details</h2>
+                <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Vehicle Config</h2>
+                  <p className="text-slate-400 font-medium">Specify your machine's parameters for accurate pricing.</p>
+                </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-8">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Select Make</label>
-                    <div className="relative mb-3">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-3 block">1. Select Manufacturer</label>
+                    <div className="relative mb-4">
+                      <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                       <Input 
-                        placeholder="Search car make..." 
+                        placeholder="Search manufacturer..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9"
+                        className="h-16 pl-14 rounded-2xl border-slate-100 bg-slate-50 focus:ring-primary/20 font-bold"
                       />
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2 custom-scrollbar">
                       {filteredMakes.map((make) => (
                         <button
                           key={make.name}
                           onClick={() => setFormData({ ...formData, make: make.name })}
                           className={cn(
-                            "p-3 rounded-lg border text-sm font-medium transition-all hover:border-primary",
+                            "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
                             formData.make === make.name 
-                              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-                              : "border-slate-200 text-slate-600"
+                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                           )}
                         >
                           {make.name}
                         </button>
                       ))}
-                      {filteredMakes.length === 0 && (
-                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
-                          No car makes found matching "{searchTerm}"
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Select Model</label>
+                  <motion.div
+                    animate={{ opacity: formData.make ? 1 : 0.5 }}
+                  >
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-3 block">2. Select Model</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {carModels.filter(m => m.make === formData.make).map((model) => (
                         <button
                           key={model.name}
                           onClick={() => setFormData({ ...formData, model: model.name })}
                           className={cn(
-                            "p-3 rounded-lg border text-sm font-medium transition-all hover:border-primary",
+                            "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
                             formData.model === model.name 
-                              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-                              : "border-slate-200 text-slate-600"
+                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                           )}
                         >
                           {model.name}
                         </button>
                       ))}
-                      {formData.make && carModels.filter(m => m.make === formData.make).length === 0 && (
-                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
-                          No models found for {formData.make}
-                        </div>
-                      )}
                       {!formData.make && (
-                        <div className="col-span-full text-center py-4 text-slate-500 text-sm">
-                          Please select a make first
+                        <div className="col-span-full text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                          Awaiting Manufacturer Selection
                         </div>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Fuel Type</label>
+                  <motion.div
+                    animate={{ opacity: formData.model ? 1 : 0.5 }}
+                  >
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-3 block">3. Propulsion System</label>
                     <div className="flex gap-3 flex-wrap">
                       {fuelTypes.map((fuel) => (
                         <button
                           key={fuel.name}
                           onClick={() => setFormData({ ...formData, fuel: fuel.name })}
                           className={cn(
-                            "px-4 py-2 rounded-full border text-sm font-medium transition-all hover:border-primary",
+                            "px-6 h-12 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all",
                             formData.fuel === fuel.name 
-                              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-                              : "border-slate-200 text-slate-600"
+                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                           )}
                         >
                           {fuel.name}
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             )}
@@ -391,57 +446,78 @@ export function Booking() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                className="space-y-10"
               >
-                <h2 className="text-xl font-semibold mb-6">Select Service</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Selection</h2>
+                  <p className="text-slate-400 font-medium">Choose the maintenance protocol for your vehicle.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
                   {services.map((service) => (
-                    <div
+                    <motion.div
                       key={service.id}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={() => setFormData({ ...formData, service: service.id })}
                       className={cn(
-                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex justify-between items-center group cursor-pointer",
+                        "p-8 rounded-3xl border text-left transition-all flex justify-between items-center group cursor-pointer relative overflow-hidden",
                         formData.service === service.id 
-                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                          : "border-slate-200"
+                          ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
+                          : "border-slate-100 bg-slate-50 hover:border-primary/30"
                       )}
                     >
-                      <div>
-                        <h3 className={cn(
-                          "font-semibold mb-1 group-hover:text-primary transition-colors",
-                          formData.service === service.id ? "text-primary" : "text-slate-900"
+                      <div className="flex items-center gap-6">
+                        <div className={cn(
+                          "h-16 w-16 rounded-2xl flex items-center justify-center transition-colors",
+                          formData.service === service.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
                         )}>
-                          {service.title}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500 text-sm">₹{calculatePrice(service.basePrice)}</span>
-                          <Popover>
-                            <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-400 hover:text-primary">
-                                <Info className="h-3 w-3" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-60">
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm border-b pb-1 mb-2">Price Breakdown</h4>
-                                {getPriceBreakdown(service.basePrice).map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-xs">
-                                    <span className="text-slate-600">{item.label}</span>
-                                    <span className="font-medium">{item.value}</span>
+                          <Zap className="h-8 w-8" />
+                        </div>
+                        <div>
+                          <h3 className={cn(
+                            "text-2xl font-black uppercase tracking-tight transition-colors",
+                            formData.service === service.id ? "text-primary" : "text-slate-900"
+                          )}>
+                            {service.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-slate-500 font-bold">₹{calculatePrice(service.basePrice)}</span>
+                            <Popover>
+                              <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-primary rounded-full">
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-72 p-6 rounded-[2rem] shadow-2xl border-slate-100">
+                                <div className="space-y-4">
+                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-3">Cost Breakdown</h4>
+                                  {getPriceBreakdown(service.basePrice).map((item, idx) => (
+                                    <div key={idx} className="flex justify-between text-sm font-bold">
+                                      <span className="text-slate-500">{item.label}</span>
+                                      <span className="text-slate-900">{item.value}</span>
+                                    </div>
+                                  ))}
+                                  <div className="flex justify-between text-lg font-black uppercase tracking-tight border-t border-slate-100 pt-4 mt-2">
+                                    <span className="text-slate-900">Total</span>
+                                    <span className="text-primary">₹{calculatePrice(service.basePrice)}</span>
                                   </div>
-                                ))}
-                                <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2">
-                                  <span>Total</span>
-                                  <span>₹{calculatePrice(service.basePrice)}</span>
                                 </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         </div>
                       </div>
                       {formData.service === service.id && (
-                        <CheckCircle2 className="text-primary h-5 w-5" />
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white shadow-lg shadow-primary/20"
+                        >
+                          <Check className="h-6 w-6 stroke-[3]" />
+                        </motion.div>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </motion.div>
@@ -453,62 +529,72 @@ export function Booking() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                className="space-y-10"
               >
-                <h2 className="text-xl font-semibold mb-6">Schedule Appointment</h2>
+                <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Scheduling</h2>
+                  <p className="text-slate-400 font-medium">Define your temporal coordinates and contact details.</p>
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Name *</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Full Name</label>
                       <Input 
-                        placeholder="Your full name"
+                        placeholder="Operator Name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Phone *</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone Uplink</label>
                       <Input 
-                        placeholder="Your phone number"
+                        placeholder="+91 XXXXX XXXXX"
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Email (Optional)</label>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
                       <Input 
-                        placeholder="Your email address"
+                        placeholder="operator@domain.com"
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Select Date *</label>
-                      <input 
-                        type="date" 
-                        className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        value={formData.date}
-                      />
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Target Date</label>
+                      <div className="relative">
+                        <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <input 
+                          type="date" 
+                          className="w-full h-16 pl-14 pr-6 rounded-2xl border border-slate-100 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
+                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          value={formData.date}
+                        />
+                      </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Select Time Slot *</label>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Time Slot</label>
+                      <div className="grid grid-cols-2 gap-3">
                         {["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"].map((time) => (
                           <button
                             key={time}
                             onClick={() => setFormData({ ...formData, time })}
                             className={cn(
-                              "p-2 rounded-lg border text-sm font-medium transition-all hover:border-primary",
+                              "h-14 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all",
                               formData.time === time 
-                                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-                                : "border-slate-200 text-slate-600"
+                                ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
+                                : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                             )}
                           >
                             {time}
@@ -519,158 +605,140 @@ export function Booking() {
                   </div>
                 </div>
 
-                <div className="mt-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
-                  <h3 className="font-semibold mb-4">Booking Summary</h3>
-                  <div className="space-y-2 text-sm text-slate-600">
-                    <div className="flex justify-between">
-                      <span>Car:</span>
-                      <span className="font-medium text-slate-900">{formData.make} {formData.model} ({formData.fuel})</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Service:</span>
-                      <span className="font-medium text-slate-900">
-                        {services.find(s => s.id === formData.service)?.title}
-                      </span>
-                    </div>
-                    
-                    {user && user.walletBalance > 0 && (
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 mt-4">
-                        <div className="flex items-center gap-3">
-                          <Wallet className="h-5 w-5 text-primary" />
-                          <div>
-                            <p className="text-xs font-semibold uppercase text-slate-400">Pay with Wallet</p>
-                            <p className="text-sm font-bold text-slate-900">Balance: ₹{user.walletBalance}</p>
-                          </div>
-                        </div>
-                        <input 
-                          type="checkbox" 
-                          checked={useWallet}
-                          onChange={(e) => setUseWallet(e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
-                        />
+                <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-6">Configuration Summary</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-xs font-bold uppercase">Machine</span>
+                        <span className="font-black uppercase tracking-tight">{formData.make} {formData.model}</span>
                       </div>
-                    )}
-
-                    <div className="flex justify-between pt-2 border-t border-slate-200 mt-2">
-                      <span>{useWallet ? "Paid via Wallet" : "Estimated Total"}:</span>
-                      <span className={cn(
-                        "font-bold text-lg",
-                        useWallet ? "text-emerald-600" : "text-primary"
-                      )}>
-                        ₹{(() => {
-                          const service = services.find(s => s.id === formData.service);
-                          return service ? calculatePrice(service.basePrice) : 0;
-                        })()}
-                      </span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-xs font-bold uppercase">Protocol</span>
+                        <span className="font-black uppercase tracking-tight">{services.find(s => s.id === formData.service)?.title}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-xs font-bold uppercase">Wallet Credit</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-black uppercase tracking-tight">₹{user?.walletBalance || 0}</span>
+                          {user && user.walletBalance > 0 && (
+                            <input 
+                              type="checkbox" 
+                              checked={useWallet}
+                              onChange={(e) => setUseWallet(e.target.checked)}
+                              className="h-5 w-5 rounded-lg border-white/20 bg-white/10 text-primary focus:ring-primary"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-4 border-t border-white/10">
+                        <span className="text-white/40 text-xs font-bold uppercase">Estimated Total</span>
+                        <span className="text-3xl font-black text-primary">
+                          ₹{(() => {
+                            const service = services.find(s => s.id === formData.service);
+                            return service ? calculatePrice(service.basePrice) : 0;
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
+
             {currentStep === 4 && (
               <motion.div
                 key="step4"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
+                className="space-y-10"
               >
-                <h2 className="text-xl font-semibold mb-6">Select Payment Method</h2>
+                <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Finalization</h2>
+                  <p className="text-slate-400 font-medium">Select your preferred transaction gateway.</p>
+                </div>
                 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {[
+                    { id: 'razorpay', title: 'Razorpay', desc: 'Cards, Netbanking, UPI', icon: CreditCard, color: 'blue' },
+                    { id: 'paytm', title: 'Paytm', desc: 'Wallet, UPI, Bank', icon: CreditCard, color: 'sky' },
+                    { id: 'pay_after_service', title: 'Pay After Service', desc: 'Doorstep Settlement', icon: Clock, color: 'slate' }
+                  ].map((method) => (
                     <button
-                      onClick={() => setFormData({ ...formData, paymentMethod: 'razorpay' })}
+                      key={method.id}
+                      onClick={() => setFormData({ ...formData, paymentMethod: method.id as any })}
                       className={cn(
-                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
-                        formData.paymentMethod === 'razorpay' 
-                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                          : "border-slate-200"
+                        "p-8 rounded-3xl border text-left transition-all flex items-center gap-6 group",
+                        formData.paymentMethod === method.id 
+                          ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
+                          : "border-slate-100 bg-slate-50 hover:border-primary/30"
                       )}
                     >
-                      <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <CreditCard className="h-6 w-6 text-blue-600" />
+                      <div className={cn(
+                        "h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+                        formData.paymentMethod === method.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
+                      )}>
+                        <method.icon className="h-8 w-8" />
                       </div>
                       <div>
-                        <p className="font-semibold">Razorpay</p>
-                        <p className="text-xs text-slate-500">Cards, Netbanking, UPI</p>
+                        <p className={cn(
+                          "text-2xl font-black uppercase tracking-tight",
+                          formData.paymentMethod === method.id ? "text-primary" : "text-slate-900"
+                        )}>{method.title}</p>
+                        <p className="text-sm font-medium text-slate-500">{method.desc}</p>
                       </div>
-                    </button>
-
-                    <button
-                      onClick={() => setFormData({ ...formData, paymentMethod: 'paytm' })}
-                      className={cn(
-                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
-                        formData.paymentMethod === 'paytm' 
-                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                          : "border-slate-200"
-                      )}
-                    >
-                      <div className="h-10 w-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                        <CreditCard className="h-6 w-6 text-sky-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Paytm</p>
-                        <p className="text-xs text-slate-500">Wallet, UPI, Bank</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setFormData({ ...formData, paymentMethod: 'pay_after_service' })}
-                      className={cn(
-                        "p-4 rounded-xl border text-left transition-all hover:border-primary flex items-center gap-4",
-                        formData.paymentMethod === 'pay_after_service' 
-                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                          : "border-slate-200"
-                      )}
-                    >
-                      <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                        <Clock className="h-6 w-6 text-slate-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Pay After Service</p>
-                        <p className="text-xs text-slate-500">Pay at your doorstep</p>
-                      </div>
-                    </button>
-                  </div>
-
-                  {user && user.walletBalance > 0 && (
-                    <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                          <Wallet className="h-6 w-6 text-emerald-600" />
+                      {formData.paymentMethod === method.id && (
+                        <div className="ml-auto h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white">
+                          <Check className="h-5 w-5 stroke-[3]" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">Use Wallet Balance</p>
-                          <p className="text-xs text-slate-600">Available: ₹{user.walletBalance}</p>
-                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {user && user.walletBalance > 0 && (
+                  <div className="p-8 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="h-14 w-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-900/5">
+                        <Wallet className="h-7 w-7" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-emerald-700">Apply</span>
-                        <input 
-                          type="checkbox" 
-                          checked={useWallet}
-                          onChange={(e) => setUseWallet(e.target.checked)}
-                          className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                        />
+                      <div>
+                        <p className="text-lg font-black uppercase tracking-tight text-slate-900">Apply Wallet Credit</p>
+                        <p className="text-sm font-medium text-emerald-700">Available Balance: ₹{user.walletBalance}</p>
                       </div>
                     </div>
-                  )}
+                    <input 
+                      type="checkbox" 
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="h-8 w-8 rounded-xl border-emerald-200 bg-white text-emerald-600 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
 
-                  <div className="mt-8 bg-slate-900 text-white p-6 rounded-xl shadow-lg">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Amount to Pay</p>
-                        <h3 className="text-3xl font-bold">
-                          ₹{(() => {
-                            const service = services.find(s => s.id === formData.service);
-                            const total = service ? calculatePrice(service.basePrice) : 0;
-                            return useWallet ? Math.max(0, total - user.walletBalance) : total;
-                          })()}
-                        </h3>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-slate-400 text-xs uppercase font-bold tracking-wider">Service</p>
-                        <p className="font-medium">{services.find(s => s.id === formData.service)?.title}</p>
+                <div className="p-10 bg-slate-900 rounded-[3rem] text-white shadow-2xl shadow-black/20 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
+                    <div>
+                      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Settlement Amount</p>
+                      <h3 className="text-6xl font-black text-primary tracking-tighter">
+                        ₹{(() => {
+                          const service = services.find(s => s.id === formData.service);
+                          const total = service ? calculatePrice(service.basePrice) : 0;
+                          return useWallet ? Math.max(0, total - user.walletBalance) : total;
+                        })()}
+                      </h3>
+                    </div>
+                    <div className="text-center md:text-right">
+                      <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Active Protocol</p>
+                      <p className="text-xl font-black uppercase tracking-tight">{services.find(s => s.id === formData.service)?.title}</p>
+                      <div className="flex items-center gap-2 mt-2 justify-center md:justify-end text-white/60 text-xs font-bold">
+                        <Sparkles className="h-3 w-3 text-primary" />
+                        {formData.make} {formData.model}
                       </div>
                     </div>
                   </div>
@@ -681,39 +749,38 @@ export function Booking() {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-between mt-12">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 1 || showVerification}
-            className="w-32"
+            className="h-16 px-10 rounded-2xl border-slate-200 text-slate-600 font-black uppercase tracking-widest text-xs hover:bg-slate-50"
           >
-            <ChevronLeft className="w-4 h-4 mr-2" /> Back
+            <ChevronLeft className="w-5 h-5 mr-3" /> Back
           </Button>
 
           {currentStep < 4 ? (
             <Button
               onClick={handleNext}
               disabled={!isStepValid() || user?.blocked || showVerification}
-              className="w-32"
+              className="h-16 px-12 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
             >
-              Next <ChevronRight className="w-4 h-4 ml-2" />
+              Next Step <ChevronRight className="w-5 h-5 ml-3" />
             </Button>
           ) : (
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid() || isSubmitting || user?.blocked || showVerification}
-              className="w-48 bg-emerald-600 hover:bg-emerald-700 h-11"
+              className="h-16 px-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-900/20 group"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                   Processing...
                 </>
               ) : (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Confirm & Pay
+                  Confirm Booking <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
@@ -723,26 +790,27 @@ export function Booking() {
         {/* Verification Modal */}
         <AnimatePresence>
           {showVerification && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8"
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white rounded-[3.5rem] shadow-2xl max-w-md w-full p-12 text-center border border-slate-100"
               >
-                <div className="text-center mb-6">
-                  <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ShieldCheck className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900">Verify Your Phone</h3>
-                  <p className="text-slate-500 mt-2">We've sent a 6-digit code to <span className="font-semibold text-slate-900">{user.phone}</span></p>
+                <div className="h-24 w-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                  <ShieldCheck className="h-12 w-12 text-primary" />
                 </div>
+                <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">Verification</h3>
+                <p className="text-slate-500 font-medium mb-10 leading-relaxed">
+                  We've transmitted a 6-digit access code to <br />
+                  <span className="font-black text-slate-900 tracking-tight">{user.phone}</span>
+                </p>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-center">Enter OTP</label>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Access Code</label>
                     <Input 
-                      className="text-center text-2xl tracking-[0.5em] font-bold h-14"
+                      className="text-center text-4xl tracking-[0.5em] font-black h-20 rounded-2xl border-slate-100 bg-slate-50 focus:ring-primary/20"
                       maxLength={6}
                       placeholder="000000"
                       value={otp}
@@ -750,31 +818,31 @@ export function Booking() {
                     />
                   </div>
                   <Button 
-                    className="w-full h-12 text-lg" 
+                    className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20" 
                     onClick={handleVerifyPhone}
                     disabled={isVerifying || otp.length !== 6}
                   >
                     {isVerifying ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Verifying...
+                        <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                        Validating...
                       </>
                     ) : (
-                      "Verify & Continue"
+                      "Authorize Transmission"
                     )}
                   </Button>
                   <Button 
                     variant="ghost" 
-                    className="w-full" 
+                    className="w-full h-12 rounded-xl text-slate-400 font-black uppercase tracking-widest text-[10px] hover:text-slate-600" 
                     onClick={() => setShowVerification(false)}
                     disabled={isVerifying}
                   >
-                    Cancel
+                    Abort Session
                   </Button>
                 </div>
                 
-                <p className="text-center text-xs text-slate-400 mt-6">
-                  Didn't receive the code? <button className="text-primary font-semibold hover:underline">Resend OTP</button>
+                <p className="text-xs font-bold text-slate-400 mt-10 uppercase tracking-widest">
+                  No transmission? <button className="text-primary hover:underline">Resend Code</button>
                 </p>
               </motion.div>
             </div>

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Save, Loader2, Globe, Mail, Phone, MapPin, MessageSquare, Gift, Facebook, Instagram, Twitter, Layout, Upload, Image as ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function SettingsPage() {
   const { settings, updateSettings, adminRole } = useData();
@@ -76,16 +77,12 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Logo URL</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      value={formData.logoUrl || ""} 
-                      onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
-                      placeholder="https://example.com/logo.png"
-                      className="h-11"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500">Provide a direct link to your logo image (PNG or SVG recommended).</p>
+                  <label className="text-sm font-semibold text-slate-700">Logo</label>
+                  <ImageUpload 
+                    value={formData.logoUrl || ""}
+                    onChange={(url) => setFormData({...formData, logoUrl: url})}
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Provide a direct link or upload your logo image (PNG or SVG recommended).</p>
                 </div>
               </div>
 
@@ -93,24 +90,14 @@ export function SettingsPage() {
                 <label className="text-sm font-semibold text-slate-700">Logo Preview</label>
                 <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 relative min-h-[200px]">
                   {formData.logoUrl ? (
-                    <>
-                      <img 
-                        src={formData.logoUrl} 
-                        alt="Logo Preview" 
-                        className="max-h-24 object-contain mb-4"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Invalid+URL';
-                        }}
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
-                        onClick={() => setFormData({...formData, logoUrl: ""})}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
+                    <img 
+                      src={formData.logoUrl} 
+                      alt="Logo Preview" 
+                      className="max-h-24 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Invalid+URL';
+                      }}
+                    />
                   ) : (
                     <div className="text-center">
                       <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -119,20 +106,6 @@ export function SettingsPage() {
                       <p className="text-sm text-slate-500">No logo uploaded yet</p>
                     </div>
                   )}
-                </div>
-                <div className="flex justify-center">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-2"
-                    onClick={() => {
-                      const url = prompt("Enter Image URL:");
-                      if (url) setFormData({...formData, logoUrl: url});
-                    }}
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload via URL
-                  </Button>
                 </div>
               </div>
             </div>

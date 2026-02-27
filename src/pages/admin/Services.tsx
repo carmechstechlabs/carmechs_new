@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function Services() {
   const { services, updateServices, adminRole } = useData();
@@ -73,21 +74,6 @@ export function Services() {
     setFormData({});
   };
 
-  const handleIconUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 512 * 1024) { // 512KB limit
-        toast.error("Icon size should be less than 512KB");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, iconUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -142,22 +128,11 @@ export function Services() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Service Icon</label>
-                <div className="flex items-center gap-4">
-                  {formData.iconUrl && (
-                    <div className="h-12 w-12 bg-white rounded border flex items-center justify-center overflow-hidden">
-                      <img src={formData.iconUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
-                    </div>
-                  )}
-                  <div className="relative flex-1">
-                    <Input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleIconUpload}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-500">Max size 512KB. SVG or transparent PNG recommended.</p>
+                <ImageUpload 
+                  value={formData.iconUrl || ""}
+                  onChange={(url) => setFormData({ ...formData, iconUrl: url })}
+                />
+                <p className="text-xs text-slate-500 mt-2">Max size 5MB. SVG or transparent PNG recommended.</p>
               </div>
             </div>
             <div className="space-y-2">
