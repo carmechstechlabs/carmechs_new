@@ -197,7 +197,22 @@ const initialUiSettings = {
   ],
   testimonialText: "Best service I've ever had! My car runs smoother than ever.",
   testimonialAuthor: "Alex Johnson",
-  testimonialRating: 4.9
+  testimonialRating: 4.9,
+  adminLogin: {
+    loginTitle: "Terminal 01",
+    loginSubtitle: "Security Clearance Required",
+    loginBgColor: "#050505",
+    loginAccentColor: "#fc9c0a",
+    loginTerminalId: "ID_REQ_001"
+  },
+  userLogin: {
+    loginTitle: "Welcome back",
+    loginSubtitle: "Enter your details to access your account",
+    loginBgColor: "#050505",
+    loginAccentColor: "#3b82f6",
+    showGoogleLogin: true,
+    showPhoneLogin: true
+  }
 };
 
 const initialApiKeys = {
@@ -223,6 +238,19 @@ const initialBrands = [
   { id: "6", name: "Audi", imageUrl: "https://picsum.photos/seed/audi/200/100" },
 ];
 
+const initialLocations = [
+  { id: "1", name: "New Delhi", isPopular: true },
+  { id: "2", name: "Mumbai", isPopular: true },
+  { id: "3", name: "Bangalore", isPopular: true },
+  { id: "4", name: "Hyderabad", isPopular: true },
+  { id: "5", name: "Chennai", isPopular: true },
+  { id: "6", name: "Kolkata", isPopular: true },
+  { id: "7", name: "Pune", isPopular: false },
+  { id: "8", name: "Ahmedabad", isPopular: false },
+  { id: "9", name: "Gurgaon", isPopular: false },
+  { id: "10", name: "Noida", isPopular: false },
+];
+
 // In-memory state
 let state = {
   services: initialServices,
@@ -235,6 +263,12 @@ let state = {
   uiSettings: initialUiSettings,
   apiKeys: initialApiKeys,
   brands: initialBrands,
+  locations: initialLocations,
+  inventory: [] as any[],
+  categories: [] as any[],
+  coupons: [] as any[],
+  reviews: [] as any[],
+  notifications: [] as any[],
 };
 
 async function startServer() {
@@ -267,10 +301,53 @@ async function startServer() {
           uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : state.uiSettings,
           apiKeys: Object.keys(dbState.apiKeys).length > 0 ? dbState.apiKeys : state.apiKeys,
           brands: dbState.brands.length > 0 ? dbState.brands : state.brands,
+          locations: dbState.locations?.length > 0 ? dbState.locations : state.locations,
+          inventory: dbState.inventory?.length > 0 ? dbState.inventory : state.inventory,
+          categories: dbState.categories?.length > 0 ? dbState.categories : state.categories,
+          coupons: dbState.coupons?.length > 0 ? dbState.coupons : state.coupons,
+          reviews: dbState.reviews?.length > 0 ? dbState.reviews : state.reviews,
+          notifications: dbState.notifications?.length > 0 ? dbState.notifications : state.notifications,
           users: dbState.users.length > 0 ? dbState.users : state.users,
           appointments: dbState.appointments.length > 0 ? dbState.appointments : state.appointments,
         };
         console.log("State loaded from Supabase");
+
+        // Set up Realtime Subscriptions
+        supabase
+          .channel('db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
+            console.log('Change received from Supabase:', payload.table, payload.eventType);
+            
+            // Refresh the specific part of the state that changed
+            const newState = await getInitialState();
+            if (newState) {
+              currentState = {
+                ...currentState,
+                ...newState,
+                // Ensure we keep the merged structure
+                services: newState.services.length > 0 ? newState.services : currentState.services,
+                carMakes: newState.carMakes.length > 0 ? newState.carMakes : currentState.carMakes,
+                carModels: newState.carModels.length > 0 ? newState.carModels : currentState.carModels,
+                fuelTypes: newState.fuelTypes.length > 0 ? newState.fuelTypes : currentState.fuelTypes,
+                settings: Object.keys(newState.settings).length > 0 ? newState.settings : currentState.settings,
+                uiSettings: Object.keys(newState.uiSettings).length > 0 ? newState.uiSettings : currentState.uiSettings,
+                apiKeys: Object.keys(newState.apiKeys).length > 0 ? newState.apiKeys : currentState.apiKeys,
+                brands: newState.brands.length > 0 ? newState.brands : currentState.brands,
+                locations: newState.locations?.length > 0 ? newState.locations : currentState.locations,
+                inventory: newState.inventory?.length > 0 ? newState.inventory : currentState.inventory,
+                categories: newState.categories?.length > 0 ? newState.categories : currentState.categories,
+                coupons: newState.coupons?.length > 0 ? newState.coupons : currentState.coupons,
+                reviews: newState.reviews?.length > 0 ? newState.reviews : currentState.reviews,
+                notifications: newState.notifications?.length > 0 ? newState.notifications : currentState.notifications,
+                users: newState.users.length > 0 ? newState.users : currentState.users,
+                appointments: newState.appointments.length > 0 ? newState.appointments : currentState.appointments,
+              };
+
+              // Broadcast to all connected clients
+              io.emit("initial_state", currentState);
+            }
+          })
+          .subscribe();
       }
     }
   } catch (error) {
@@ -348,6 +425,42 @@ async function startServer() {
       currentState.brands = brands;
       socket.broadcast.emit("brands_updated", brands);
       await updateTable('brands', brands);
+    });
+
+    socket.on("update_locations", async (locations) => {
+      currentState.locations = locations;
+      socket.broadcast.emit("locations_updated", locations);
+      await updateTable('locations', locations);
+    });
+
+    socket.on("update_inventory", async (inventory) => {
+      currentState.inventory = inventory;
+      socket.broadcast.emit("inventory_updated", inventory);
+      await updateTable('inventory', inventory);
+    });
+
+    socket.on("update_categories", async (categories) => {
+      currentState.categories = categories;
+      socket.broadcast.emit("categories_updated", categories);
+      await updateTable('categories', categories);
+    });
+
+    socket.on("update_coupons", async (coupons) => {
+      currentState.coupons = coupons;
+      socket.broadcast.emit("coupons_updated", coupons);
+      await updateTable('coupons', coupons);
+    });
+
+    socket.on("update_reviews", async (reviews) => {
+      currentState.reviews = reviews;
+      socket.broadcast.emit("reviews_updated", reviews);
+      await updateTable('reviews', reviews);
+    });
+
+    socket.on("update_notifications", async (notifications) => {
+      currentState.notifications = notifications;
+      socket.broadcast.emit("notifications_updated", notifications);
+      await updateTable('notifications', notifications);
     });
 
     socket.on("disconnect", () => {

@@ -222,28 +222,28 @@ export function Booking() {
   );
 
   return (
-    <div className="min-h-screen bg-[#fdfcfb] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       {/* Hero Header */}
-      <div className="bg-slate-900 pt-40 pb-24 relative overflow-hidden mb-12">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-slate-900 to-transparent z-10" />
+      <div className="bg-white pt-40 pb-24 relative overflow-hidden border-b border-slate-100 mb-12">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
         
-        <div className="container mx-auto px-4 relative z-20">
+        <div className="container mx-auto px-4 lg:px-8 relative z-20">
           <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm mb-6"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 mb-6"
             >
-              <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80">Booking Terminal</span>
+              <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Booking Terminal</span>
             </motion.div>
             
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none mb-6"
+              className="text-5xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-6"
             >
               Secure Your <br /> Slot
             </motion.h1>
@@ -252,7 +252,7 @@ export function Booking() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-lg text-white/40 font-medium max-w-xl mx-auto"
+              className="text-lg text-slate-500 font-medium max-w-xl mx-auto"
             >
               Configure your service parameters and schedule a precision maintenance session in under 60 seconds.
             </motion.p>
@@ -260,13 +260,13 @@ export function Booking() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-4xl relative z-20">
+      <div className="container mx-auto px-4 lg:px-8 max-w-4xl relative z-20">
         {/* Progress Steps */}
         <div className="mb-16">
           <div className="flex justify-between relative">
             <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-200 -z-10 -translate-y-1/2 rounded-full"></div>
             <div 
-              className="absolute top-1/2 left-0 h-[2px] bg-primary -z-10 -translate-y-1/2 rounded-full transition-all duration-500 ease-out"
+              className="absolute top-1/2 left-0 h-[2px] bg-red-600 -z-10 -translate-y-1/2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
             ></div>
             
@@ -276,12 +276,12 @@ export function Booking() {
                   initial={false}
                   animate={{
                     scale: currentStep >= step.id ? 1.1 : 1,
-                    backgroundColor: currentStep >= step.id ? "var(--color-primary)" : "#fff"
+                    backgroundColor: currentStep >= step.id ? "#dc2626" : "#fff"
                   }}
                   className={cn(
                     "w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all duration-300 shadow-xl",
                     currentStep >= step.id 
-                      ? "border-primary text-white shadow-primary/20" 
+                      ? "border-red-600 text-white shadow-red-600/20" 
                       : "border-slate-200 text-slate-400 bg-white"
                   )}
                 >
@@ -342,7 +342,7 @@ export function Booking() {
 
         {/* Form Content */}
         <div className="bg-white rounded-[3.5rem] shadow-2xl shadow-black/5 border border-slate-100 p-10 md:p-16 min-h-[500px] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 -z-10" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 -z-10" />
           
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
@@ -355,7 +355,7 @@ export function Booking() {
               >
                 <div>
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Vehicle Config</h2>
-                  <p className="text-slate-400 font-medium">Specify your machine's parameters for accurate pricing.</p>
+                  <p className="text-slate-500 font-medium">Specify your machine's parameters for accurate pricing.</p>
                 </div>
                 
                 <div className="space-y-8">
@@ -367,7 +367,7 @@ export function Booking() {
                         placeholder="Search manufacturer..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-16 pl-14 rounded-2xl border-slate-100 bg-slate-50 focus:ring-primary/20 font-bold"
+                        className="h-16 pl-14 rounded-2xl border-slate-100 bg-slate-50 focus:ring-red-600/20 font-bold"
                       />
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2 custom-scrollbar">
@@ -378,8 +378,8 @@ export function Booking() {
                           className={cn(
                             "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
                             formData.make === make.name 
-                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
-                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
+                              ? "border-red-600 bg-red-600 text-white shadow-lg shadow-red-600/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-red-600/30"
                           )}
                         >
                           {make.name}
@@ -400,8 +400,8 @@ export function Booking() {
                           className={cn(
                             "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
                             formData.model === model.name 
-                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
-                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
+                              ? "border-red-600 bg-red-600 text-white shadow-lg shadow-red-600/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-red-600/30"
                           )}
                         >
                           {model.name}
@@ -427,8 +427,8 @@ export function Booking() {
                           className={cn(
                             "px-6 h-12 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all",
                             formData.fuel === fuel.name 
-                              ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
-                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
+                              ? "border-red-600 bg-red-600 text-white shadow-lg shadow-red-600/20" 
+                              : "border-slate-100 bg-slate-50 text-slate-500 hover:border-red-600/30"
                           )}
                         >
                           {fuel.name}
@@ -450,7 +450,7 @@ export function Booking() {
               >
                 <div>
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Selection</h2>
-                  <p className="text-slate-400 font-medium">Choose the maintenance protocol for your vehicle.</p>
+                  <p className="text-slate-500 font-medium">Choose the maintenance protocol for your vehicle.</p>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4">
@@ -463,21 +463,21 @@ export function Booking() {
                       className={cn(
                         "p-8 rounded-3xl border text-left transition-all flex justify-between items-center group cursor-pointer relative overflow-hidden",
                         formData.service === service.id 
-                          ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
-                          : "border-slate-100 bg-slate-50 hover:border-primary/30"
+                          ? "border-red-600 bg-red-50 shadow-xl shadow-red-600/5" 
+                          : "border-slate-100 bg-slate-50 hover:border-red-600/30"
                       )}
                     >
                       <div className="flex items-center gap-6">
                         <div className={cn(
                           "h-16 w-16 rounded-2xl flex items-center justify-center transition-colors",
-                          formData.service === service.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
+                          formData.service === service.id ? "bg-red-600 text-white" : "bg-white text-slate-400 group-hover:text-red-600"
                         )}>
                           <Zap className="h-8 w-8" />
                         </div>
                         <div>
                           <h3 className={cn(
                             "text-2xl font-black uppercase tracking-tight transition-colors",
-                            formData.service === service.id ? "text-primary" : "text-slate-900"
+                            formData.service === service.id ? "text-red-600" : "text-slate-900"
                           )}>
                             {service.title}
                           </h3>
@@ -485,11 +485,11 @@ export function Booking() {
                             <span className="text-slate-500 font-bold">₹{calculatePrice(service.basePrice)}</span>
                             <Popover>
                               <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-primary rounded-full">
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-300 hover:text-red-600 rounded-full">
                                   <Info className="h-4 w-4" />
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-72 p-6 rounded-[2rem] shadow-2xl border-slate-100">
+                              <PopoverContent className="w-72 p-6 rounded-[2rem] shadow-2xl border-slate-100 bg-white">
                                 <div className="space-y-4">
                                   <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-3">Cost Breakdown</h4>
                                   {getPriceBreakdown(service.basePrice).map((item, idx) => (
@@ -500,7 +500,7 @@ export function Booking() {
                                   ))}
                                   <div className="flex justify-between text-lg font-black uppercase tracking-tight border-t border-slate-100 pt-4 mt-2">
                                     <span className="text-slate-900">Total</span>
-                                    <span className="text-primary">₹{calculatePrice(service.basePrice)}</span>
+                                    <span className="text-red-600">₹{calculatePrice(service.basePrice)}</span>
                                   </div>
                                 </div>
                               </PopoverContent>
@@ -512,7 +512,7 @@ export function Booking() {
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white shadow-lg shadow-primary/20"
+                          className="h-10 w-10 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-red-600/20"
                         >
                           <Check className="h-6 w-6 stroke-[3]" />
                         </motion.div>
@@ -606,7 +606,7 @@ export function Booking() {
                 </div>
 
                 <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/20 blur-[60px] rounded-full" />
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-6">Configuration Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
@@ -629,14 +629,14 @@ export function Booking() {
                               type="checkbox" 
                               checked={useWallet}
                               onChange={(e) => setUseWallet(e.target.checked)}
-                              className="h-5 w-5 rounded-lg border-white/20 bg-white/10 text-primary focus:ring-primary"
+                              className="h-5 w-5 rounded-lg border-white/20 bg-white/10 text-red-600 focus:ring-red-600"
                             />
                           )}
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-white/10">
                         <span className="text-white/40 text-xs font-bold uppercase">Estimated Total</span>
-                        <span className="text-3xl font-black text-primary">
+                        <span className="text-3xl font-black text-red-600">
                           ₹{(() => {
                             const service = services.find(s => s.id === formData.service);
                             return service ? calculatePrice(service.basePrice) : 0;
@@ -659,7 +659,7 @@ export function Booking() {
               >
                 <div>
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Finalization</h2>
-                  <p className="text-slate-400 font-medium">Select your preferred transaction gateway.</p>
+                  <p className="text-slate-500 font-medium">Select your preferred transaction gateway.</p>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4">
@@ -674,25 +674,25 @@ export function Booking() {
                       className={cn(
                         "p-8 rounded-3xl border text-left transition-all flex items-center gap-6 group",
                         formData.paymentMethod === method.id 
-                          ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
-                          : "border-slate-100 bg-slate-50 hover:border-primary/30"
+                          ? "border-red-600 bg-red-50 shadow-xl shadow-red-600/5" 
+                          : "border-slate-100 bg-slate-50 hover:border-red-600/30"
                       )}
                     >
                       <div className={cn(
                         "h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
-                        formData.paymentMethod === method.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
+                        formData.paymentMethod === method.id ? "bg-red-600 text-white" : "bg-white text-slate-400 group-hover:text-red-600"
                       )}>
                         <method.icon className="h-8 w-8" />
                       </div>
                       <div>
                         <p className={cn(
                           "text-2xl font-black uppercase tracking-tight",
-                          formData.paymentMethod === method.id ? "text-primary" : "text-slate-900"
+                          formData.paymentMethod === method.id ? "text-red-600" : "text-slate-900"
                         )}>{method.title}</p>
                         <p className="text-sm font-medium text-slate-500">{method.desc}</p>
                       </div>
                       {formData.paymentMethod === method.id && (
-                        <div className="ml-auto h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white">
+                        <div className="ml-auto h-8 w-8 bg-red-600 rounded-full flex items-center justify-center text-white">
                           <Check className="h-5 w-5 stroke-[3]" />
                         </div>
                       )}
@@ -721,11 +721,11 @@ export function Booking() {
                 )}
 
                 <div className="p-10 bg-slate-900 rounded-[3rem] text-white shadow-2xl shadow-black/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-red-600/20 blur-[80px] rounded-full" />
                   <div className="flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
                     <div>
                       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Settlement Amount</p>
-                      <h3 className="text-6xl font-black text-primary tracking-tighter">
+                      <h3 className="text-6xl font-black text-red-600 tracking-tighter">
                         ₹{(() => {
                           const service = services.find(s => s.id === formData.service);
                           const total = service ? calculatePrice(service.basePrice) : 0;
@@ -737,7 +737,7 @@ export function Booking() {
                       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Active Protocol</p>
                       <p className="text-xl font-black uppercase tracking-tight">{services.find(s => s.id === formData.service)?.title}</p>
                       <div className="flex items-center gap-2 mt-2 justify-center md:justify-end text-white/60 text-xs font-bold">
-                        <Sparkles className="h-3 w-3 text-primary" />
+                        <Sparkles className="h-3 w-3 text-red-600" />
                         {formData.make} {formData.model}
                       </div>
                     </div>
@@ -763,7 +763,7 @@ export function Booking() {
             <Button
               onClick={handleNext}
               disabled={!isStepValid() || user?.blocked || showVerification}
-              className="h-16 px-12 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
+              className="h-16 px-12 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-red-600/20 bg-red-600 hover:bg-red-700 text-white border-none"
             >
               Next Step <ChevronRight className="w-5 h-5 ml-3" />
             </Button>
@@ -771,7 +771,7 @@ export function Booking() {
             <Button
               onClick={handleSubmit}
               disabled={!isStepValid() || isSubmitting || user?.blocked || showVerification}
-              className="h-16 px-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-900/20 group"
+              className="h-16 px-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-900/20 group text-white border-none"
             >
               {isSubmitting ? (
                 <>
@@ -797,8 +797,8 @@ export function Booking() {
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 className="bg-white rounded-[3.5rem] shadow-2xl max-w-md w-full p-12 text-center border border-slate-100"
               >
-                <div className="h-24 w-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
-                  <ShieldCheck className="h-12 w-12 text-primary" />
+                <div className="h-24 w-24 bg-red-600/10 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
+                  <ShieldCheck className="h-12 w-12 text-red-600" />
                 </div>
                 <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">Verification</h3>
                 <p className="text-slate-500 font-medium mb-10 leading-relaxed">
@@ -810,7 +810,7 @@ export function Booking() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Access Code</label>
                     <Input 
-                      className="text-center text-4xl tracking-[0.5em] font-black h-20 rounded-2xl border-slate-100 bg-slate-50 focus:ring-primary/20"
+                      className="text-center text-4xl tracking-[0.5em] font-black h-20 rounded-2xl border-slate-100 bg-slate-50 focus:ring-red-600/20"
                       maxLength={6}
                       placeholder="000000"
                       value={otp}
@@ -818,7 +818,7 @@ export function Booking() {
                     />
                   </div>
                   <Button 
-                    className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20" 
+                    className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-red-600/20 bg-red-600 hover:bg-red-700 text-white border-none" 
                     onClick={handleVerifyPhone}
                     disabled={isVerifying || otp.length !== 6}
                   >
@@ -842,7 +842,7 @@ export function Booking() {
                 </div>
                 
                 <p className="text-xs font-bold text-slate-400 mt-10 uppercase tracking-widest">
-                  No transmission? <button className="text-primary hover:underline">Resend Code</button>
+                  No transmission? <button className="text-red-600 hover:underline">Resend Code</button>
                 </p>
               </motion.div>
             </div>

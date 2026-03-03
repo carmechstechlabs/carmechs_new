@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Save, Loader2, Globe, Mail, Phone, MapPin, MessageSquare, Gift, Facebook, Instagram, Twitter, Layout, Upload, Image as ImageIcon, X } from "lucide-react";
+import { Save, Loader2, Globe, Mail, Phone, MapPin, MessageSquare, Gift, Facebook, Instagram, Twitter, Layout, Upload, Image as ImageIcon, X, Shield, Zap, Activity, ArrowRight, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
+import { motion } from "motion/react";
 
 export function SettingsPage() {
   const { settings, updateSettings, adminRole } = useData();
@@ -32,78 +33,99 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Site Settings</h1>
-          <p className="text-slate-500">Manage your business information and global configurations.</p>
+    <div className="space-y-8 pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+            <SettingsIcon className="h-3 w-3" /> Configuration
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">System Settings</h1>
+          <p className="text-slate-500 text-sm font-medium">Manage global parameters and business identity.</p>
         </div>
-        <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'}>
+        
+        <Button 
+          size="lg" 
+          onClick={handleSave} 
+          disabled={isSaving || adminRole !== 'admin'}
+          className="h-14 px-10 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 group"
+        >
           {isSaving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
               Save Changes
             </>
           )}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-none shadow-sm lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Branding & Identity
-            </CardTitle>
-            <CardDescription>Customize your brand's visual identity across the platform.</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Branding Section */}
+        <Card className="bg-white border-slate-200 shadow-sm lg:col-span-2 rounded-[2.5rem] overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-red-600 opacity-50" />
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
+                <Globe className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Branding & Identity</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Customize your visual identity across the platform.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Logo Text</label>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Logo Text</label>
                   <Input 
                     value={formData.logoText} 
                     onChange={(e) => setFormData({...formData, logoText: e.target.value})}
                     placeholder="CarMechs"
-                    className="h-11"
+                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-sm uppercase tracking-widest"
                   />
-                  <p className="text-xs text-slate-500">This text will appear next to the logo icon.</p>
+                  <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">Primary text identifier for the navigation interface.</p>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Logo</label>
-                  <ImageUpload 
-                    value={formData.logoUrl || ""}
-                    onChange={(url) => setFormData({...formData, logoUrl: url})}
-                  />
-                  <p className="text-xs text-slate-500 mt-2">Provide a direct link or upload your logo image (PNG or SVG recommended).</p>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Logo Image</label>
+                  <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-4">
+                    <ImageUpload 
+                      value={formData.logoUrl || ""}
+                      onChange={(url) => setFormData({...formData, logoUrl: url})}
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest mt-2">Recommended: PNG or SVG with transparent background.</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-semibold text-slate-700">Logo Preview</label>
-                <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 relative min-h-[200px]">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Logo Preview</label>
+                <div className="border-2 border-dashed border-slate-100 rounded-[2.5rem] p-12 flex flex-col items-center justify-center bg-slate-50 relative min-h-[280px] group/preview overflow-hidden">
+                  <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover/preview:opacity-100 transition-opacity" />
                   {formData.logoUrl ? (
-                    <img 
+                    <motion.img 
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       src={formData.logoUrl} 
                       alt="Logo Preview" 
-                      className="max-h-24 object-contain"
+                      className="max-h-32 object-contain relative z-10 drop-shadow-sm"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150?text=Invalid+URL';
                       }}
                     />
                   ) : (
-                    <div className="text-center">
-                      <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <ImageIcon className="h-8 w-8 text-slate-400" />
+                    <div className="text-center relative z-10">
+                      <div className="h-20 w-20 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                        <ImageIcon className="h-10 w-10 text-slate-300" />
                       </div>
-                      <p className="text-sm text-slate-500">No logo uploaded yet</p>
+                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Logo Uploaded</p>
                     </div>
                   )}
                 </div>
@@ -112,19 +134,24 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-primary" />
-              Contact Information
-            </CardTitle>
-            <CardDescription>Primary contact details for customer support.</CardDescription>
+        {/* Contact Section */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                <Mail className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Contact Information</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Primary contact details for support channels.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardContent className="p-8 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Mail className="h-3.5 w-3.5" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                  <Mail className="h-3 w-3 text-red-600" />
                   Support Email
                 </label>
                 <Input 
@@ -132,156 +159,182 @@ export function SettingsPage() {
                   value={formData.email} 
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="support@carmechs.com"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Phone className="h-3.5 w-3.5" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                  <Phone className="h-3 w-3 text-red-600" />
                   Phone Number
                 </label>
                 <Input 
                   value={formData.phone} 
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   placeholder="+91 98765 43210"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5" />
-                Office Address
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                <MapPin className="h-3 w-3 text-red-600" />
+                Physical Address
               </label>
               <Input 
                 value={formData.address} 
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
                 placeholder="123, Auto Plaza, Sector 18, Gurgaon"
+                className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-emerald-500" />
-              Messaging & Social
-            </CardTitle>
-            <CardDescription>Connect with customers on their favorite platforms.</CardDescription>
+        {/* Messaging Section */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                <MessageSquare className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Social Media</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Connect with users on external platforms.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5" />
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                <MessageSquare className="h-3 w-3 text-emerald-600" />
                 WhatsApp Number
               </label>
               <Input 
                 value={formData.whatsapp} 
                 onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
                 placeholder="+919876543210"
+                className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-emerald-600/20 focus:border-emerald-600/50 font-bold text-xs uppercase tracking-widest"
               />
-              <p className="text-[11px] text-slate-500">
-                Include country code without spaces or symbols (e.g., +919876543210).
+              <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
+                Include country code without symbols (e.g. 919876543210).
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Facebook className="h-3.5 w-3.5" />
-                  Facebook
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                  <Facebook className="h-3 w-3 text-blue-600" />
+                  FB
                 </label>
                 <Input 
                   value={formData.facebook || ""} 
                   onChange={(e) => setFormData({...formData, facebook: e.target.value})}
-                  placeholder="https://facebook.com/..."
+                  placeholder="URL"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Instagram className="h-3.5 w-3.5" />
-                  Instagram
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                  <Instagram className="h-3 w-3 text-pink-500" />
+                  IG
                 </label>
                 <Input 
                   value={formData.instagram || ""} 
                   onChange={(e) => setFormData({...formData, instagram: e.target.value})}
-                  placeholder="https://instagram.com/..."
+                  placeholder="URL"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <Twitter className="h-3.5 w-3.5" />
-                  Twitter
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                  <Twitter className="h-3 w-3 text-sky-500" />
+                  TW
                 </label>
                 <Input 
                   value={formData.twitter || ""} 
                   onChange={(e) => setFormData({...formData, twitter: e.target.value})}
-                  placeholder="https://twitter.com/..."
+                  placeholder="URL"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Layout className="h-5 w-5 text-blue-500" />
-              Footer Settings
-            </CardTitle>
-            <CardDescription>Manage the content displayed in the site footer.</CardDescription>
+        {/* Footer Section */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-violet-50 flex items-center justify-center border border-violet-100">
+                <Layout className="h-5 w-5 text-violet-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Footer Content</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Manage content displayed in the site footer.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Footer Description</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Footer Description</label>
               <Textarea 
                 value={formData.footerDescription || ""} 
                 onChange={(e) => setFormData({...formData, footerDescription: e.target.value})}
                 placeholder="Brief description of your business for the footer."
                 rows={4}
+                className="bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-medium text-sm"
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Privacy Policy URL</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Privacy Policy URL</label>
                 <Input 
                   value={formData.privacyPolicyUrl || ""} 
                   onChange={(e) => setFormData({...formData, privacyPolicyUrl: e.target.value})}
                   placeholder="/privacy"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Terms of Service URL</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Terms of Service URL</label>
                 <Input 
                   value={formData.termsOfServiceUrl || ""} 
                   onChange={(e) => setFormData({...formData, termsOfServiceUrl: e.target.value})}
                   placeholder="/terms"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-amber-500" />
-              Referral Program
-            </CardTitle>
-            <CardDescription>Configure rewards for your referral system.</CardDescription>
+        {/* Referral Section */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden">
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100">
+                <Gift className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Referral Program</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure rewards for your referral system.</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <Gift className="h-3.5 w-3.5" />
-                Referral Reward Amount (₹)
+          <CardContent className="p-8 space-y-6">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                <Zap className="h-3 w-3 text-amber-600" />
+                Referral Reward (₹)
               </label>
               <Input 
                 type="number"
                 value={formData.referralRewardAmount} 
                 onChange={(e) => setFormData({...formData, referralRewardAmount: Number(e.target.value)})}
                 placeholder="500"
+                className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-xl uppercase tracking-widest"
               />
-              <p className="text-[11px] text-slate-500">
-                This amount will be credited to the referrer's wallet upon a successful sign-up.
+              <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
+                Amount credited to referrer's wallet upon successful user sign-up.
               </p>
             </div>
           </CardContent>

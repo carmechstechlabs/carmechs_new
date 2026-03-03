@@ -37,12 +37,18 @@ export async function getInitialState() {
     const { data: carModels, error: cmodErr } = await supabase.from('car_models').select('*');
     const { data: fuelTypes, error: fErr } = await supabase.from('fuel_types').select('*');
     const { data: brands, error: bErr } = await supabase.from('brands').select('*');
+    const { data: locations, error: lErr } = await supabase.from('locations').select('*');
+    const { data: inventory, error: iErr } = await supabase.from('inventory').select('*');
+    const { data: categories, error: catErr } = await supabase.from('categories').select('*');
+    const { data: coupons, error: cpErr } = await supabase.from('coupons').select('*');
+    const { data: reviews, error: rErr } = await supabase.from('reviews').select('*');
+    const { data: notifications, error: nErr } = await supabase.from('notifications').select('*');
     const { data: users, error: uErr } = await supabase.from('users').select('*');
     const { data: appointments, error: aErr } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
     const { data: config, error: cfgErr } = await supabase.from('site_config').select('*');
 
-    if (sErr || cmErr || cmodErr || fErr || bErr || uErr || aErr || cfgErr) {
-      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, uErr, aErr, cfgErr });
+    if (sErr || cmErr || cmodErr || fErr || bErr || lErr || uErr || aErr || cfgErr || iErr || catErr || cpErr || rErr || nErr) {
+      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, lErr, uErr, aErr, cfgErr, iErr, catErr, cpErr, rErr, nErr });
     }
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
@@ -64,6 +70,12 @@ export async function getInitialState() {
       uiSettings,
       apiKeys,
       brands: (brands || []).map(toCamelCase),
+      locations: (locations || []).map(toCamelCase),
+      inventory: (inventory || []).map(toCamelCase),
+      categories: (categories || []).map(toCamelCase),
+      coupons: (coupons || []).map(toCamelCase),
+      reviews: (reviews || []).map(toCamelCase),
+      notifications: (notifications || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
@@ -78,6 +90,12 @@ export async function getInitialState() {
       uiSettings: {},
       apiKeys: {},
       brands: [],
+      locations: [],
+      inventory: [],
+      categories: [],
+      coupons: [],
+      reviews: [],
+      notifications: [],
     };
   }
 }

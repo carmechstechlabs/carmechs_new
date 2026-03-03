@@ -22,6 +22,62 @@ export interface Brand {
   imageUrl: string;
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  minQuantity: number;
+  price: number;
+  status: 'in_stock' | 'low_stock' | 'out_of_stock';
+}
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  description: string;
+  iconName: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  minOrderAmount: number;
+  maxDiscount?: number;
+  expiryDate: string;
+  isActive: boolean;
+}
+
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  serviceId?: string;
+  createdAt: string;
+  isPublished: boolean;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  isPopular: boolean;
+}
+
 export interface PricingItem {
   name: string;
   multiplier: number;
@@ -118,6 +174,16 @@ export interface AdminUiSettings {
   loginTerminalId?: string;
 }
 
+export interface UserLoginUiSettings {
+  loginTitle: string;
+  loginSubtitle: string;
+  loginBgColor: string;
+  loginAccentColor: string;
+  loginLogoUrl?: string;
+  showGoogleLogin: boolean;
+  showPhoneLogin: boolean;
+}
+
 export interface UiSettings {
   heroTitle: string;
   heroSubtitle: string;
@@ -132,6 +198,7 @@ export interface UiSettings {
   testimonialAuthor: string;
   testimonialRating: number;
   adminLogin: AdminUiSettings;
+  userLogin: UserLoginUiSettings;
   pages: Page[];
 }
 
@@ -160,6 +227,12 @@ interface DataContextType {
   uiSettings: UiSettings;
   apiKeys: ApiKeys;
   brands: Brand[];
+  locations: Location[];
+  inventory: InventoryItem[];
+  categories: ServiceCategory[];
+  coupons: Coupon[];
+  reviews: Review[];
+  notifications: Notification[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -171,6 +244,12 @@ interface DataContextType {
   updateUiSettings: (uiSettings: UiSettings) => void;
   updateApiKeys: (apiKeys: ApiKeys) => void;
   updateBrands: (brands: Brand[]) => void;
+  updateLocations: (locations: Location[]) => void;
+  updateInventory: (inventory: InventoryItem[]) => void;
+  updateCategories: (categories: ServiceCategory[]) => void;
+  updateCoupons: (coupons: Coupon[]) => void;
+  updateReviews: (reviews: Review[]) => void;
+  updateNotifications: (notifications: Notification[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
   processReferral: (referralCode: string, newUserId: string) => void;
@@ -226,6 +305,14 @@ const initialUiSettings: UiSettings = {
     loginAccentColor: "#fc9c0a",
     loginTerminalId: "ID_REQ_001"
   },
+  userLogin: {
+    loginTitle: "Welcome back",
+    loginSubtitle: "Enter your details to access your account",
+    loginBgColor: "#050505",
+    loginAccentColor: "#3b82f6",
+    showGoogleLogin: true,
+    showPhoneLogin: true
+  },
   pages: [
     {
       id: "home",
@@ -277,6 +364,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
   const [apiKeys, setApiKeys] = useState<ApiKeys>(initialApiKeys);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -332,10 +425,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
         adminLogin: {
           ...initialUiSettings.adminLogin,
           ...(state.uiSettings?.adminLogin || {})
+        },
+        userLogin: {
+          ...initialUiSettings.userLogin,
+          ...(state.uiSettings?.userLogin || {})
         }
       });
       setApiKeys(state.apiKeys);
       setBrands(state.brands || []);
+      setLocations(state.locations || []);
+      setInventory(state.inventory || []);
+      setCategories(state.categories || []);
+      setCoupons(state.coupons || []);
+      setReviews(state.reviews || []);
+      setNotifications(state.notifications || []);
     });
 
     newSocket.on('services_updated', (newServices) => setServices(newServices));
@@ -348,6 +451,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('ui_settings_updated', (newUiSettings) => setUiSettings(newUiSettings));
     newSocket.on('api_keys_updated', (newApiKeys) => setApiKeys(newApiKeys));
     newSocket.on('brands_updated', (newBrands) => setBrands(newBrands));
+    newSocket.on('locations_updated', (newLocations) => setLocations(newLocations));
+    newSocket.on('inventory_updated', (newInventory) => setInventory(newInventory));
+    newSocket.on('categories_updated', (newCategories) => setCategories(newCategories));
+    newSocket.on('coupons_updated', (newCoupons) => setCoupons(newCoupons));
+    newSocket.on('reviews_updated', (newReviews) => setReviews(newReviews));
+    newSocket.on('notifications_updated', (newNotifications) => setNotifications(newNotifications));
 
     return () => {
       newSocket.disconnect();
@@ -422,6 +531,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
     socket?.emit('update_brands', newBrands);
   };
 
+  const updateLocations = (newLocations: Location[]) => {
+    setLocations(newLocations);
+    socket?.emit('update_locations', newLocations);
+  };
+
+  const updateInventory = (newInventory: InventoryItem[]) => {
+    setInventory(newInventory);
+    socket?.emit('update_inventory', newInventory);
+  };
+
+  const updateCategories = (newCategories: ServiceCategory[]) => {
+    setCategories(newCategories);
+    socket?.emit('update_categories', newCategories);
+  };
+
+  const updateCoupons = (newCoupons: Coupon[]) => {
+    setCoupons(newCoupons);
+    socket?.emit('update_coupons', newCoupons);
+  };
+
+  const updateReviews = (newReviews: Review[]) => {
+    setReviews(newReviews);
+    socket?.emit('update_reviews', newReviews);
+  };
+
+  const updateNotifications = (newNotifications: Notification[]) => {
+    setNotifications(newNotifications);
+    socket?.emit('update_notifications', newNotifications);
+  };
+
   const updateWalletBalance = (userId: string, amount: number) => {
     const updatedUsers = users.map(u => 
       u.id === userId ? { ...u, walletBalance: (u.walletBalance || 0) + amount } : u
@@ -487,6 +626,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       uiSettings,
       apiKeys,
       brands,
+      locations,
+      inventory,
+      categories,
+      coupons,
+      reviews,
+      notifications,
       updateServices,
       updateCarMakes,
       updateCarModels,
@@ -498,6 +643,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateUiSettings,
       updateApiKeys,
       updateBrands,
+      updateLocations,
+      updateInventory,
+      updateCategories,
+      updateCoupons,
+      updateReviews,
+      updateNotifications,
       addAppointment,
       updateWalletBalance,
       processReferral,

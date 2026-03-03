@@ -53,11 +53,11 @@ export function FAQ() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#e31e24]/10">
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-primary/10 via-transparent to-transparent blur-3xl" />
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-red-50 via-transparent to-transparent blur-3xl" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -65,22 +65,22 @@ export function FAQ() {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-[#e31e24] text-xs font-bold uppercase tracking-wider mb-6">
               <Sparkles className="h-3 w-3" />
               Support Terminal
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              How can we <span className="text-gradient">help you?</span>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-slate-900">
+              How can we <span className="text-[#e31e24]">help you?</span>
             </h1>
-            <p className="text-slate-400 text-lg mb-10 leading-relaxed">
+            <p className="text-slate-500 text-lg mb-10 leading-relaxed">
               Find answers to common questions about our services, booking process, and more.
             </p>
 
             <div className="relative max-w-xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input 
                 placeholder="Search for answers..." 
-                className="pl-12 h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-primary focus:border-primary text-lg"
+                className="pl-12 h-14 bg-slate-50 border-slate-200 rounded-2xl focus:ring-[#e31e24] focus:border-[#e31e24] text-lg text-slate-900"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -96,7 +96,7 @@ export function FAQ() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="glass-dark rounded-3xl border border-white/5 p-6 md:p-12"
+            className="bg-white rounded-3xl border border-slate-200 p-6 md:p-12 shadow-xl shadow-slate-200/50"
           >
             {filteredFaqs.length > 0 ? (
               <Accordion type="single" collapsible className="w-full space-y-4">
@@ -104,17 +104,17 @@ export function FAQ() {
                   <AccordionItem 
                     key={index} 
                     value={`item-${index}`}
-                    className="border-white/5 px-4 rounded-2xl hover:bg-white/[0.02] transition-colors"
+                    className="border-slate-100 px-4 rounded-2xl hover:bg-slate-50 transition-colors"
                   >
-                    <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary hover:no-underline py-6">
+                    <AccordionTrigger className="text-left text-lg font-semibold hover:text-[#e31e24] hover:no-underline py-6 text-slate-900">
                       <div className="flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <HelpCircle className="h-4 w-4 text-primary" />
+                        <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                          <HelpCircle className="h-4 w-4 text-[#e31e24]" />
                         </div>
                         {faq.question}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-slate-400 text-base leading-relaxed pb-6 pl-12">
+                    <AccordionContent className="text-slate-500 text-base leading-relaxed pb-6 pl-12">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -122,10 +122,10 @@ export function FAQ() {
               </Accordion>
             ) : (
               <div className="text-center py-20">
-                <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-8 w-8 text-slate-500" />
+                <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-8 w-8 text-slate-300" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">No results found</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-900">No results found</h3>
                 <p className="text-slate-500">Try searching for something else or contact our support.</p>
               </div>
             )}
@@ -138,10 +138,10 @@ export function FAQ() {
             viewport={{ once: true }}
             className="mt-12 text-center"
           >
-            <p className="text-slate-400 mb-6">Still have questions?</p>
+            <p className="text-slate-500 mb-6">Still have questions?</p>
             <a 
               href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-white font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#e31e24] text-white font-bold hover:bg-[#c4191f] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-500/20"
             >
               <MessageCircle className="h-5 w-5" />
               Contact Our Support Team

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Car, Fuel, Wrench } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Plus, Trash2, Edit2, Car, Fuel, Wrench, Search, Zap, Shield, ArrowRight, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { motion, AnimatePresence } from "motion/react";
 
 export function Cars() {
   const { carMakes, carModels, fuelTypes, updateCarMakes, updateCarModels, updateFuelTypes, adminRole } = useData();
@@ -95,7 +96,6 @@ export function Cars() {
     if (confirm(`Delete ${itemName}?`)) {
       if (activeTab === 'makes') {
         updateCarMakes(carMakes.filter(m => m.name !== itemName));
-        // Also delete associated models? Or keep them? Let's keep them for now but maybe warn.
       } else if (activeTab === 'models') {
         updateCarModels(carModels.filter(m => m.name !== itemName));
       } else {
@@ -113,6 +113,7 @@ export function Cars() {
       make: item.make,
       year: item.year || ""
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -128,141 +129,231 @@ export function Cars() {
   ) || [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Manage Car Data</h1>
-
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center border-b border-slate-200 pb-4">
-        <div className="flex flex-wrap gap-2">
+    <div className="space-y-8 pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.3em]">
+            <Car className="h-3 w-3" /> Vehicle Data
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Fleet Parameters</h1>
+          <p className="text-slate-500 text-sm font-medium">Configure vehicle makes, models, and fuel specifications.</p>
+        </div>
+        
+        <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as any); setEditingItem(null); setSearchTerm(""); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${
                 activeTab === tab.id 
-                  ? "bg-primary text-white" 
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  ? "bg-[#e31e24] text-white shadow-lg shadow-red-500/20" 
+                  : "bg-transparent text-slate-400 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
-              <tab.icon className="h-4 w-4" />
+              <tab.icon className={`h-3.5 w-3.5 ${activeTab === tab.id ? "animate-pulse" : ""}`} />
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="relative w-full md:w-64">
-          <Input 
-            placeholder="Search..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
-        </div>
       </div>
 
-      {/* Add/Edit Form */}
-      <Card className={editingItem ? "border-primary/50 bg-primary/5" : ""}>
-        <CardHeader>
-          <CardTitle>{editingItem ? "Edit Item" : `Add New ${activeTab === 'makes' ? 'Make' : activeTab === 'models' ? 'Model' : 'Fuel Type'}`}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 items-end flex-wrap">
-            <div className="flex-1 min-w-[200px]">
-              <label className="text-sm font-medium mb-1 block">Name</label>
-              <Input 
-                placeholder={`Enter name...`}
-                value={editingItem ? editingItem.name : newItem}
-                onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (editingItem ? handleUpdate() : handleAdd())}
-              />
-            </div>
-            
-            {activeTab === 'models' && (
-              <div className="w-48">
-                <label className="text-sm font-medium mb-1 block">Car Make</label>
-                <Select 
-                  value={editingItem ? editingItem.make : selectedMake} 
-                  onValueChange={(val) => editingItem ? setEditingItem({...editingItem, make: val}) : setSelectedMake(val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Make" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {carMakes.map((make) => (
-                      <SelectItem key={make.name} value={make.name}>{make.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Form Section */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className={`bg-white border-slate-200 shadow-sm rounded-[2rem] overflow-hidden sticky top-8 transition-all duration-500 ${editingItem ? "ring-2 ring-red-600/20 border-red-600/30" : ""}`}>
+            <div className={`absolute top-0 left-0 w-full h-1 ${editingItem ? "bg-[#e31e24]" : "bg-slate-100"}`} />
+            <CardHeader className="p-8 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-colors ${editingItem ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}>
+                  {editingItem ? <Edit2 className="h-5 w-5 text-[#e31e24]" /> : <Plus className="h-5 w-5 text-slate-400" />}
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tighter">
+                    {editingItem ? "Edit Entry" : `New ${activeTab === 'makes' ? 'Make' : activeTab === 'models' ? 'Model' : 'Fuel'}`}
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    {editingItem ? "Modify existing parameters" : "Define new fleet specification"}
+                  </CardDescription>
+                </div>
               </div>
-            )}
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Name / Designation</label>
+                  <Input 
+                    placeholder="Enter name..."
+                    value={editingItem ? editingItem.name : newItem}
+                    onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem(e.target.value)}
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                  />
+                </div>
 
-            {activeTab === 'models' && (
-              <div className="w-32">
-                <label className="text-sm font-medium mb-1 block">Year</label>
-                <Input 
-                  placeholder="e.g. 2020"
-                  value={editingItem ? (editingItem.year || "") : newYear}
-                  onChange={(e) => editingItem ? setEditingItem({...editingItem, year: e.target.value}) : setNewYear(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (editingItem ? handleUpdate() : handleAdd())}
-                />
-              </div>
-            )}
-
-            <div className="w-32">
-              <label className="text-sm font-medium mb-1 block">Multiplier</label>
-              <Input 
-                type="number"
-                step="0.1"
-                placeholder="1.0"
-                value={editingItem ? editingItem.multiplier : newMultiplier}
-                onChange={(e) => editingItem ? setEditingItem({...editingItem, multiplier: e.target.value}) : setNewMultiplier(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (editingItem ? handleUpdate() : handleAdd())}
-              />
-            </div>
-            {editingItem ? (
-              <div className="flex gap-2">
-                <Button onClick={handleUpdate}>Update</Button>
-                <Button variant="outline" onClick={() => setEditingItem(null)}>Cancel</Button>
-              </div>
-            ) : (
-              <Button onClick={handleAdd}>
-                <Plus className="mr-2 h-4 w-4" /> Add
-              </Button>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 mt-2">
-            Multiplier affects the service price. 1.0 is standard price, 1.5 is 50% more, etc.
-          </p>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredData.map((item, index) => (
-          <Card key={index} className="hover:shadow-sm transition-shadow">
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <span className="font-medium block">{item.name}</span>
                 {activeTab === 'models' && (
-                  <span className="text-xs text-slate-500 block">
-                    Make: {(item as any).make} {(item as any).year ? `| Year: ${(item as any).year}` : ''}
-                  </span>
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Parent Make</label>
+                      <Select 
+                        value={editingItem ? editingItem.make : selectedMake} 
+                        onValueChange={(val) => editingItem ? setEditingItem({...editingItem, make: val}) : setSelectedMake(val)}
+                      >
+                        <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest">
+                          <SelectValue placeholder="Select Make" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 rounded-xl shadow-xl">
+                          {carMakes.map((make) => (
+                            <SelectItem key={make.name} value={make.name} className="font-bold text-xs uppercase tracking-widest focus:bg-red-50 focus:text-red-600 transition-colors py-3">
+                              {make.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Production Year</label>
+                      <Input 
+                        placeholder="e.g. 2024"
+                        value={editingItem ? (editingItem.year || "") : newYear}
+                        onChange={(e) => editingItem ? setEditingItem({...editingItem, year: e.target.value}) : setNewYear(e.target.value)}
+                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      />
+                    </div>
+                  </>
                 )}
-                <span className="text-xs text-slate-500">Multiplier: {item.multiplier}x</span>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                    Price Multiplier
+                    <span className="text-[#e31e24] font-black">{editingItem ? editingItem.multiplier : newMultiplier}x</span>
+                  </label>
+                  <Input 
+                    type="number"
+                    step="0.1"
+                    placeholder="1.0"
+                    value={editingItem ? editingItem.multiplier : newMultiplier}
+                    onChange={(e) => editingItem ? setEditingItem({...editingItem, multiplier: e.target.value}) : setNewMultiplier(e.target.value)}
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-lg"
+                  />
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest px-1">
+                    Affects base service pricing. 1.0 = standard rate.
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => startEditing(item)}>
-                  <Edit2 className="h-4 w-4 text-slate-500" />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDelete(item.name)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+
+              <div className="flex flex-col gap-3 pt-4">
+                {editingItem ? (
+                  <>
+                    <Button 
+                      onClick={handleUpdate}
+                      className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20"
+                    >
+                      Update Entry
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setEditingItem(null)}
+                      className="h-12 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl"
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={handleAdd}
+                    className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 group"
+                  >
+                    <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform" /> Add Entry
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
-        ))}
-        {filteredData.length === 0 && (
-          <div className="col-span-full text-center py-8 text-slate-500">
-            No items found matching "{searchTerm}"
+        </div>
+
+        {/* List Section */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center gap-4 bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100">
+              <Search className="h-5 w-5 text-slate-400" />
+            </div>
+            <Input 
+              placeholder={`Search ${tabs.find(t => t.id === activeTab)?.label}...`} 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border-none bg-transparent shadow-none focus-visible:ring-0 font-bold text-slate-900 placeholder:text-slate-300 uppercase tracking-widest text-xs"
+            />
+            {searchTerm && (
+              <Button variant="ghost" size="icon" onClick={() => setSearchTerm("")} className="h-8 w-8 text-slate-400 hover:text-slate-900">
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredData.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <Card className="bg-white border-slate-200 shadow-sm hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-2xl">
+                    <CardContent className="p-6 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{item.name}</span>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            {item.multiplier}x
+                          </span>
+                        </div>
+                        {activeTab === 'models' && (
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span className="text-red-600/70">{(item as any).make}</span>
+                            {(item as any).year && (
+                              <>
+                                <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                <span>{(item as any).year}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => startEditing(item)}
+                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-lg transition-all"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(item.name)}
+                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-lg transition-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {filteredData.length === 0 && (
+              <div className="col-span-full text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                <div className="h-16 w-16 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100 mx-auto mb-4">
+                  <Search className="h-8 w-8 text-slate-300" />
+                </div>
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-900/40">No Results Found</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-slate-400">Try adjusting your search or filters</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

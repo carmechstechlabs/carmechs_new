@@ -8,7 +8,7 @@ import {
   Save, Loader2, Palette, Image as ImageIcon, Sliders, CheckCircle2, 
   Star, Plus, Trash2, Wrench, ShieldCheck, Clock, IndianRupee, 
   Layout, Monitor, Smartphone, Eye, Settings2, FileText, 
-  ChevronRight, MoveUp, MoveDown, Globe, Lock, Terminal, Upload
+  ChevronRight, MoveUp, MoveDown, Globe, Lock, Terminal, Upload, MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -17,8 +17,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { ImageUpload } from "@/components/ImageUpload";
 
 export function UiSettingsPage() {
-  const { uiSettings, updateUiSettings, adminRole } = useData();
+  const { uiSettings, updateUiSettings, adminRole, locations, updateLocations } = useData();
   const [formData, setFormData] = useState<UiSettings>(uiSettings);
+  const [localLocations, setLocalLocations] = useState(locations);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("global");
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
@@ -33,6 +34,7 @@ export function UiSettingsPage() {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
       updateUiSettings(formData);
+      updateLocations(localLocations);
       toast.success("UI Settings updated successfully");
     } catch (error) {
       toast.error("Failed to update UI settings");
@@ -114,7 +116,7 @@ export function UiSettingsPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-[#3b2c1f] tracking-tight uppercase">UI & Experience Engine</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight uppercase">UI & Experience Engine</h1>
           <p className="text-sm text-slate-500 font-medium mt-1">Design, build, and deploy custom interfaces across your platform.</p>
         </div>
         
@@ -124,7 +126,7 @@ export function UiSettingsPage() {
               Exit Editor
             </Button>
           )}
-          <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'} className="bg-[#1e1b18] hover:bg-primary text-white font-bold rounded-xl shadow-xl shadow-black/5">
+          <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl shadow-xl shadow-red-500/10">
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Deploy Changes
           </Button>
@@ -141,14 +143,20 @@ export function UiSettingsPage() {
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="bg-white border border-slate-200 p-1 rounded-2xl h-14">
-                <TabsTrigger value="global" className="rounded-xl px-6 data-[state=active]:bg-[#1e1b18] data-[state=active]:text-white">
+                <TabsTrigger value="global" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
                   <Palette className="h-4 w-4 mr-2" /> Global Theme
                 </TabsTrigger>
-                <TabsTrigger value="pages" className="rounded-xl px-6 data-[state=active]:bg-[#1e1b18] data-[state=active]:text-white">
+                <TabsTrigger value="pages" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
                   <Layout className="h-4 w-4 mr-2" /> Page Builder
                 </TabsTrigger>
-                <TabsTrigger value="admin" className="rounded-xl px-6 data-[state=active]:bg-[#1e1b18] data-[state=active]:text-white">
+                <TabsTrigger value="admin" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
                   <Lock className="h-4 w-4 mr-2" /> Admin Security UI
+                </TabsTrigger>
+                <TabsTrigger value="user-login" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                  <Smartphone className="h-4 w-4 mr-2" /> User Login UI
+                </TabsTrigger>
+                <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                  <MapPin className="h-4 w-4 mr-2" /> Locations
                 </TabsTrigger>
               </TabsList>
 
@@ -179,7 +187,7 @@ export function UiSettingsPage() {
                       </div>
                       
                       <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-2 text-[#3b2c1f] font-bold text-sm uppercase tracking-tight">
+                        <div className="flex items-center gap-2 text-slate-900 font-bold text-sm uppercase tracking-tight">
                           <ImageIcon className="h-4 w-4" /> Global Hero Assets
                         </div>
                         <ImageUpload 
@@ -249,8 +257,8 @@ export function UiSettingsPage() {
 
               <TabsContent value="pages" className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-black text-[#3b2c1f] uppercase tracking-tight">Active Pages</h2>
-                  <Button onClick={addPage} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl">
+                  <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Active Pages</h2>
+                  <Button onClick={addPage} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl">
                     <Plus className="h-4 w-4 mr-2" /> Create New Page
                   </Button>
                 </div>
@@ -271,14 +279,14 @@ export function UiSettingsPage() {
                         </div>
                       </div>
                       <CardContent className="p-6">
-                        <h3 className="font-black text-[#3b2c1f] text-xl uppercase tracking-tight mb-1">{page.title}</h3>
+                        <h3 className="font-bold text-slate-900 text-xl uppercase tracking-tight mb-1">{page.title}</h3>
                         <p className="text-xs text-slate-400 font-mono mb-6">/{page.slug}</p>
                         
                         <div className="flex items-center justify-between">
                           <Button 
                             variant="outline" 
                             onClick={() => setEditingPageId(page.id)}
-                            className="rounded-xl border-slate-200 font-bold text-xs uppercase tracking-widest hover:bg-[#1e1b18] hover:text-white transition-all"
+                            className="rounded-xl border-slate-200 font-bold text-xs uppercase tracking-widest hover:bg-[#e31e24] hover:text-white transition-all"
                           >
                             Launch Editor <ChevronRight className="h-3 w-3 ml-2" />
                           </Button>
@@ -429,6 +437,228 @@ export function UiSettingsPage() {
                   </div>
                 </Card>
               </TabsContent>
+              <TabsContent value="user-login" className="space-y-6">
+                <Card className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden">
+                  <div className="grid grid-cols-1 lg:grid-cols-2">
+                    <div className="p-8 space-y-8 border-r border-slate-100">
+                      <div>
+                        <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2 mb-6">
+                          <Smartphone className="h-5 w-5 text-primary" /> User Login Customization
+                        </h3>
+                        
+                        <div className="space-y-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Login Page Title</label>
+                            <Input 
+                              value={formData.userLogin.loginTitle} 
+                              onChange={(e) => setFormData({
+                                ...formData, 
+                                userLogin: { ...formData.userLogin, loginTitle: e.target.value }
+                              })}
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Login Page Subtitle</label>
+                            <Input 
+                              value={formData.userLogin.loginSubtitle} 
+                              onChange={(e) => setFormData({
+                                ...formData, 
+                                userLogin: { ...formData.userLogin, loginSubtitle: e.target.value }
+                              })}
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Background Color</label>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="color" 
+                                  value={formData.userLogin.loginBgColor} 
+                                  onChange={(e) => setFormData({
+                                    ...formData, 
+                                    userLogin: { ...formData.userLogin, loginBgColor: e.target.value }
+                                  })}
+                                  className="h-12 w-12 rounded-xl border-none cursor-pointer"
+                                />
+                                <Input 
+                                  value={formData.userLogin.loginBgColor} 
+                                  onChange={(e) => setFormData({
+                                    ...formData, 
+                                    userLogin: { ...formData.userLogin, loginBgColor: e.target.value }
+                                  })}
+                                  className="h-12 rounded-xl font-mono text-xs"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Accent Color</label>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="color" 
+                                  value={formData.userLogin.loginAccentColor} 
+                                  onChange={(e) => setFormData({
+                                    ...formData, 
+                                    userLogin: { ...formData.userLogin, loginAccentColor: e.target.value }
+                                  })}
+                                  className="h-12 w-12 rounded-xl border-none cursor-pointer"
+                                />
+                                <Input 
+                                  value={formData.userLogin.loginAccentColor} 
+                                  onChange={(e) => setFormData({
+                                    ...formData, 
+                                    userLogin: { ...formData.userLogin, loginAccentColor: e.target.value }
+                                  })}
+                                  className="h-12 rounded-xl font-mono text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Enable Google Login</label>
+                              <input 
+                                type="checkbox" 
+                                checked={formData.userLogin.showGoogleLogin}
+                                onChange={(e) => setFormData({
+                                  ...formData, 
+                                  userLogin: { ...formData.userLogin, showGoogleLogin: e.target.checked }
+                                })}
+                                className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Enable Phone Login</label>
+                              <input 
+                                type="checkbox" 
+                                checked={formData.userLogin.showPhoneLogin}
+                                onChange={(e) => setFormData({
+                                  ...formData, 
+                                  userLogin: { ...formData.userLogin, showPhoneLogin: e.target.checked }
+                                })}
+                                className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Custom Logo URL</label>
+                            <ImageUpload 
+                              value={formData.userLogin.loginLogoUrl || ""}
+                              onChange={(url) => setFormData({
+                                ...formData, 
+                                userLogin: { ...formData.userLogin, loginLogoUrl: url }
+                              })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-8 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: formData.userLogin.loginBgColor }}>
+                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                      <div className="max-w-[280px] w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 shadow-2xl relative z-10 scale-90 backdrop-blur-md">
+                        <div className="text-center mb-6">
+                          <div className="h-10 w-10 bg-white/10 rounded-xl mx-auto mb-4 flex items-center justify-center border border-white/10">
+                            <Wrench className="h-5 w-5 text-white/60" />
+                          </div>
+                          <h4 className="text-white font-black uppercase tracking-tighter text-sm">
+                            {formData.userLogin.loginTitle}
+                          </h4>
+                          <p className="text-[7px] text-slate-400 uppercase tracking-widest mt-1">{formData.userLogin.loginSubtitle}</p>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="h-8 bg-white/10 rounded-lg border border-white/10" />
+                          <div className="h-8 bg-white/10 rounded-lg border border-white/10" />
+                          <div className="h-10 rounded-lg" style={{ backgroundColor: formData.userLogin.loginAccentColor }} />
+                          
+                          {(formData.userLogin.showGoogleLogin || formData.userLogin.showPhoneLogin) && (
+                            <div className="pt-4 space-y-2">
+                              {formData.userLogin.showGoogleLogin && <div className="h-8 bg-white/5 rounded-lg border border-white/5" />}
+                              {formData.userLogin.showPhoneLogin && <div className="h-8 bg-white/5 rounded-lg border border-white/5" />}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-[80px] opacity-20" style={{ backgroundColor: formData.userLogin.loginAccentColor }} />
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="locations" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Service Locations</h2>
+                    <p className="text-sm text-slate-500 font-medium">Manage the cities where your services are available.</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      const newLoc = { id: `loc_${Date.now()}`, name: "New City", isPopular: false };
+                      setLocalLocations([...localLocations, newLoc]);
+                    }} 
+                    className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add City
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {localLocations.map((loc, idx) => (
+                    <Card key={loc.id} className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden group">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
+                            <MapPin className="h-6 w-6 text-slate-400 group-hover:text-red-600 transition-colors" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setLocalLocations(localLocations.filter(l => l.id !== loc.id))}
+                            className="text-slate-300 hover:text-red-500 rounded-xl"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">City Name</label>
+                            <Input 
+                              value={loc.name} 
+                              onChange={(e) => {
+                                const newLocs = [...localLocations];
+                                newLocs[idx].name = e.target.value;
+                                setLocalLocations(newLocs);
+                              }}
+                              className="h-12 rounded-xl font-bold"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <input 
+                              type="checkbox" 
+                              id={`popular-${loc.id}`}
+                              checked={loc.isPopular}
+                              onChange={(e) => {
+                                const newLocs = [...localLocations];
+                                newLocs[idx].isPopular = e.target.checked;
+                                setLocalLocations(newLocs);
+                              }}
+                              className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-600"
+                            />
+                            <label htmlFor={`popular-${loc.id}`} className="text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer">Mark as Popular City</label>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
             </Tabs>
           </motion.div>
         ) : (
@@ -492,10 +722,10 @@ export function UiSettingsPage() {
                     <Card key={section.id} className="rounded-2xl border-slate-200 overflow-hidden group">
                       <div className="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-100">
                         <div className="flex items-center gap-3">
-                          <div className="h-6 w-6 bg-[#1e1b18] rounded-lg flex items-center justify-center text-[10px] font-black text-white">
+                          <div className="h-6 w-6 bg-[#e31e24] rounded-lg flex items-center justify-center text-[10px] font-bold text-white">
                             {idx + 1}
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#3b2c1f]">{section.type}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">{section.type}</span>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md" onClick={() => moveSection(editingPageId, section.id, 'up')} disabled={idx === 0}>
@@ -627,18 +857,18 @@ export function UiSettingsPage() {
                         )}
                         {section.type === 'content' && (
                           <div className="py-16 px-10">
-                            <h3 className="text-2xl font-black text-[#3b2c1f] uppercase tracking-tight mb-4">{section.title}</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-4">{section.title}</h3>
                             <p className="text-slate-600 leading-relaxed">{section.content}</p>
                             {section.image && <img src={section.image} className="mt-8 rounded-2xl w-full h-64 object-cover" />}
                           </div>
                         )}
                         {section.type === 'features' && (
                           <div className="py-16 px-10 bg-slate-50">
-                            <h3 className="text-2xl font-black text-[#3b2c1f] uppercase tracking-tight mb-10 text-center">{section.title}</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-10 text-center">{section.title}</h3>
                             <div className="grid grid-cols-2 gap-6">
                               {[1,2,3,4].map(i => (
                                 <div key={i} className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-                                  <div className="h-10 w-10 bg-primary/10 rounded-xl mb-4" />
+                                  <div className="h-10 w-10 bg-red-50 rounded-xl mb-4" />
                                   <div className="h-4 w-24 bg-slate-200 rounded mb-2" />
                                   <div className="h-3 w-full bg-slate-100 rounded" />
                                 </div>
@@ -648,7 +878,7 @@ export function UiSettingsPage() {
                         )}
                         {section.type === 'services' && (
                           <div className="py-16 px-10">
-                            <h3 className="text-2xl font-black text-[#3b2c1f] uppercase tracking-tight mb-10 text-center">{section.title}</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-10 text-center">{section.title}</h3>
                             <div className="space-y-4">
                               {[1,2,3].map(i => (
                                 <div key={i} className="p-6 border border-slate-100 rounded-2xl flex items-center gap-4">

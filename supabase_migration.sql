@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   phone TEXT,
+  password TEXT,
   role TEXT DEFAULT 'user',
   verified BOOLEAN DEFAULT FALSE,
   blocked BOOLEAN DEFAULT FALSE,

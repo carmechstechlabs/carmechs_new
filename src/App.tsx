@@ -12,6 +12,7 @@ import { Profile } from "@/pages/Profile";
 import { DynamicPage } from "@/pages/DynamicPage";
 import { NotFound } from "@/pages/NotFound";
 import { DataProvider, useData } from "@/context/DataContext";
+import { useEffect } from "react";
 
 // Admin
 import { AdminLogin } from "@/pages/admin/AdminLogin";
@@ -26,6 +27,11 @@ import { Users as AdminUsers } from "@/pages/admin/Users";
 import { UiSettingsPage as AdminUiSettings } from "@/pages/admin/UiSettings";
 import { ApiKeysPage as AdminApiKeys } from "@/pages/admin/ApiKeys";
 import { Brands as AdminBrands } from "@/pages/admin/Brands";
+import { Locations as AdminLocations } from "@/pages/admin/Locations";
+import { Inventory as AdminInventory } from "@/pages/admin/Inventory";
+import { Categories as AdminCategories } from "@/pages/admin/Categories";
+import { Coupons as AdminCoupons } from "@/pages/admin/Coupons";
+import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
@@ -58,6 +64,11 @@ function AppRoutes() {
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="services" element={<AdminServices />} />
           <Route path="brands" element={<AdminBrands />} />
+          <Route path="locations" element={<AdminLocations />} />
+          <Route path="inventory" element={<AdminInventory />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="coupons" element={<AdminCoupons />} />
+          <Route path="reviews" element={<AdminReviews />} />
           <Route path="cars" element={<AdminCars />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="ui-settings" element={<AdminUiSettings />} />
@@ -69,9 +80,24 @@ function AppRoutes() {
   );
 }
 
+function ThemeInjector() {
+  const { uiSettings } = useData();
+  
+  useEffect(() => {
+    if (uiSettings.primaryColor) {
+      document.documentElement.style.setProperty('--primary', uiSettings.primaryColor);
+    } else {
+      document.documentElement.style.setProperty('--primary', '#e31e24');
+    }
+  }, [uiSettings.primaryColor]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <DataProvider>
+      <ThemeInjector />
       <BrowserRouter>
         <Toaster position="top-center" richColors />
         <AppRoutes />

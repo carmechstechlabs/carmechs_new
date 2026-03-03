@@ -1,12 +1,48 @@
+import React, { useState } from "react";
 import { useData } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wrench, Car, Users, Calendar, Clock, CheckCircle2, XCircle, Shield, IndianRupee, TrendingUp, ArrowUpRight, ArrowDownRight, Gift, Wallet } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  Wrench, Car, Users, Calendar, Clock, CheckCircle2, 
+  XCircle, Shield, IndianRupee, TrendingUp, ArrowUpRight, 
+  ArrowDownRight, Gift, Wallet, Activity, Zap, Cpu, 
+  Globe, Database, Palette, Plus, MapPin, Package, Star 
+} from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
+import { toast } from "sonner";
 
 export function Dashboard() {
-  const { services, carMakes, carModels, fuelTypes, appointments, users, brands, settings } = useData();
+  const { 
+    services, carMakes, carModels, fuelTypes, appointments, 
+    users, brands, settings, uiSettings, updateUiSettings, 
+    locations, updateLocations, inventory, reviews, categories, coupons 
+  } = useData();
+  const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
+  const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
+  const [newCityName, setNewCityName] = useState("");
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    setPrimaryColor(newColor);
+    updateUiSettings({ ...uiSettings, primaryColor: newColor });
+  };
+
+  const handleHeroImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newImage = e.target.value;
+    setHeroBgImage(newImage);
+    updateUiSettings({ ...uiSettings, heroBgImage: newImage });
+  };
+
+  const handleAddCity = () => {
+    if (!newCityName.trim()) return;
+    const newLoc = { id: `loc_${Date.now()}`, name: newCityName, isPopular: false };
+    updateLocations([...locations, newLoc]);
+    setNewCityName("");
+    toast.success(`${newCityName} added to service areas`);
+  };
 
   const pendingAppointments = appointments.filter(a => a.status === 'pending').length;
   const confirmedAppointments = appointments.filter(a => a.status === 'confirmed').length;
@@ -20,8 +56,6 @@ export function Dashboard() {
       return acc + (service?.basePrice || 0);
     }, 0);
 
-  const totalReferralRewards = users.reduce((acc, curr) => acc + (curr.referralsCount * settings.referralRewardAmount), 0);
-
   const activeUsers = users.filter(u => u.verified).length || users.length;
 
   const stats = [
@@ -30,8 +64,8 @@ export function Dashboard() {
       value: appointments.length, 
       description: "All time bookings",
       icon: Calendar, 
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      color: "text-blue-400",
+      glowColor: "shadow-blue-500/20",
       trend: "+12.5%",
       trendUp: true
     },
@@ -40,8 +74,8 @@ export function Dashboard() {
       value: pendingAppointments, 
       description: "Requires attention",
       icon: Clock, 
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
+      color: "text-amber-400",
+      glowColor: "shadow-amber-500/20",
       trend: "-2.1%",
       trendUp: false
     },
@@ -50,8 +84,8 @@ export function Dashboard() {
       value: activeUsers, 
       description: "Verified customers",
       icon: Users, 
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
+      color: "text-indigo-400",
+      glowColor: "shadow-indigo-500/20",
       trend: "+4.2%",
       trendUp: true
     },
@@ -60,14 +94,33 @@ export function Dashboard() {
       value: `₹${totalRevenue.toLocaleString()}`, 
       description: "From completed services",
       icon: IndianRupee, 
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
+      color: "text-emerald-400",
+      glowColor: "shadow-emerald-500/20",
       trend: "+18.3%",
+      trendUp: true
+    },
+    { 
+      title: "Inventory Value", 
+      value: `₹${inventory.reduce((acc, item) => acc + (item.price * item.quantity), 0).toLocaleString()}`, 
+      description: `${inventory.filter(i => i.status === 'low_stock').length} items low stock`,
+      icon: Package, 
+      color: "text-amber-400",
+      glowColor: "shadow-amber-500/20",
+      trend: "Stable",
+      trendUp: true
+    },
+    { 
+      title: "Avg Rating", 
+      value: reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0", 
+      description: `From ${reviews.length} reviews`,
+      icon: Star, 
+      color: "text-yellow-400",
+      glowColor: "shadow-yellow-500/20",
+      trend: "+0.2",
       trendUp: true
     },
   ];
 
-  // Create a unified recent activity feed
   const recentActivity = [
     ...appointments.map(a => ({
       id: `apt-${a.id}`,
@@ -76,19 +129,18 @@ export function Dashboard() {
       subtitle: `by ${a.name}`,
       date: new Date(a.createdAt),
       icon: Calendar,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-100'
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/10'
     })),
-    // Since users don't have createdAt, we'll just use the current date for the last 3 users to simulate recent activity
     ...users.slice(-3).map((u, i) => ({
       id: `user-${u.id}`,
       type: 'user',
       title: `New user registered`,
       subtitle: u.name,
-      date: new Date(Date.now() - i * 86400000), // Simulate recent dates
+      date: new Date(Date.now() - i * 86400000),
       icon: Users,
-      color: 'text-indigo-500',
-      bgColor: 'bg-indigo-100'
+      color: 'text-indigo-400',
+      bgColor: 'bg-indigo-500/10'
     }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 6);
 
@@ -98,25 +150,24 @@ export function Dashboard() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending': return <Clock className="h-4 w-4 text-amber-500" />;
-      case 'confirmed': return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
-      case 'completed': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-      case 'cancelled': return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'pending': return <Clock className="h-3 w-3 text-amber-400" />;
+      case 'confirmed': return <CheckCircle2 className="h-3 w-3 text-blue-400" />;
+      case 'completed': return <CheckCircle2 className="h-3 w-3 text-emerald-400" />;
+      case 'cancelled': return <XCircle className="h-3 w-3 text-red-400" />;
       default: return null;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+      case 'pending': return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+      case 'confirmed': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+      case 'completed': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+      case 'cancelled': return 'text-red-400 bg-red-400/10 border-red-400/20';
+      default: return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
     }
   };
 
-  // Chart Data
   const statusData = [
     { name: 'Pending', value: pendingAppointments, color: '#f59e0b' },
     { name: 'Confirmed', value: confirmedAppointments, color: '#3b82f6' },
@@ -124,12 +175,9 @@ export function Dashboard() {
     { name: 'Cancelled', value: cancelledAppointments, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
-  // Group appointments by date for the bar chart
   const appointmentsByDate = appointments.reduce((acc: any, curr) => {
     const date = new Date(curr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    if (!acc[date]) {
-      acc[date] = 0;
-    }
+    if (!acc[date]) acc[date] = 0;
     acc[date]++;
     return acc;
   }, {});
@@ -137,56 +185,82 @@ export function Dashboard() {
   const barChartData = Object.keys(appointmentsByDate).map(date => ({
     date,
     appointments: appointmentsByDate[date]
-  })).slice(-7); // Last 7 days with data
+  })).slice(-7);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500">Welcome back! Here's what's happening today.</p>
+    <div className="space-y-8 pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+            <Activity className="h-3 w-3" /> System Overview
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Management Dashboard</h1>
+          <p className="text-slate-500 text-sm font-medium">Real-time operational monitoring and business analysis.</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-          <Calendar className="h-4 w-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-600">
-            {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </span>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50">
+            <Calendar className="h-4 w-4 text-red-600" />
+            <span className="text-xs font-black text-slate-900 uppercase tracking-widest">
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </div>
+          <Button className="bg-red-600 hover:bg-red-700 text-white rounded-2xl px-6 h-12 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20 border-none">
+            <TrendingUp className="mr-2 h-3 w-3" /> View Reports
+          </Button>
         </div>
       </div>
       
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={index} className="border-none shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className={cn("p-3 rounded-xl transition-colors", stat.bgColor)}>
-                  <stat.icon className={cn("h-6 w-6", stat.color)} />
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-red-600/30 transition-all duration-500 group relative overflow-hidden">
+              <div className={cn("absolute top-0 right-0 w-32 h-32 bg-red-600/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-red-600/10 transition-colors")} />
+              <CardContent className="p-6 relative z-10">
+                <div className="flex justify-between items-start mb-6">
+                  <div className={cn("p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner group-hover:border-red-600/50 transition-colors")}>
+                    <stat.icon className={cn("h-6 w-6", stat.color.replace('text-blue-400', 'text-blue-600').replace('text-amber-400', 'text-amber-600').replace('text-indigo-400', 'text-indigo-600').replace('text-emerald-400', 'text-emerald-600'))} />
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest",
+                    stat.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                  )}>
+                    {stat.trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                    {stat.trend}
+                  </div>
                 </div>
-                <div className={cn(
-                  "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full",
-                  stat.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                )}>
-                  {stat.trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                  {stat.trend}
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{stat.title}</p>
+                  <h3 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">{stat.value}</h3>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-red-600" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.description}</p>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500 mb-1">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</h3>
-                <p className="text-xs text-slate-400">{stat.description}</p>
-              </div>
-            </CardContent>
-            <div className={cn("h-1 w-full", stat.color.replace('text', 'bg'))} />
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
           <CardHeader>
-            <CardTitle>Appointments by Status</CardTitle>
+            <div className="flex items-center gap-2 mb-1">
+              <Database className="h-3 w-3 text-red-600" />
+              <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Distribution</span>
+            </div>
+            <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Appointment Status</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[350px]">
             {statusData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -194,84 +268,133 @@ export function Dashboard() {
                     data={statusData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
+                    innerRadius={80}
+                    outerRadius={110}
+                    paddingAngle={8}
                     dataKey="value"
+                    stroke="none"
                   >
                     {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
                     ))}
                   </Pie>
-                  <RechartsTooltip />
-                  <Legend />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: '#0f172a', fontSize: '12px', fontWeight: 'bold' }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value) => <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-500">
-                No appointment data available.
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
+                <Database className="h-12 w-12 opacity-20" />
+                <p className="text-xs font-bold uppercase tracking-widest">No data available</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
           <CardHeader>
-            <CardTitle>Recent Appointments Trend</CardTitle>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-3 w-3 text-red-600" />
+              <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Analytics</span>
+            </div>
+            <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Booking Trends</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[350px]">
             {barChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
-                  <RechartsTooltip cursor={{fill: 'transparent'}} />
-                  <Bar dataKey="appointments" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                <AreaChart data={barChartData}>
+                  <defs>
+                    <linearGradient id="colorApts" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    allowDecimals={false}
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: '#0f172a', fontSize: '12px', fontWeight: 'bold' }}
+                  />
+                  <Area type="monotone" dataKey="appointments" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorApts)" />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-500">
-                No appointment data available.
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
+                <TrendingUp className="h-12 w-12 opacity-20" />
+                <p className="text-xs font-bold uppercase tracking-widest">No trend data available</p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
+      {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="lg:col-span-2 bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 pb-6">
             <div>
-              <CardTitle>Recent Appointments</CardTitle>
-              <CardDescription>Latest service bookings from customers.</CardDescription>
+              <div className="flex items-center gap-2 mb-1">
+                <Globe className="h-3 w-3 text-red-600" />
+                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Live Feed</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Recent Bookings</CardTitle>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href="/admin/appointments">View All</a>
+            <Button variant="outline" size="sm" className="bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100 rounded-xl font-black uppercase tracking-widest text-[9px]" asChild>
+              <a href="/admin/appointments">View All Bookings</a>
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {recentAppointments.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                  <thead className="text-[10px] text-slate-400 uppercase tracking-[0.2em] bg-slate-50 font-black">
                     <tr>
-                      <th className="px-4 py-3 rounded-tl-lg">Customer</th>
-                      <th className="px-4 py-3">Service</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3 rounded-tr-lg">Status</th>
+                      <th className="px-6 py-4">Customer</th>
+                      <th className="px-6 py-4">Service</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-50">
                     {recentAppointments.map((apt) => (
-                      <tr key={apt.id} className="border-b last:border-0 border-slate-100">
-                        <td className="px-4 py-3 font-medium text-slate-900">{apt.name}</td>
-                        <td className="px-4 py-3 text-slate-600">{apt.service}</td>
-                        <td className="px-4 py-3 text-slate-600">{new Date(apt.date).toLocaleDateString()}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(apt.status)}`}>
+                      <tr key={apt.id} className="hover:bg-slate-50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 group-hover:text-red-600 transition-colors">{apt.name}</span>
+                            <span className="text-[10px] text-slate-400 uppercase tracking-widest">{apt.phone}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{apt.service}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{new Date(apt.date).toLocaleDateString()}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border",
+                            getStatusColor(apt.status).replace('text-amber-400', 'text-amber-600').replace('bg-amber-400/10', 'bg-amber-50').replace('border-amber-400/20', 'border-amber-100').replace('text-blue-400', 'text-blue-600').replace('bg-blue-400/10', 'bg-blue-50').replace('border-blue-400/20', 'border-blue-100').replace('text-emerald-400', 'text-emerald-600').replace('bg-emerald-400/10', 'bg-emerald-50').replace('border-emerald-400/20', 'border-emerald-100').replace('text-red-400', 'text-red-600').replace('bg-red-400/10', 'bg-red-50').replace('border-red-400/20', 'border-red-100')
+                          )}>
                             {getStatusIcon(apt.status)}
-                            <span className="capitalize">{apt.status}</span>
+                            {apt.status}
                           </span>
                         </td>
                       </tr>
@@ -280,29 +403,35 @@ export function Dashboard() {
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 py-4 text-center">No recent appointments.</p>
+              <div className="py-20 text-center">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">No recent bookings found</p>
+              </div>
             )}
           </CardContent>
         </Card>
         
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+          <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
+            <CardHeader className="border-b border-slate-50 pb-6">
+              <div className="flex items-center gap-2 mb-1">
+                <Cpu className="h-3 w-3 text-red-600" />
+                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Activity Log</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Recent Events</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {recentActivity.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`mt-0.5 h-8 w-8 rounded-full flex items-center justify-center ${activity.bgColor}`}>
-                        <activity.icon className={`h-4 w-4 ${activity.color}`} />
+                    <div key={activity.id} className="flex items-start gap-4 group">
+                      <div className={cn("mt-1 h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 group-hover:border-red-600/50 transition-all shadow-sm", activity.bgColor.replace('bg-blue-500/10', 'bg-blue-50').replace('bg-indigo-500/10', 'bg-indigo-50'))}>
+                        <activity.icon className={cn("h-4 w-4", activity.color.replace('text-blue-400', 'text-blue-600').replace('text-indigo-400', 'text-indigo-600'))} />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium text-slate-900">{activity.title}</p>
+                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-red-600 transition-colors">{activity.title}</p>
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-500">{activity.subtitle}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activity.subtitle}</p>
+                          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
                             {activity.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </p>
                         </div>
@@ -311,22 +440,112 @@ export function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 text-center">No recent activity.</p>
+                <p className="text-xs font-bold text-slate-300 text-center py-10 uppercase tracking-widest">No events recorded</p>
               )}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
+          <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden group">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Palette className="h-3 w-3 text-red-600" />
+                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Quick Config</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Layout & Regions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Primary Brand Color</label>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                    <input 
+                      type="color" 
+                      value={primaryColor} 
+                      onChange={handleColorChange}
+                      className="absolute inset-0 h-full w-full scale-150 cursor-pointer"
+                    />
+                  </div>
+                  <Input 
+                    value={primaryColor}
+                    onChange={(e) => {
+                      setPrimaryColor(e.target.value);
+                      updateUiSettings({ ...uiSettings, primaryColor: e.target.value });
+                    }}
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-mono text-xs uppercase tracking-widest"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-slate-50">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Hero Background Image</label>
+                <div className="flex flex-col gap-2">
+                  <Input 
+                    placeholder="IMAGE URL..." 
+                    value={heroBgImage}
+                    onChange={handleHeroImageChange}
+                    className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                  />
+                  {heroBgImage && (
+                    <div className="h-20 w-full rounded-xl overflow-hidden border border-slate-100">
+                      <img src={heroBgImage} alt="Hero Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-slate-50">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Quick Add City</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Input 
+                      placeholder="CITY NAME..." 
+                      value={newCityName}
+                      onChange={(e) => setNewCityName(e.target.value)}
+                      className="h-11 pl-9 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleAddCity}
+                    className="h-11 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/10"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {locations.slice(0, 3).map(loc => (
+                    <span key={loc.id} className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                      {loc.name}
+                    </span>
+                  ))}
+                  {locations.length > 3 && (
+                    <span className="px-2 py-1 text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                      +{locations.length - 3} More
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden group">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="h-3 w-3 text-emerald-600" />
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em]">System Status</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Core Health</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 group-hover:border-emerald-200 transition-all">
                 <div className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
                 </div>
-                <span className="text-sm font-medium">All systems operational</span>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-black uppercase tracking-widest">Systems Nominal</span>
+                  <span className="text-[9px] font-bold text-emerald-600/60 uppercase tracking-widest">All modules operational</span>
+                </div>
               </div>
             </CardContent>
           </Card>

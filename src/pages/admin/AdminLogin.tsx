@@ -63,15 +63,11 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans" style={{ backgroundColor: adminUi.loginBgColor }}>
-      {/* Technical Grid Background */}
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans bg-white">
+      {/* Subtle Grid Background */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       
-      {/* Atmospheric Glows */}
-      <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] rounded-full blur-[120px] opacity-30 animate-pulse" style={{ backgroundColor: adminUi.loginAccentColor }} />
-      <div className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] opacity-20" />
-
       <motion.div 
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -86,21 +82,14 @@ export function AdminLogin() {
             transition={{ delay: 0.2 }}
             className="inline-block mb-6"
           >
-            <div className="relative p-1 rounded-3xl bg-gradient-to-b from-white/10 to-transparent border border-white/5 shadow-2xl">
-              <div className="bg-[#0A0A0A] rounded-[1.4rem] p-5 border border-white/5">
+            <div className="relative p-1 rounded-3xl bg-slate-50 border border-slate-100 shadow-2xl">
+              <div className="bg-white rounded-[1.4rem] p-5 border border-slate-50 shadow-inner">
                 {(adminUi.loginLogoUrl || settings.logoUrl) ? (
-                  <img src={adminUi.loginLogoUrl || settings.logoUrl} alt="Logo" className="h-12 w-12 object-contain grayscale brightness-200" />
+                  <img src={adminUi.loginLogoUrl || settings.logoUrl} alt="Logo" className="h-12 w-12 object-contain" />
                 ) : (
-                  <ShieldCheck className="h-10 w-10 text-white opacity-80" />
+                  <ShieldCheck className="h-10 w-10 text-[#e31e24]" />
                 )}
               </div>
-              {/* Scanning Line Animation */}
-              <motion.div 
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                className="absolute left-0 right-0 h-px blur-[2px] z-20"
-                style={{ backgroundColor: adminUi.loginAccentColor }}
-              />
             </div>
           </motion.div>
 
@@ -108,70 +97,52 @@ export function AdminLogin() {
             initial={{ opacity: 0, letterSpacing: "0.2em" }}
             animate={{ opacity: 1, letterSpacing: "0.05em" }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="text-4xl font-black text-white uppercase tracking-tighter mb-3"
+            className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-3"
           >
-            {adminUi.loginTitle.split(' ')[0]} <span style={{ color: adminUi.loginAccentColor }}>{adminUi.loginTitle.split(' ').slice(1).join(' ')}</span>
+            Admin <span className="text-[#e31e24]">Portal</span>
           </motion.h2>
           <div className="flex items-center justify-center gap-3">
-            <div className="h-px w-8 bg-white/10" />
-            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.3em]">
-              {adminUi.loginSubtitle}
+            <div className="h-px w-8 bg-slate-100" />
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">
+              Authorized Personnel Only
             </p>
-            <div className="h-px w-8 bg-white/10" />
+            <div className="h-px w-8 bg-slate-100" />
           </div>
         </div>
 
         {/* Login Card */}
-        <div className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-8 shadow-2xl backdrop-blur-md relative overflow-hidden group">
-          {/* Subtle Corner Accents */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-white/10 rounded-tl-[2rem]" />
-          <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-white/10 rounded-tr-[2rem]" />
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-white/10 rounded-bl-[2rem]" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-white/10 rounded-br-[2rem]" />
-
+        <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 relative overflow-hidden group">
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div className="space-y-5">
               <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">User Identifier</label>
-                  <span className="text-[8px] font-mono" style={{ color: `${adminUi.loginAccentColor}80` }}>{adminUi.loginTerminalId}</span>
-                </div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Username / Email</label>
                 <div className="relative group">
                   <input
                     type="text"
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full bg-white/[0.02] border border-white/5 rounded-xl px-5 py-4 text-white placeholder-slate-700 focus:outline-none transition-all font-mono text-sm"
-                    style={{ borderColor: 'rgba(255,255,255,0.05)' }}
-                    placeholder="ADMIN_ID"
-                    onFocus={(e) => e.target.style.borderColor = adminUi.loginAccentColor}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e31e24]/50 transition-all font-bold text-sm"
+                    placeholder="Enter your username"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Access Key</label>
-                  <span className="text-[8px] font-mono" style={{ color: `${adminUi.loginAccentColor}80` }}>SEC_AUTH_002</span>
-                </div>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Password</label>
                 <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-white/[0.02] border border-white/5 rounded-xl px-5 py-4 text-white placeholder-slate-700 focus:outline-none transition-all font-mono text-sm"
-                    style={{ borderColor: 'rgba(255,255,255,0.05)' }}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e31e24]/50 transition-all font-bold text-sm"
                     placeholder="••••••••"
-                    onFocus={(e) => e.target.style.borderColor = adminUi.loginAccentColor}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 hover:text-primary transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-[#e31e24] transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -180,30 +151,18 @@ export function AdminLogin() {
             </div>
 
             <Button 
-              className="w-full h-14 bg-white text-black font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-xl shadow-white/5 group"
-              style={{ 
-                backgroundColor: 'white',
-                color: 'black'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = adminUi.loginAccentColor;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = 'black';
-              }}
+              className="w-full h-14 bg-[#e31e24] text-white font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 hover:bg-[#c4191f]"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-xs">Decrypting...</span>
+                  <span className="text-xs">Verifying...</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <Lock className="h-3.5 w-3.5" />
-                  <span className="text-xs">Initialize Session</span>
+                  <span className="text-xs">Login to Dashboard</span>
                 </div>
               )}
             </Button>
@@ -212,29 +171,9 @@ export function AdminLogin() {
 
         {/* Footer Info */}
         <div className="mt-8 flex flex-col items-center gap-6">
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col items-center">
-              <span className="text-[8px] text-slate-600 uppercase font-bold tracking-tighter">Status</span>
-              <span className="text-[10px] text-emerald-500 font-mono flex items-center gap-1.5">
-                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
-                Operational
-              </span>
-            </div>
-            <div className="w-px h-6 bg-white/5" />
-            <div className="flex flex-col items-center">
-              <span className="text-[8px] text-slate-600 uppercase font-bold tracking-tighter">Encryption</span>
-              <span className="text-[10px] text-slate-400 font-mono">AES-256</span>
-            </div>
-            <div className="w-px h-6 bg-white/5" />
-            <div className="flex flex-col items-center">
-              <span className="text-[8px] text-slate-600 uppercase font-bold tracking-tighter">Node</span>
-              <span className="text-[10px] text-slate-400 font-mono">v18.2.0</span>
-            </div>
-          </div>
-
-          <Link to="/" className="text-[10px] text-slate-500 hover:text-primary uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
+          <Link to="/" className="text-[10px] text-slate-400 hover:text-[#e31e24] uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-            Abort & Return
+            Back to Website
           </Link>
         </div>
       </motion.div>
