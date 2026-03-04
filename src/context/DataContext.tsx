@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { io, Socket } from 'socket.io-client';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
+import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment } from '@/services/supabaseService';
 
 // Types
 export interface Service {
@@ -407,7 +408,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const newSocket = io(); // Connect to the same host
+    // 1. Initial Fetch from Supabase (Directly from Frontend)
+    const fetchInitialData = async () => {
+      try {
+        const state = await getInitialState();
+        if (state) {
+          setServices(state.services);
+          setCarMakes(state.carMakes);
+          setCarModels(state.carModels);
+          setFuelTypes(state.fuelTypes);
+          setSettings(state.settings);
+          setAppointments(state.appointments);
+          setUsers(state.users);
+          setUiSettings(prev => ({
+            ...prev,
+            ...state.uiSettings,
+            pages: state.uiSettings?.pages || prev.pages,
+            adminLogin: { ...prev.adminLogin, ...(state.uiSettings?.adminLogin || {}) },
+            userLogin: { ...prev.userLogin, ...(state.uiSettings?.userLogin || {}) }
+          }));
+          setApiKeys(state.apiKeys);
+          setBrands(state.brands || []);
+          setLocations(state.locations || []);
+          setInventory(state.inventory || []);
+          setCategories(state.categories || []);
+          setCoupons(state.coupons || []);
+          setReviews(state.reviews || []);
+          setNotifications(state.notifications || []);
+        }
+      } catch (error) {
+        console.error("Error fetching initial data from Supabase:", error);
+      }
+    };
+
+    fetchInitialData();
+
+    // 2. Setup Socket Connection for Real-time Updates
+    const newSocket = io(); 
     setSocket(newSocket);
 
     newSocket.on('initial_state', (state) => {
@@ -477,88 +514,156 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateServices = (newServices: Service[]) => {
     setServices(newServices);
-    socket?.emit('update_services', newServices);
+    if (socket?.connected) {
+      socket.emit('update_services', newServices);
+    } else {
+      updateTable('services', newServices);
+    }
   };
   
   const updateCarMakes = (newMakes: PricingItem[]) => {
     setCarMakes(newMakes);
-    socket?.emit('update_car_makes', newMakes);
+    if (socket?.connected) {
+      socket.emit('update_car_makes', newMakes);
+    } else {
+      updateTable('car_makes', newMakes);
+    }
   };
   
   const updateCarModels = (newModels: CarModel[]) => {
     setCarModels(newModels);
-    socket?.emit('update_car_models', newModels);
+    if (socket?.connected) {
+      socket.emit('update_car_models', newModels);
+    } else {
+      updateTable('car_models', newModels);
+    }
   };
   
   const updateFuelTypes = (newFuels: PricingItem[]) => {
     setFuelTypes(newFuels);
-    socket?.emit('update_fuel_types', newFuels);
+    if (socket?.connected) {
+      socket.emit('update_fuel_types', newFuels);
+    } else {
+      updateTable('fuel_types', newFuels);
+    }
   };
   
   const updateSettings = (newSettings: Settings) => {
     setSettings(newSettings);
-    socket?.emit('update_settings', newSettings);
+    if (socket?.connected) {
+      socket.emit('update_settings', newSettings);
+    } else {
+      updateConfig('settings', newSettings);
+    }
   };
   
   const updateAppointments = (newAppointments: Appointment[]) => {
     setAppointments(newAppointments);
-    socket?.emit('update_appointments', newAppointments);
+    if (socket?.connected) {
+      socket.emit('update_appointments', newAppointments);
+    } else {
+      updateTable('appointments', newAppointments);
+    }
   };
   
   const updateUsers = (newUsers: User[]) => {
     setUsers(newUsers);
-    socket?.emit('update_users', newUsers);
+    if (socket?.connected) {
+      socket.emit('update_users', newUsers);
+    } else {
+      updateTable('users', newUsers);
+    }
   };
 
   const updateUser = (userId: string, updates: Partial<User>) => {
     const updatedUsers = users.map(u => u.id === userId ? { ...u, ...updates } : u);
     setUsers(updatedUsers);
-    socket?.emit('update_users', updatedUsers);
+    if (socket?.connected) {
+      socket.emit('update_users', updatedUsers);
+    } else {
+      updateTable('users', updatedUsers);
+    }
   };
 
   const updateUiSettings = (newUiSettings: UiSettings) => {
     setUiSettings(newUiSettings);
-    socket?.emit('update_ui_settings', newUiSettings);
+    if (socket?.connected) {
+      socket.emit('update_ui_settings', newUiSettings);
+    } else {
+      updateConfig('ui_settings', newUiSettings);
+    }
   };
 
   const updateApiKeys = (newApiKeys: ApiKeys) => {
     setApiKeys(newApiKeys);
-    socket?.emit('update_api_keys', newApiKeys);
+    if (socket?.connected) {
+      socket.emit('update_api_keys', newApiKeys);
+    } else {
+      updateConfig('api_keys', newApiKeys);
+    }
   };
 
   const updateBrands = (newBrands: Brand[]) => {
     setBrands(newBrands);
-    socket?.emit('update_brands', newBrands);
+    if (socket?.connected) {
+      socket.emit('update_brands', newBrands);
+    } else {
+      updateTable('brands', newBrands);
+    }
   };
 
   const updateLocations = (newLocations: Location[]) => {
     setLocations(newLocations);
-    socket?.emit('update_locations', newLocations);
+    if (socket?.connected) {
+      socket.emit('update_locations', newLocations);
+    } else {
+      updateTable('locations', newLocations);
+    }
   };
 
   const updateInventory = (newInventory: InventoryItem[]) => {
     setInventory(newInventory);
-    socket?.emit('update_inventory', newInventory);
+    if (socket?.connected) {
+      socket.emit('update_inventory', newInventory);
+    } else {
+      updateTable('inventory', newInventory);
+    }
   };
 
   const updateCategories = (newCategories: ServiceCategory[]) => {
     setCategories(newCategories);
-    socket?.emit('update_categories', newCategories);
+    if (socket?.connected) {
+      socket.emit('update_categories', newCategories);
+    } else {
+      updateTable('categories', newCategories);
+    }
   };
 
   const updateCoupons = (newCoupons: Coupon[]) => {
     setCoupons(newCoupons);
-    socket?.emit('update_coupons', newCoupons);
+    if (socket?.connected) {
+      socket.emit('update_coupons', newCoupons);
+    } else {
+      updateTable('coupons', newCoupons);
+    }
   };
 
   const updateReviews = (newReviews: Review[]) => {
     setReviews(newReviews);
-    socket?.emit('update_reviews', newReviews);
+    if (socket?.connected) {
+      socket.emit('update_reviews', newReviews);
+    } else {
+      updateTable('reviews', newReviews);
+    }
   };
 
   const updateNotifications = (newNotifications: Notification[]) => {
     setNotifications(newNotifications);
-    socket?.emit('update_notifications', newNotifications);
+    if (socket?.connected) {
+      socket.emit('update_notifications', newNotifications);
+    } else {
+      updateTable('notifications', newNotifications);
+    }
   };
 
   const updateWalletBalance = (userId: string, amount: number) => {
@@ -566,7 +671,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       u.id === userId ? { ...u, walletBalance: (u.walletBalance || 0) + amount } : u
     );
     setUsers(updatedUsers);
-    socket?.emit('update_users', updatedUsers);
+    if (socket?.connected) {
+      socket.emit('update_users', updatedUsers);
+    } else {
+      updateTable('users', updatedUsers);
+    }
   };
 
   const processReferral = (referralCode: string, newUserId: string) => {
@@ -588,7 +697,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     setUsers(updatedUsers);
-    socket?.emit('update_users', updatedUsers);
+    if (socket?.connected) {
+      socket.emit('update_users', updatedUsers);
+    } else {
+      updateTable('users', updatedUsers);
+    }
   };
 
   const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
@@ -600,8 +713,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString()
     };
     setAppointments(prev => [newAppointment, ...prev]);
-    // We emit the add_appointment event, and the server will broadcast the updated list
-    socket?.emit('add_appointment', newAppointment);
+    
+    if (socket?.connected) {
+      socket.emit('add_appointment', newAppointment);
+    } else {
+      dbAddAppointment(newAppointment);
+    }
   };
 
   const loginAdmin = (role: 'admin' | 'viewer' = 'admin') => {

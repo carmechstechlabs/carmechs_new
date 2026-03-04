@@ -1,10 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/^["']|["']$/g, '');
-const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').replace(/^["']|["']$/g, '');
+const isServer = typeof window === 'undefined';
 
-export const supabase = (supabaseUrl && supabaseServiceKey) 
-  ? createClient(supabaseUrl, supabaseServiceKey)
+const supabaseUrl = (
+  (isServer ? process.env.SUPABASE_URL : import.meta.env.VITE_SUPABASE_URL) || ''
+).replace(/^["']|["']$/g, '');
+
+const supabaseKey = (
+  (isServer ? process.env.SUPABASE_SERVICE_ROLE_KEY : import.meta.env.VITE_SUPABASE_ANON_KEY) || ''
+).replace(/^["']|["']$/g, '');
+
+export const supabase = (supabaseUrl && supabaseKey) 
+  ? createClient(supabaseUrl, supabaseKey)
   : null;
 
 // Helper to map camelCase to snake_case for DB
