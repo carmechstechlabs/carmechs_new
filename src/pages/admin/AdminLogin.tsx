@@ -5,10 +5,11 @@ import { Lock, Loader2, Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
 import { motion } from "motion/react";
+import { supabase } from "@/services/supabaseService";
 
 export function AdminLogin() {
   const navigate = useNavigate();
-  const { loginAdmin, isAdminLoggedIn, settings, uiSettings, users } = useData();
+  const { loginAdmin, isAdminLoggedIn, settings, uiSettings, users, isLoading: isDataLoading } = useData();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -36,10 +37,32 @@ export function AdminLogin() {
     setIsLoading(true);
 
     try {
+      // Check if data is still loading
+      if (isDataLoading) {
+        toast.error("System is still initializing. Please wait a few seconds and try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if Supabase is initialized
+      if (!supabase) {
+        toast.error("Database Error: Supabase client is not initialized. Please check your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables in Vercel.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Simulate network delay for security
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
       const identifier = formData.username.trim().toLowerCase();
       const password = formData.password;
+
+      // Check if users are loaded
+      if (users.length === 0) {
+        toast.error("Database Connection Error: No users found. Please check your Supabase configuration and ensure you've run the migration.");
+        setIsLoading(false);
+        return;
+      }
 
       // Find user in the users list who is an admin or viewer
       const user = users.find(u => 
@@ -53,9 +76,22 @@ export function AdminLogin() {
         toast.success(`Identity Verified: ${user.name}. Access Granted.`);
         navigate("/admin/dashboard");
       } else {
-        toast.error("Authentication Failed. Invalid Credentials or Insufficient Permissions.");
+        // Check if it's a password mismatch or role issue
+        const foundUser = users.find(u => u.email.toLowerCase() === identifier || u.name.toLowerCase() === identifier);
+        if (foundUser) {
+          if (foundUser.password !== password) {
+            toast.error("Authentication Failed: Invalid password.");
+          } else if (foundUser.role === 'user') {
+            toast.error("Authentication Failed: Insufficient permissions. This account is not an administrator.");
+          } else {
+            toast.error("Authentication Failed: Invalid credentials.");
+          }
+        } else {
+          toast.error("Authentication Failed: User not found.");
+        }
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast.error("System Error. Please try again.");
     } finally {
       setIsLoading(false);
@@ -180,6 +216,10 @@ export function AdminLogin() {
 
         {/* Footer Info */}
         <div className="mt-8 flex flex-col items-center gap-6">
+          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center max-w-xs">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Default Credentials</p>
+            <p className="text-[10px] text-slate-600 font-bold">admin@carmechs.in / admin</p>
+          </div>
           <Link to="/" className="text-[10px] text-slate-400 hover:text-[#e31e24] uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
             Back to Website

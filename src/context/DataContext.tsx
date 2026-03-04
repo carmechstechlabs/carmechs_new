@@ -260,6 +260,7 @@ interface DataContextType {
   logoutAdmin: () => void;
   currentUser: FirebaseUser | null;
   logout: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -371,6 +372,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -438,6 +440,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error("Error fetching initial data from Supabase:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -774,7 +778,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       loginAdmin,
       logoutAdmin,
       currentUser,
-      logout
+      logout,
+      isLoading
     }}>
       {children}
     </DataContext.Provider>
