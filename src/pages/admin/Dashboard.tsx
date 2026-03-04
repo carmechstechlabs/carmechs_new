@@ -195,7 +195,13 @@ export function Dashboard() {
           <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
             <Activity className="h-3 w-3" /> System Overview
           </div>
-          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Management Dashboard</h1>
+          <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
+            Management Dashboard
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 border border-emerald-100 rounded-full animate-pulse">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Live Sync</span>
+            </div>
+          </h1>
           <p className="text-slate-500 text-sm font-medium">Real-time operational monitoring and business analysis.</p>
         </div>
         
