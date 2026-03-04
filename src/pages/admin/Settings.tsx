@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Save, Loader2, Globe, Mail, Phone, MapPin, MessageSquare, Gift, Facebook, Instagram, Twitter, Layout, Upload, Image as ImageIcon, X, Shield, Zap, Activity, ArrowRight, Settings as SettingsIcon } from "lucide-react";
+import { Save, Loader2, Globe, Mail, Phone, MapPin, MessageSquare, Gift, Facebook, Instagram, Twitter, Layout, Upload, Image as ImageIcon, X, Shield, Zap, Activity, ArrowRight, Settings as SettingsIcon, Key, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { motion } from "motion/react";
 
 export function SettingsPage() {
-  const { settings, updateSettings, adminRole } = useData();
+  const { settings, updateSettings, adminRole, users, updateUsers } = useData();
   const [formData, setFormData] = useState<Settings>(settings);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -336,6 +336,90 @@ export function SettingsPage() {
               <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
                 Amount credited to referrer's wallet upon successful user sign-up.
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Security Section */}
+        <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden lg:col-span-2">
+          <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
+                <Shield className="h-5 w-5 text-red-600" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Security & Access</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Update your administrative credentials.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Change Admin Password</h3>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">New Password</label>
+                    <div className="relative">
+                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-600" />
+                      <Input 
+                        type="password"
+                        placeholder="Enter new password"
+                        id="new-admin-password"
+                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Confirm Password</label>
+                    <div className="relative">
+                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-600" />
+                      <Input 
+                        type="password"
+                        placeholder="Confirm new password"
+                        id="confirm-admin-password"
+                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      const newPass = (document.getElementById('new-admin-password') as HTMLInputElement).value;
+                      const confirmPass = (document.getElementById('confirm-admin-password') as HTMLInputElement).value;
+                      if (!newPass) {
+                        toast.error("Password cannot be empty");
+                        return;
+                      }
+                      if (newPass !== confirmPass) {
+                        toast.error("Passwords do not match");
+                        return;
+                      }
+                      // In a real app, this would call an API. 
+                      // Here we update the admin user in the users list.
+                      const adminUser = users.find(u => u.role === 'admin');
+                      if (adminUser) {
+                        const updatedUsers = users.map(u => u.id === adminUser.id ? { ...u, password: newPass } : u);
+                        updateUsers(updatedUsers);
+                        toast.success("Admin password updated successfully");
+                        (document.getElementById('new-admin-password') as HTMLInputElement).value = "";
+                        (document.getElementById('confirm-admin-password') as HTMLInputElement).value = "";
+                      }
+                    }}
+                    className="h-12 px-8 bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Update Password
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 flex flex-col items-center justify-center text-center">
+                <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm mb-4">
+                  <ShieldCheck className="h-8 w-8 text-red-600" />
+                </div>
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-2">Security Recommendation</h4>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                  Use at least 8 characters with a mix of letters, numbers, and symbols to ensure maximum security for your administrative portal.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

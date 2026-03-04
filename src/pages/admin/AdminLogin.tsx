@@ -129,7 +129,16 @@ export function AdminLogin() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Password</label>
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password</label>
+                  <button 
+                    type="button"
+                    onClick={() => toast.info("Please contact the system administrator to reset your password.")}
+                    className="text-[9px] font-black text-red-600 uppercase tracking-widest hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <div className="relative group">
                   <input
                     type={showPassword ? "text" : "password"}

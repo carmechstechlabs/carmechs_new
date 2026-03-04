@@ -123,7 +123,17 @@ export function Services() {
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12">
             <div className="max-w-xs">
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Vehicle Profile</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vehicle Profile</h2>
+                {isVehicleSelected && (
+                  <button 
+                    onClick={() => { setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}
+                    className="text-[9px] font-black text-red-600 uppercase tracking-widest hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <p className="text-sm text-slate-500 font-medium">Select your vehicle to unlock precise, model-specific pricing.</p>
             </div>
             
