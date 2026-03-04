@@ -114,7 +114,11 @@ export async function getInitialState() {
 export async function updateTable(table: string, data: any[]) {
   if (!supabase) return;
   try {
-    if (!data || data.length === 0) return;
+    if (!data || data.length === 0) {
+      // If data is empty, we might want to clear the table, but let's be careful
+      // For now, just return to avoid accidental wipes
+      return;
+    }
 
     const mappedData = data.map(item => {
       const snake = toSnakeCase(item);
@@ -131,8 +135,36 @@ export async function updateTable(table: string, data: any[]) {
 
     const { error } = await supabase.from(table).upsert(mappedData);
     if (error) console.error(`Error updating ${table}:`, error);
+
+    // Handle deletions: Remove items from DB that are not in the new data list
+    // Determine the primary key for the table
+    let primaryKey = 'id';
+    if (['car_makes', 'car_models', 'fuel_types'].includes(table)) {
+      primaryKey = 'name';
+    }
+
+    const currentIds = data.map(item => item[primaryKey]).filter(Boolean);
+    if (currentIds.length > 0) {
+      // For composite keys like car_models (name, make), this is a simplification
+      // but usually 'name' is unique enough for our purposes here.
+      const { error: delError } = await supabase
+        .from(table)
+        .delete()
+        .not(primaryKey, 'in', `(${currentIds.map(id => `"${id}"`).join(',')})`);
+      if (delError) console.error(`Error cleaning up ${table}:`, delError);
+    }
   } catch (error) {
     console.error(`Unexpected error updating ${table}:`, error);
+  }
+}
+
+export async function deleteFromTable(table: string, id: string) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) console.error(`Error deleting from ${table}:`, error);
+  } catch (error) {
+    console.error(`Unexpected error deleting from ${table}:`, error);
   }
 }
 

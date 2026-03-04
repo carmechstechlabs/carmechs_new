@@ -476,10 +476,45 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
-  app.post("/api/upload", upload.single("image"), (req, res) => {
+  app.post("/api/upload", upload.single("image"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
+
+    // Try to upload to Supabase Storage if configured
+    if (supabase) {
+      try {
+        const fileContent = fs.readFileSync(req.file.path);
+        const fileName = `${Date.now()}-${req.file.originalname}`;
+        const { data, error } = await supabase.storage
+          .from('uploads')
+          .upload(fileName, fileContent, {
+            contentType: req.file.mimetype,
+            upsert: true
+          });
+
+        if (error) {
+          console.error("Supabase storage upload error:", error);
+          // Fallback to local URL if Supabase fails but file is saved locally
+          const localUrl = `/uploads/${req.file.filename}`;
+          return res.json({ url: localUrl });
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(fileName);
+
+        // Clean up local file after successful upload to Supabase
+        fs.unlinkSync(req.file.path);
+
+        return res.json({ url: publicUrl });
+      } catch (err) {
+        console.error("Unexpected error during Supabase upload:", err);
+      }
+    }
+
+    // Fallback to local storage
     const imageUrl = `/uploads/${req.file.filename}`;
     res.json({ url: imageUrl });
   });
