@@ -137,23 +137,12 @@ export function AdminLogin() {
           >
             Admin <span className="text-[#e31e24]">Portal</span>
           </motion.h2>
-          
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center justify-center gap-3">
-              <div className="h-px w-8 bg-slate-100" />
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">
-                Authorized Personnel Only
-              </p>
-              <div className="h-px w-8 bg-slate-100" />
-            </div>
-            
-            {/* Connection Status Badge */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
-              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : 'bg-red-500'}`} />
-              <span className="text-[8px] font-black uppercase tracking-widest">
-                Database: {supabase ? 'Connected' : 'Configuration Missing'}
-              </span>
-            </div>
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-px w-8 bg-slate-100" />
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">
+              Authorized Personnel Only
+            </p>
+            <div className="h-px w-8 bg-slate-100" />
           </div>
         </div>
 
