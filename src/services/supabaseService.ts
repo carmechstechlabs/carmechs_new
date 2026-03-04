@@ -54,12 +54,13 @@ export async function getInitialState() {
     const { data: coupons, error: cpErr } = await supabase.from('coupons').select('*');
     const { data: reviews, error: rErr } = await supabase.from('reviews').select('*');
     const { data: notifications, error: nErr } = await supabase.from('notifications').select('*');
+    const { data: servicePackages, error: spErr } = await supabase.from('service_packages').select('*');
     const { data: users, error: uErr } = await supabase.from('users').select('*');
     const { data: appointments, error: aErr } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
     const { data: config, error: cfgErr } = await supabase.from('site_config').select('*');
 
-    if (sErr || cmErr || cmodErr || fErr || bErr || lErr || uErr || aErr || cfgErr || iErr || catErr || cpErr || rErr || nErr) {
-      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, lErr, uErr, aErr, cfgErr, iErr, catErr, cpErr, rErr, nErr });
+    if (sErr || cmErr || cmodErr || fErr || bErr || lErr || uErr || aErr || cfgErr || iErr || catErr || cpErr || rErr || nErr || spErr) {
+      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, lErr, uErr, aErr, cfgErr, iErr, catErr, cpErr, rErr, nErr, spErr });
     }
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
@@ -87,6 +88,7 @@ export async function getInitialState() {
       coupons: (coupons || []).map(toCamelCase),
       reviews: (reviews || []).map(toCamelCase),
       notifications: (notifications || []).map(toCamelCase),
+      servicePackages: (servicePackages || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
@@ -107,6 +109,7 @@ export async function getInitialState() {
       coupons: [],
       reviews: [],
       notifications: [],
+      servicePackages: [],
     };
   }
 }
@@ -114,9 +117,16 @@ export async function getInitialState() {
 export async function updateTable(table: string, data: any[]) {
   if (!supabase) return;
   try {
+    // Determine the primary key for the table
+    let primaryKey = 'id';
+    if (['car_makes', 'car_models', 'fuel_types'].includes(table)) {
+      primaryKey = 'name';
+    }
+
     if (!data || data.length === 0) {
-      // If data is empty, we might want to clear the table, but let's be careful
-      // For now, just return to avoid accidental wipes
+      // If data is empty, clear the table
+      const { error: delError } = await supabase.from(table).delete().neq(primaryKey, '00000000-0000-0000-0000-000000000000'); // Delete all
+      if (delError) console.error(`Error clearing ${table}:`, delError);
       return;
     }
 
@@ -137,16 +147,8 @@ export async function updateTable(table: string, data: any[]) {
     if (error) console.error(`Error updating ${table}:`, error);
 
     // Handle deletions: Remove items from DB that are not in the new data list
-    // Determine the primary key for the table
-    let primaryKey = 'id';
-    if (['car_makes', 'car_models', 'fuel_types'].includes(table)) {
-      primaryKey = 'name';
-    }
-
     const currentIds = data.map(item => item[primaryKey]).filter(Boolean);
     if (currentIds.length > 0) {
-      // For composite keys like car_models (name, make), this is a simplification
-      // but usually 'name' is unique enough for our purposes here.
       const { error: delError } = await supabase
         .from(table)
         .delete()

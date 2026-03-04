@@ -251,6 +251,20 @@ const initialLocations = [
   { id: "10", name: "Noida", isPopular: false },
 ];
 
+const initialServicePackages = [
+  {
+    id: "basic-maint",
+    title: "Basic Maintenance",
+    description: "Essential services to keep your car running smoothly.",
+    serviceIds: ["periodic", "spa"],
+    discountPercentage: 10,
+    basePrice: 2878,
+    features: ["Oil Change", "Full Wash", "Interior Vacuuming"],
+    isPopular: true,
+    imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=800&auto=format&fit=crop"
+  }
+];
+
 // In-memory state
 let state = {
   services: initialServices,
@@ -269,6 +283,7 @@ let state = {
   coupons: [] as any[],
   reviews: [] as any[],
   notifications: [] as any[],
+  servicePackages: initialServicePackages,
 };
 
 async function startServer() {
@@ -286,31 +301,53 @@ async function startServer() {
   let currentState = { ...state };
   try {
     if (supabase) {
+      console.log("Supabase client initialized, fetching initial state...");
       const dbState = await getInitialState();
       if (dbState) {
         // Merge with initial state to ensure all keys exist
         currentState = {
           ...state,
           ...dbState,
-          // Only override if data was actually found
-          services: dbState.services.length > 0 ? dbState.services : state.services,
-          carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : state.carMakes,
-          carModels: dbState.carModels.length > 0 ? dbState.carModels : state.carModels,
-          fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : state.fuelTypes,
-          settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : state.settings,
-          uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : state.uiSettings,
-          apiKeys: Object.keys(dbState.apiKeys).length > 0 ? dbState.apiKeys : state.apiKeys,
-          brands: dbState.brands.length > 0 ? dbState.brands : state.brands,
-          locations: dbState.locations?.length > 0 ? dbState.locations : state.locations,
-          inventory: dbState.inventory?.length > 0 ? dbState.inventory : state.inventory,
-          categories: dbState.categories?.length > 0 ? dbState.categories : state.categories,
-          coupons: dbState.coupons?.length > 0 ? dbState.coupons : state.coupons,
-          reviews: dbState.reviews?.length > 0 ? dbState.reviews : state.reviews,
-          notifications: dbState.notifications?.length > 0 ? dbState.notifications : state.notifications,
-          users: dbState.users.length > 0 ? dbState.users : state.users,
-          appointments: dbState.appointments.length > 0 ? dbState.appointments : state.appointments,
         };
-        console.log("State loaded from Supabase");
+
+        // Check if we need to seed any tables that are empty
+        const tablesToSeed = [
+          { name: 'services', data: state.services, dbData: dbState.services },
+          { name: 'car_makes', data: state.carMakes, dbData: dbState.carMakes },
+          { name: 'car_models', data: state.carModels, dbData: dbState.carModels },
+          { name: 'fuel_types', data: state.fuelTypes, dbData: dbState.fuelTypes },
+          { name: 'settings', data: state.settings, dbData: dbState.settings, isConfig: true },
+          { name: 'ui_settings', data: state.uiSettings, dbData: dbState.uiSettings, isConfig: true },
+          { name: 'brands', data: state.brands, dbData: dbState.brands },
+          { name: 'locations', data: state.locations, dbData: dbState.locations },
+          { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
+        ];
+
+        for (const table of tablesToSeed) {
+          const isEmpty = table.isConfig 
+            ? Object.keys(table.dbData || {}).length === 0 
+            : (table.dbData || []).length === 0;
+          
+          if (isEmpty && table.data) {
+            console.log(`Seeding table ${table.name} with initial data...`);
+            if (table.isConfig) {
+              await updateConfig(table.name, table.data as any);
+            } else {
+              await updateTable(table.name, table.data as any[]);
+            }
+          }
+        }
+
+        // Re-fetch state after seeding to be sure
+        const seededState = await getInitialState();
+        if (seededState) {
+          currentState = {
+            ...state,
+            ...seededState,
+          };
+        }
+        
+        console.log("State loaded and synchronized with Supabase");
 
         // Set up Realtime Subscriptions
         supabase
@@ -339,6 +376,7 @@ async function startServer() {
                 coupons: newState.coupons?.length > 0 ? newState.coupons : currentState.coupons,
                 reviews: newState.reviews?.length > 0 ? newState.reviews : currentState.reviews,
                 notifications: newState.notifications?.length > 0 ? newState.notifications : currentState.notifications,
+                servicePackages: newState.servicePackages?.length > 0 ? newState.servicePackages : currentState.servicePackages,
                 users: newState.users.length > 0 ? newState.users : currentState.users,
                 appointments: newState.appointments.length > 0 ? newState.appointments : currentState.appointments,
               };
@@ -362,105 +400,129 @@ async function startServer() {
 
     // Handle updates from clients
     socket.on("update_services", async (services) => {
+      console.log("Updating services...");
       currentState.services = services;
       socket.broadcast.emit("services_updated", services);
       await updateTable('services', services);
     });
 
     socket.on("update_car_makes", async (makes) => {
+      console.log("Updating car makes...");
       currentState.carMakes = makes;
       socket.broadcast.emit("car_makes_updated", makes);
       await updateTable('car_makes', makes);
     });
 
     socket.on("update_car_models", async (models) => {
+      console.log("Updating car models...");
       currentState.carModels = models;
       socket.broadcast.emit("car_models_updated", models);
       await updateTable('car_models', models);
     });
 
     socket.on("update_fuel_types", async (fuels) => {
+      console.log("Updating fuel types...");
       currentState.fuelTypes = fuels;
       socket.broadcast.emit("fuel_types_updated", fuels);
       await updateTable('fuel_types', fuels);
     });
 
     socket.on("update_settings", async (settings) => {
+      console.log("Updating settings...");
       currentState.settings = settings;
       socket.broadcast.emit("settings_updated", settings);
       await updateConfig('settings', settings);
     });
 
     socket.on("update_appointments", async (appointments) => {
+      console.log("Updating appointments...");
       currentState.appointments = appointments;
       socket.broadcast.emit("appointments_updated", appointments);
       await updateTable('appointments', appointments);
     });
 
     socket.on("add_appointment", async (appointment) => {
+      console.log("Adding appointment...");
       currentState.appointments = [appointment, ...currentState.appointments];
       io.emit("appointments_updated", currentState.appointments);
       await addAppointment(appointment);
     });
 
     socket.on("update_users", async (users) => {
+      console.log("Updating users...");
       currentState.users = users;
       socket.broadcast.emit("users_updated", users);
       await updateTable('users', users);
     });
 
     socket.on("update_ui_settings", async (uiSettings) => {
+      console.log("Updating UI settings...");
       currentState.uiSettings = uiSettings;
       socket.broadcast.emit("ui_settings_updated", uiSettings);
       await updateConfig('ui_settings', uiSettings);
     });
 
     socket.on("update_api_keys", async (apiKeys) => {
+      console.log("Updating API keys...");
       currentState.apiKeys = apiKeys;
       socket.broadcast.emit("api_keys_updated", apiKeys);
       await updateConfig('api_keys', apiKeys);
     });
 
     socket.on("update_brands", async (brands) => {
+      console.log("Updating brands...");
       currentState.brands = brands;
       socket.broadcast.emit("brands_updated", brands);
       await updateTable('brands', brands);
     });
 
     socket.on("update_locations", async (locations) => {
+      console.log("Updating locations...");
       currentState.locations = locations;
       socket.broadcast.emit("locations_updated", locations);
       await updateTable('locations', locations);
     });
 
     socket.on("update_inventory", async (inventory) => {
+      console.log("Updating inventory...");
       currentState.inventory = inventory;
       socket.broadcast.emit("inventory_updated", inventory);
       await updateTable('inventory', inventory);
     });
 
     socket.on("update_categories", async (categories) => {
+      console.log("Updating categories...");
       currentState.categories = categories;
       socket.broadcast.emit("categories_updated", categories);
       await updateTable('categories', categories);
     });
 
     socket.on("update_coupons", async (coupons) => {
+      console.log("Updating coupons...");
       currentState.coupons = coupons;
       socket.broadcast.emit("coupons_updated", coupons);
       await updateTable('coupons', coupons);
     });
 
     socket.on("update_reviews", async (reviews) => {
+      console.log("Updating reviews...");
       currentState.reviews = reviews;
       socket.broadcast.emit("reviews_updated", reviews);
       await updateTable('reviews', reviews);
     });
 
     socket.on("update_notifications", async (notifications) => {
+      console.log("Updating notifications...");
       currentState.notifications = notifications;
       socket.broadcast.emit("notifications_updated", notifications);
       await updateTable('notifications', notifications);
+    });
+
+    socket.on("update_service_packages", async (packages) => {
+      console.log("Updating service packages...");
+      currentState.servicePackages = packages;
+      socket.broadcast.emit("service_packages_updated", packages);
+      await updateTable('service_packages', packages);
     });
 
     socket.on("disconnect", () => {

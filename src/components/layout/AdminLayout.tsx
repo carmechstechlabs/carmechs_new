@@ -62,6 +62,7 @@ export function AdminLayout() {
     { path: "/admin/appointments", label: "Bookings", icon: Calendar },
     { path: "/admin/customers", label: "Customers", icon: UsersRound },
     { path: "/admin/services", label: "Catalog", icon: Wrench },
+    { path: "/admin/service-packages", label: "Bundles", icon: Package },
     { path: "/admin/categories", label: "Categories", icon: LayoutGrid },
     { path: "/admin/inventory", label: "Inventory", icon: Package },
     { path: "/admin/coupons", label: "Coupons", icon: Ticket },

@@ -5,9 +5,6 @@ import { Home } from "@/pages/Home";
 import { Services } from "@/pages/Services";
 import { Booking } from "@/pages/Booking";
 import { Login } from "@/pages/Login";
-import { Contact } from "@/pages/Contact";
-import { About } from "@/pages/About";
-import { FAQ } from "@/pages/FAQ";
 import { Profile } from "@/pages/Profile";
 import { DynamicPage } from "@/pages/DynamicPage";
 import { NotFound } from "@/pages/NotFound";
@@ -32,6 +29,7 @@ import { Inventory as AdminInventory } from "@/pages/admin/Inventory";
 import { Categories as AdminCategories } from "@/pages/admin/Categories";
 import { Coupons as AdminCoupons } from "@/pages/admin/Coupons";
 import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
+import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
@@ -44,9 +42,9 @@ function AppRoutes() {
         <Route path="p/:slug" element={<DynamicPage />} />
         <Route path="services" element={<Services />} />
         <Route path="book" element={<Booking />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="about" element={<About />} />
-        <Route path="faq" element={<FAQ />} />
+        <Route path="contact" element={<DynamicPage slugOverride="contact" />} />
+        <Route path="about" element={<DynamicPage slugOverride="about" />} />
+        <Route path="faq" element={<DynamicPage slugOverride="faq" />} />
         <Route path="profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -63,6 +61,7 @@ function AppRoutes() {
           <Route path="appointments" element={<AdminAppointments />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="services" element={<AdminServices />} />
+          <Route path="service-packages" element={<AdminServicePackages />} />
           <Route path="brands" element={<AdminBrands />} />
           <Route path="locations" element={<AdminLocations />} />
           <Route path="inventory" element={<AdminInventory />} />

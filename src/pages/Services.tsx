@@ -11,11 +11,12 @@ import {
   Info,
   ChevronRight,
   Search,
-  ArrowRight
+  ArrowRight,
+  Package
 } from "lucide-react";
 import { useState } from "react";
 import { ServiceModal } from "@/components/ServiceModal";
-import { useData } from "@/context/DataContext";
+import { useData, ServicePackage } from "@/context/DataContext";
 import {
   Select,
   SelectContent,
@@ -43,8 +44,9 @@ const getIcon = (service: any) => {
 };
 
 export function Services() {
-  const { services, carMakes, carModels, fuelTypes } = useData();
+  const { services, servicePackages, carMakes, carModels, fuelTypes } = useData();
   const [selectedService, setSelectedService] = useState<any>(null);
+  const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Vehicle Selection State
@@ -112,6 +114,93 @@ export function Services() {
           </div>
         </div>
       </div>
+
+      {/* Service Packages Section */}
+      {servicePackages.length > 0 && (
+        <div className="container mx-auto px-4 lg:px-8 mb-32">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Exclusive Bundles</span>
+              </div>
+              <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter">Service Packages</h2>
+              <p className="text-slate-500 font-medium max-w-xl">Get multiple services combined at a special discounted rate. Maximum value for your vehicle.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {servicePackages.map((pkg, index) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden flex flex-col lg:flex-row group"
+              >
+                <div className="lg:w-2/5 relative overflow-hidden h-64 lg:h-auto">
+                  {pkg.imageUrl ? (
+                    <img src={pkg.imageUrl} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                      <Package className="h-12 w-12 text-slate-300" />
+                    </div>
+                  )}
+                  <div className="absolute top-6 left-6 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xl">
+                    Save {pkg.discountPercentage}%
+                  </div>
+                  {pkg.isPopular && (
+                    <div className="absolute bottom-6 left-6 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-xl">
+                      Most Popular
+                    </div>
+                  )}
+                </div>
+
+                <div className="lg:w-3/5 p-10 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4 group-hover:text-red-600 transition-colors">{pkg.title}</h3>
+                    <p className="text-slate-500 text-sm font-medium mb-8 line-clamp-2">{pkg.description}</p>
+                    
+                    <div className="space-y-3 mb-8">
+                      {pkg.serviceIds.slice(0, 3).map(sid => {
+                        const service = services.find(s => s.id === sid);
+                        return (
+                          <div key={sid} className="flex items-center gap-3 text-xs font-bold text-slate-400">
+                            <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                            </div>
+                            <span>{service?.title || "Premium Service"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Package Price</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl font-black text-red-600 tracking-tighter">₹{pkg.basePrice.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-slate-300 line-through">
+                          ₹{services.filter(s => pkg.serviceIds.includes(s.id)).reduce((sum, s) => sum + s.basePrice, 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      asChild
+                      className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-red-600/10 bg-red-600 hover:bg-red-700 text-white border-none"
+                    >
+                      <Link to="/book" state={{ packageId: pkg.id }}>Book Now</Link>
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 lg:px-8 -mt-20 relative z-20">
         {/* Vehicle Selector Card */}

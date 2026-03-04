@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ const steps = [
 ];
 
 export function Booking() {
-  const { services, carMakes, carModels, fuelTypes, addAppointment, users, updateWalletBalance, updateUser } = useData();
+  const { services, servicePackages, carMakes, carModels, fuelTypes, addAppointment, users, updateWalletBalance, updateUser } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,6 +31,7 @@ export function Booking() {
     model: "",
     fuel: "",
     service: "",
+    packageId: "",
     date: "",
     time: "",
     name: "",
@@ -42,12 +43,16 @@ export function Booking() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const qServiceId = params.get('serviceId');
+    const qPackageId = params.get('packageId');
     const qMake = params.get('make');
     const qModel = params.get('model');
     const qFuel = params.get('fuel');
 
     if (location.state?.serviceId || qServiceId) {
       setFormData(prev => ({ ...prev, service: location.state?.serviceId || qServiceId || "" }));
+    }
+    if (location.state?.packageId || qPackageId) {
+      setFormData(prev => ({ ...prev, packageId: location.state?.packageId || qPackageId || "" }));
     }
     if (location.state?.vehicleDetails || (qMake && qModel && qFuel)) {
       setFormData(prev => ({
@@ -61,7 +66,13 @@ export function Booking() {
 
   const calculatePrice = (basePrice: number) => {
     let additionalPrice = 0;
-    const { make, model, fuel } = formData;
+    const { make, model, fuel, packageId } = formData;
+
+    // Packages have their own discounted base price already calculated
+    if (packageId) {
+      const pkg = servicePackages.find(p => p.id === packageId);
+      if (pkg) return pkg.basePrice;
+    }
 
     const selectedMake = carMakes.find(m => m.name === make);
     if (selectedMake) additionalPrice += selectedMake.price;
@@ -76,9 +87,17 @@ export function Booking() {
   };
 
   const getPriceBreakdown = (basePrice: number) => {
-    const { make, model, fuel } = formData;
+    const { make, model, fuel, packageId } = formData;
     const breakdown = [];
     
+    if (packageId) {
+      const pkg = servicePackages.find(p => p.id === packageId);
+      if (pkg) {
+        breakdown.push({ label: "Package Base", value: `₹${pkg.basePrice}` });
+        return breakdown;
+      }
+    }
+
     breakdown.push({ label: "Base Price", value: `₹${basePrice}` });
 
     const selectedMake = carMakes.find(m => m.name === make);
@@ -139,7 +158,8 @@ export function Booking() {
     
     try {
       const service = services.find(s => s.id === formData.service);
-      const totalPrice = service ? calculatePrice(service.basePrice) : 0;
+      const pkg = servicePackages.find(p => p.id === formData.packageId);
+      const totalPrice = pkg ? pkg.basePrice : (service ? calculatePrice(service.basePrice) : 0);
       
       // If using wallet, we subtract from balance first
       if (useWallet && user) {
@@ -164,7 +184,7 @@ export function Booking() {
       });
       
       if (formData.email) {
-        const serviceTitle = services.find(s => s.id === formData.service)?.title || "Car Service";
+        const serviceTitle = pkg ? pkg.title : (services.find(s => s.id === formData.service)?.title || "Car Service");
         
         const response = await fetch('/api/send-confirmation', {
           method: 'POST',
@@ -216,7 +236,7 @@ export function Booking() {
 
   const isStepValid = () => {
     if (currentStep === 1) return formData.make && formData.model && formData.fuel;
-    if (currentStep === 2) return formData.service;
+    if (currentStep === 2) return formData.service || formData.packageId;
     if (currentStep === 3) return formData.date && formData.time && formData.name && formData.phone;
     if (currentStep === 4) return formData.paymentMethod;
     return false;
@@ -459,12 +479,69 @@ export function Booking() {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4">
+                  {/* Service Packages First */}
+                  {servicePackages.length > 0 && (
+                    <div className="space-y-4 mb-6">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Recommended Bundles</p>
+                      {servicePackages.map((pkg) => (
+                        <motion.div
+                          key={pkg.id}
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          onClick={() => setFormData({ ...formData, packageId: pkg.id, service: "" })}
+                          className={cn(
+                            "p-8 rounded-3xl border text-left transition-all flex justify-between items-center group cursor-pointer relative overflow-hidden",
+                            formData.packageId === pkg.id 
+                              ? "border-emerald-600 bg-emerald-50 shadow-xl shadow-emerald-600/5" 
+                              : "border-slate-100 bg-white hover:border-emerald-600/30 shadow-sm"
+                          )}
+                        >
+                          <div className="flex items-center gap-6">
+                            <div className={cn(
+                              "h-16 w-16 rounded-2xl flex items-center justify-center transition-colors",
+                              formData.packageId === pkg.id ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-400 group-hover:text-emerald-600"
+                            )}>
+                              <Package className="h-8 w-8" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className={cn(
+                                  "text-2xl font-black uppercase tracking-tight transition-colors",
+                                  formData.packageId === pkg.id ? "text-emerald-600" : "text-slate-900"
+                                )}>
+                                  {pkg.title}
+                                </h3>
+                                <span className="bg-emerald-100 text-emerald-600 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">Bundle</span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-slate-500 font-bold">₹{pkg.basePrice.toLocaleString()}</span>
+                                <span className="text-[10px] text-slate-400 line-through font-medium">
+                                  ₹{services.filter(s => pkg.serviceIds.includes(s.id)).reduce((sum, s) => sum + s.basePrice, 0).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {formData.packageId === pkg.id && (
+                            <motion.div 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-600/20"
+                            >
+                              <Check className="h-6 w-6 stroke-[3]" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Individual Services</p>
                   {services.map((service) => (
                     <motion.div
                       key={service.id}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      onClick={() => setFormData({ ...formData, service: service.id })}
+                      onClick={() => setFormData({ ...formData, service: service.id, packageId: "" })}
                       className={cn(
                         "p-8 rounded-3xl border text-left transition-all flex justify-between items-center group cursor-pointer relative overflow-hidden",
                         formData.service === service.id 
@@ -621,7 +698,11 @@ export function Booking() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-white/40 text-xs font-bold uppercase">Protocol</span>
-                        <span className="font-black uppercase tracking-tight">{services.find(s => s.id === formData.service)?.title}</span>
+                        <span className="font-black uppercase tracking-tight">
+                          {formData.packageId 
+                            ? servicePackages.find(p => p.id === formData.packageId)?.title 
+                            : services.find(s => s.id === formData.service)?.title}
+                        </span>
                       </div>
                     </div>
                     <div className="space-y-4">
@@ -643,6 +724,9 @@ export function Booking() {
                         <span className="text-white/40 text-xs font-bold uppercase">Estimated Total</span>
                         <span className="text-3xl font-black text-red-600">
                           ₹{(() => {
+                            if (formData.packageId) {
+                              return servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0;
+                            }
                             const service = services.find(s => s.id === formData.service);
                             return service ? calculatePrice(service.basePrice) : 0;
                           })()}
@@ -732,15 +816,20 @@ export function Booking() {
                       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Settlement Amount</p>
                       <h3 className="text-6xl font-black text-red-600 tracking-tighter">
                         ₹{(() => {
+                          const pkg = servicePackages.find(p => p.id === formData.packageId);
                           const service = services.find(s => s.id === formData.service);
-                          const total = service ? calculatePrice(service.basePrice) : 0;
+                          const total = pkg ? pkg.basePrice : (service ? calculatePrice(service.basePrice) : 0);
                           return useWallet ? Math.max(0, total - user.walletBalance) : total;
                         })()}
                       </h3>
                     </div>
                     <div className="text-center md:text-right">
                       <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Active Protocol</p>
-                      <p className="text-xl font-black uppercase tracking-tight">{services.find(s => s.id === formData.service)?.title}</p>
+                      <p className="text-xl font-black uppercase tracking-tight">
+                        {formData.packageId 
+                          ? servicePackages.find(p => p.id === formData.packageId)?.title 
+                          : services.find(s => s.id === formData.service)?.title}
+                      </p>
                       <div className="flex items-center gap-2 mt-2 justify-center md:justify-end text-white/60 text-xs font-bold">
                         <Sparkles className="h-3 w-3 text-red-600" />
                         {formData.make} {formData.model}

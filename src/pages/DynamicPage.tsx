@@ -5,7 +5,31 @@ import { NotFound } from "./NotFound";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Clock, IndianRupee, Wrench, Star, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { 
+  ShieldCheck, 
+  Clock, 
+  IndianRupee, 
+  Wrench, 
+  Star, 
+  ChevronRight, 
+  Image as ImageIcon, 
+  HelpCircle, 
+  Search, 
+  Sparkles, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Send, 
+  MessageSquare 
+} from "lucide-react";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { Home } from "./Home";
@@ -18,12 +42,12 @@ const IconMap: Record<string, any> = {
   Star
 };
 
-export function DynamicPage() {
+export function DynamicPage({ slugOverride }: { slugOverride?: string }) {
   const { slug } = useParams();
   const { uiSettings, services, brands } = useData();
   const [carSelection, setCarSelection] = React.useState({ make: '', model: '', fuel: '' });
   
-  const pageSlug = slug || 'home';
+  const pageSlug = slugOverride || slug || 'home';
   const page = uiSettings.pages?.find(p => p.slug === pageSlug);
 
   if (!page || (!page.isPublished && pageSlug !== 'home')) {
@@ -367,6 +391,122 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                   <img src={brand.imageUrl} alt={brand.name} className="max-h-full max-w-full object-contain" />
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'faq-list':
+      return (
+        <section className="pb-32 bg-white">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-slate-900">{section.title}</h2>
+            </div>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-3xl border border-slate-200 p-6 md:p-12 shadow-xl shadow-slate-200/50"
+            >
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                {[
+                  { q: "How do I book a service?", a: "You can book a service by clicking on the 'Book Now' button on our homepage or services page. Select your car make, model, and the desired service, then choose a convenient date and time slot." },
+                  { q: "What areas do you serve?", a: "We currently serve the greater metropolitan area. You can check if we service your specific location by entering your pincode during the booking process." },
+                  { q: "Do you offer pick-up and drop-off services?", a: "Yes, we offer complimentary pick-up and drop-off services for all our major service packages. Our driver will pick up your car from your specified location and return it after the service is complete." },
+                  { q: "How long does a typical service take?", a: "The duration depends on the service package. A standard periodic maintenance service typically takes 4-6 hours. Minor repairs like battery replacement or car wash can be done in under 2 hours." }
+                ].map((faq, index) => (
+                  <AccordionItem 
+                    key={index} 
+                    value={`item-${index}`}
+                    className="border-slate-100 px-4 rounded-2xl hover:bg-slate-50 transition-colors"
+                  >
+                    <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary hover:no-underline py-6 text-slate-900">
+                      <div className="flex items-center gap-4">
+                        <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                          <HelpCircle className="h-4 w-4 text-primary" />
+                        </div>
+                        {faq.q}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-slate-500 text-base leading-relaxed pb-6 pl-12">
+                      {faq.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
+          </div>
+        </section>
+      );
+
+    case 'contact-form':
+      return (
+        <section className="py-24 bg-white">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
+              <div className="lg:col-span-5 space-y-8">
+                <motion.div 
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100"
+                >
+                  <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-10">Terminal Access</h2>
+                  <div className="space-y-10">
+                    <div className="flex items-start gap-6 group">
+                      <div className="bg-white h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                        <MapPin className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
+                      </div>
+                      <div>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Base Operations</h3>
+                        <p className="text-lg font-bold text-slate-900 leading-tight">Newtown, Kolkata 700156</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-6 group">
+                      <div className="bg-white h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                        <Phone className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
+                      </div>
+                      <div>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Voice Uplink</h3>
+                        <p className="text-lg font-bold text-slate-900">+91-70034-35356</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              <motion.div 
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="lg:col-span-7 bg-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100"
+              >
+                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-12">{section.title}</h2>
+                <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">First Name</label>
+                      <input type="text" className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" placeholder="John" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Last Name</label>
+                      <input type="text" className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" placeholder="Doe" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
+                    <input type="email" className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold" placeholder="john@example.com" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Message</label>
+                    <textarea rows={5} className="w-full p-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold resize-none" placeholder="How can we help?"></textarea>
+                  </div>
+                  <Button size="lg" className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group bg-primary hover:bg-primary/90 text-white border-none">
+                    Send Transmission <Send className="ml-3 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  </Button>
+                </form>
+              </motion.div>
             </div>
           </div>
         </section>

@@ -17,6 +17,18 @@ export interface Service {
   iconUrl?: string;
 }
 
+export interface ServicePackage {
+  id: string;
+  title: string;
+  description: string;
+  serviceIds: string[];
+  discountPercentage: number;
+  basePrice: number;
+  features: string[];
+  isPopular: boolean;
+  imageUrl?: string;
+}
+
 export interface Brand {
   id: string;
   name: string;
@@ -148,7 +160,7 @@ export interface Feature {
 
 export interface PageSection {
   id: string;
-  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands';
+  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands' | 'faq-list' | 'contact-form';
   title?: string;
   subtitle?: string;
   content?: string;
@@ -234,6 +246,7 @@ interface DataContextType {
   coupons: Coupon[];
   reviews: Review[];
   notifications: Notification[];
+  servicePackages: ServicePackage[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -251,6 +264,7 @@ interface DataContextType {
   updateCoupons: (coupons: Coupon[]) => void;
   updateReviews: (reviews: Review[]) => void;
   updateNotifications: (notifications: Notification[]) => void;
+  updateServicePackages: (packages: ServicePackage[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
   processReferral: (referralCode: string, newUserId: string) => void;
@@ -267,6 +281,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Initial Data
 const initialServices: Service[] = [];
+const initialServicePackages: ServicePackage[] = [];
 const initialCarMakes: PricingItem[] = [];
 const initialCarModels: CarModel[] = [];
 const initialFuelTypes: PricingItem[] = [];
@@ -334,8 +349,28 @@ const initialUiSettings: UiSettings = {
       title: "About Us",
       isPublished: true,
       sections: [
-        { id: "a1", type: "hero", title: "About CarMechs", subtitle: "Your trusted partner for car maintenance." },
-        { id: "a2", type: "content", title: "Our Story", content: "We started with a simple mission: to make car care easy." }
+        { id: "a1", type: "hero", title: "Engineering Trust", subtitle: "We are on a mission to redefine automotive care through radical transparency." },
+        { id: "a2", type: "content", title: "Our Story", content: "CarMechs started with a simple observation: car service shouldn't be a black box. We saw owners struggling with opaque pricing, inconsistent quality, and a lack of accountability." }
+      ]
+    },
+    {
+      id: "contact",
+      slug: "contact",
+      title: "Contact Us",
+      isPublished: true,
+      sections: [
+        { id: "c1", type: "hero", title: "Direct Connection", subtitle: "Have a technical query or need immediate assistance? Our support engineers are standing by." },
+        { id: "c2", type: "contact-form", title: "Submit Inquiry" }
+      ]
+    },
+    {
+      id: "faq",
+      slug: "faq",
+      title: "FAQ",
+      isPublished: true,
+      sections: [
+        { id: "q1", type: "hero", title: "How can we help you?", subtitle: "Find answers to common questions about our services, booking process, and more." },
+        { id: "q2", type: "faq-list", title: "Frequently Asked Questions" }
       ]
     }
   ]
@@ -372,6 +407,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [servicePackages, setServicePackages] = useState<ServicePackage[]>(initialServicePackages);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
@@ -437,6 +473,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setCoupons(state.coupons || []);
           setReviews(state.reviews || []);
           setNotifications(state.notifications || []);
+          setServicePackages(state.servicePackages || []);
         }
       } catch (error) {
         console.error("Error fetching initial data from Supabase:", error);
@@ -467,6 +504,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'coupons' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'service_packages' }, () => fetchInitialData())
         .subscribe();
 
       return () => {
@@ -509,6 +547,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setCoupons(state.coupons || []);
       setReviews(state.reviews || []);
       setNotifications(state.notifications || []);
+      setServicePackages(state.servicePackages || []);
     });
 
     newSocket.on('services_updated', (newServices) => setServices(newServices));
@@ -527,6 +566,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('coupons_updated', (newCoupons) => setCoupons(newCoupons));
     newSocket.on('reviews_updated', (newReviews) => setReviews(newReviews));
     newSocket.on('notifications_updated', (newNotifications) => setNotifications(newNotifications));
+    newSocket.on('service_packages_updated', (newPackages) => setServicePackages(newPackages));
 
     return () => {
       newSocket.disconnect();
@@ -700,6 +740,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateServicePackages = (newPackages: ServicePackage[]) => {
+    setServicePackages(newPackages);
+    if (socket?.connected) {
+      socket.emit('update_service_packages', newPackages);
+    } else {
+      updateTable('service_packages', newPackages);
+    }
+  };
+
   const updateWalletBalance = (userId: string, amount: number) => {
     const updatedUsers = users.map(u => 
       u.id === userId ? { ...u, walletBalance: (u.walletBalance || 0) + amount } : u
@@ -783,6 +832,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       coupons,
       reviews,
       notifications,
+      servicePackages,
       updateServices,
       updateCarMakes,
       updateCarModels,
@@ -800,6 +850,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateCoupons,
       updateReviews,
       updateNotifications,
+      updateServicePackages,
       addAppointment,
       updateWalletBalance,
       processReferral,

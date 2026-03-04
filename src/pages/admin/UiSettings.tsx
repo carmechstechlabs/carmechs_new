@@ -758,6 +758,8 @@ export function UiSettingsPage() {
                               <option value="brands">Brands</option>
                               <option value="content">Content</option>
                               <option value="cta">CTA</option>
+                              <option value="faq-list">FAQ List</option>
+                              <option value="contact-form">Contact Form</option>
                             </select>
                           </div>
                           <div className="space-y-1">
