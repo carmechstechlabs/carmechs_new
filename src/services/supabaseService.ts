@@ -10,6 +10,10 @@ const supabaseKey = (
   (isServer ? process.env.SUPABASE_SERVICE_ROLE_KEY : import.meta.env.VITE_SUPABASE_ANON_KEY) || ''
 ).replace(/^["']|["']$/g, '');
 
+if (!isServer && (!supabaseUrl || !supabaseKey)) {
+  console.warn("Supabase configuration missing! Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.");
+}
+
 export const supabase = (supabaseUrl && supabaseKey) 
   ? createClient(supabaseUrl, supabaseKey)
   : null;
