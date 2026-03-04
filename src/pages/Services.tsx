@@ -53,18 +53,18 @@ export function Services() {
   const [selectedFuel, setSelectedFuel] = useState<string>("");
 
   const calculatePrice = (basePrice: number) => {
-    let multiplier = 1;
+    let additionalPrice = 0;
 
     const make = carMakes.find(m => m.name === selectedMake);
-    if (make) multiplier *= make.multiplier;
+    if (make) additionalPrice += make.price;
 
     const model = carModels.find(m => m.name === selectedModel);
-    if (model) multiplier *= model.multiplier;
+    if (model) additionalPrice += model.price;
 
     const fuel = fuelTypes.find(f => f.name === selectedFuel);
-    if (fuel) multiplier *= fuel.multiplier;
+    if (fuel) additionalPrice += fuel.price;
 
-    return Math.round(basePrice * multiplier);
+    return Math.round(basePrice + additionalPrice);
   };
 
   const isVehicleSelected = selectedMake && selectedModel && selectedFuel;
@@ -130,7 +130,7 @@ export function Services() {
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Manufacturer</label>
-                <Select value={selectedMake} onValueChange={setSelectedMake}>
+                <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel(""); setSelectedFuel(""); }}>
                   <SelectTrigger className="h-14 rounded-2xl border-slate-200 bg-slate-50 font-bold text-slate-700">
                     <SelectValue placeholder="Select Make" />
                   </SelectTrigger>
@@ -144,7 +144,7 @@ export function Services() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Model</label>
-                <Select value={selectedModel} onValueChange={setSelectedModel} disabled={!selectedMake}>
+                <Select value={selectedModel} onValueChange={(val) => { setSelectedModel(val); setSelectedFuel(""); }} disabled={!selectedMake}>
                   <SelectTrigger className="h-14 rounded-2xl border-slate-200 bg-slate-50 font-bold text-slate-700">
                     <SelectValue placeholder="Select Model" />
                   </SelectTrigger>
@@ -158,7 +158,7 @@ export function Services() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Fuel Type</label>
-                <Select value={selectedFuel} onValueChange={setSelectedFuel}>
+                <Select value={selectedFuel} onValueChange={setSelectedFuel} disabled={!selectedModel}>
                   <SelectTrigger className="h-14 rounded-2xl border-slate-200 bg-slate-50 font-bold text-slate-700">
                     <SelectValue placeholder="Select Fuel" />
                   </SelectTrigger>
@@ -267,12 +267,16 @@ export function Services() {
                                 <span>₹{service.basePrice}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-500">Make Multiplier</span>
-                                <span>x{carMakes.find(m => m.name === selectedMake)?.multiplier || 1}</span>
+                                <span className="text-slate-500">Make Adjustment</span>
+                                <span>+₹{carMakes.find(m => m.name === selectedMake)?.price || 0}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-500">Model Multiplier</span>
-                                <span>x{carModels.find(m => m.name === selectedModel)?.multiplier || 1}</span>
+                                <span className="text-slate-500">Model Adjustment</span>
+                                <span>+₹{carModels.find(m => m.name === selectedModel)?.price || 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-500">Fuel Adjustment</span>
+                                <span>+₹{fuelTypes.find(f => f.name === selectedFuel)?.price || 0}</span>
                               </div>
                               <div className="flex justify-between border-t border-slate-100 pt-3 text-red-600">
                                 <span>Total Estimate</span>

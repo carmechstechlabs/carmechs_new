@@ -18,10 +18,10 @@ export function Cars() {
   const { carMakes, carModels, fuelTypes, updateCarMakes, updateCarModels, updateFuelTypes, adminRole } = useData();
   const [activeTab, setActiveTab] = useState<'makes' | 'models' | 'fuels'>('makes');
   const [newItem, setNewItem] = useState("");
-  const [newMultiplier, setNewMultiplier] = useState("1.0");
+  const [newPrice, setNewPrice] = useState("0");
   const [newYear, setNewYear] = useState("");
   const [selectedMake, setSelectedMake] = useState("");
-  const [editingItem, setEditingItem] = useState<{ originalName: string, name: string, multiplier: string, make?: string, year?: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ originalName: string, name: string, price: string, make?: string, year?: string } | null>(null);
 
   const handleAdd = () => {
     if (adminRole !== 'admin') {
@@ -30,9 +30,9 @@ export function Cars() {
     }
     if (!newItem) return;
     
-    const multiplier = parseFloat(newMultiplier);
-    if (isNaN(multiplier)) {
-      toast.error("Please enter a valid multiplier");
+    const price = parseFloat(newPrice);
+    if (isNaN(price)) {
+      toast.error("Please enter a valid price");
       return;
     }
 
@@ -42,15 +42,15 @@ export function Cars() {
     }
 
     if (activeTab === 'makes') {
-      updateCarMakes([...carMakes, { name: newItem, multiplier }]);
+      updateCarMakes([...carMakes, { name: newItem, price }]);
     } else if (activeTab === 'models') {
-      updateCarModels([...carModels, { name: newItem, multiplier, make: selectedMake, year: newYear }]);
+      updateCarModels([...carModels, { name: newItem, price, make: selectedMake, year: newYear }]);
     } else {
-      updateFuelTypes([...fuelTypes, { name: newItem, multiplier }]);
+      updateFuelTypes([...fuelTypes, { name: newItem, price }]);
     }
     
     setNewItem("");
-    setNewMultiplier("1.0");
+    setNewPrice("0");
     setNewYear("");
     toast.success("Item added successfully");
   };
@@ -62,9 +62,9 @@ export function Cars() {
     }
     if (!editingItem || !editingItem.name) return;
 
-    const multiplier = parseFloat(editingItem.multiplier);
-    if (isNaN(multiplier)) {
-      toast.error("Please enter a valid multiplier");
+    const price = parseFloat(editingItem.price);
+    if (isNaN(price)) {
+      toast.error("Please enter a valid price");
       return;
     }
 
@@ -74,13 +74,13 @@ export function Cars() {
     }
 
     if (activeTab === 'makes') {
-      const updatedItem = { name: editingItem.name, multiplier };
+      const updatedItem = { name: editingItem.name, price };
       updateCarMakes(carMakes.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else if (activeTab === 'models') {
-      const updatedItem = { name: editingItem.name, multiplier, make: editingItem.make!, year: editingItem.year };
+      const updatedItem = { name: editingItem.name, price, make: editingItem.make!, year: editingItem.year };
       updateCarModels(carModels.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else {
-      const updatedItem = { name: editingItem.name, multiplier };
+      const updatedItem = { name: editingItem.name, price };
       updateFuelTypes(fuelTypes.map(item => item.name === editingItem.originalName ? updatedItem : item));
     }
 
@@ -109,7 +109,7 @@ export function Cars() {
     setEditingItem({
       originalName: item.name,
       name: item.name,
-      multiplier: item.multiplier.toString(),
+      price: item.price.toString(),
       make: item.make,
       year: item.year || ""
     });
@@ -224,19 +224,18 @@ export function Cars() {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between">
-                    Price Multiplier
-                    <span className="text-[#e31e24] font-black">{editingItem ? editingItem.multiplier : newMultiplier}x</span>
+                    Additional Price
+                    <span className="text-[#e31e24] font-black">₹{editingItem ? editingItem.price : newPrice}</span>
                   </label>
                   <Input 
                     type="number"
-                    step="0.1"
-                    placeholder="1.0"
-                    value={editingItem ? editingItem.multiplier : newMultiplier}
-                    onChange={(e) => editingItem ? setEditingItem({...editingItem, multiplier: e.target.value}) : setNewMultiplier(e.target.value)}
+                    placeholder="0"
+                    value={editingItem ? editingItem.price : newPrice}
+                    onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewPrice(e.target.value)}
                     className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-lg"
                   />
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest px-1">
-                    Affects base service pricing. 1.0 = standard rate.
+                    Added to base service pricing. 0 = standard rate.
                   </p>
                 </div>
               </div>
@@ -305,7 +304,7 @@ export function Cars() {
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{item.name}</span>
                           <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            {item.multiplier}x
+                            +₹{item.price}
                           </span>
                         </div>
                         {activeTab === 'models' && (

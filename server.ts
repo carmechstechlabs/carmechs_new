@@ -96,43 +96,43 @@ const initialServices = [
 ];
 
 const initialCarMakes = [
-  { name: "Toyota", multiplier: 1.1 },
-  { name: "Honda", multiplier: 1.1 },
-  { name: "Ford", multiplier: 1.1 },
-  { name: "BMW", multiplier: 2.0 },
-  { name: "Mercedes", multiplier: 2.0 },
-  { name: "Audi", multiplier: 2.0 },
-  { name: "Hyundai", multiplier: 1.0 },
-  { name: "Kia", multiplier: 1.0 }
+  { name: "Toyota", price: 500 },
+  { name: "Honda", price: 500 },
+  { name: "Ford", price: 500 },
+  { name: "BMW", price: 2000 },
+  { name: "Mercedes", price: 2000 },
+  { name: "Audi", price: 2000 },
+  { name: "Hyundai", price: 0 },
+  { name: "Kia", price: 0 }
 ];
 
 const initialCarModels = [
-  { name: "Corolla", make: "Toyota", multiplier: 1.1 },
-  { name: "Camry", make: "Toyota", multiplier: 1.2 },
-  { name: "Fortuner", make: "Toyota", multiplier: 1.4 },
-  { name: "City", make: "Honda", multiplier: 1.1 },
-  { name: "Civic", make: "Honda", multiplier: 1.2 },
-  { name: "Amaze", make: "Honda", multiplier: 1.0 },
-  { name: "EcoSport", make: "Ford", multiplier: 1.1 },
-  { name: "Endeavour", make: "Ford", multiplier: 1.4 },
-  { name: "3 Series", make: "BMW", multiplier: 1.5 },
-  { name: "5 Series", make: "BMW", multiplier: 1.6 },
-  { name: "X5", make: "BMW", multiplier: 1.8 },
-  { name: "C-Class", make: "Mercedes", multiplier: 1.5 },
-  { name: "E-Class", make: "Mercedes", multiplier: 1.6 },
-  { name: "A4", make: "Audi", multiplier: 1.5 },
-  { name: "Q7", make: "Audi", multiplier: 1.8 },
-  { name: "Creta", make: "Hyundai", multiplier: 1.1 },
-  { name: "Verna", make: "Hyundai", multiplier: 1.1 },
-  { name: "Seltos", make: "Kia", multiplier: 1.1 },
-  { name: "Sonet", make: "Kia", multiplier: 1.0 }
+  { name: "Corolla", make: "Toyota", price: 200 },
+  { name: "Camry", make: "Toyota", price: 500 },
+  { name: "Fortuner", make: "Toyota", price: 1000 },
+  { name: "City", make: "Honda", price: 200 },
+  { name: "Civic", make: "Honda", price: 400 },
+  { name: "Amaze", make: "Honda", price: 0 },
+  { name: "EcoSport", make: "Ford", price: 300 },
+  { name: "Endeavour", make: "Ford", price: 1200 },
+  { name: "3 Series", make: "BMW", price: 1500 },
+  { name: "5 Series", make: "BMW", price: 2500 },
+  { name: "X5", make: "BMW", price: 3500 },
+  { name: "C-Class", make: "Mercedes", price: 1500 },
+  { name: "E-Class", make: "Mercedes", price: 2500 },
+  { name: "A4", make: "Audi", price: 1500 },
+  { name: "Q7", make: "Audi", price: 3500 },
+  { name: "Creta", make: "Hyundai", price: 300 },
+  { name: "Verna", make: "Hyundai", price: 300 },
+  { name: "Seltos", make: "Kia", price: 300 },
+  { name: "Sonet", make: "Kia", price: 0 }
 ];
 
 const initialFuelTypes = [
-  { name: "Petrol", multiplier: 1.0 },
-  { name: "Diesel", multiplier: 1.15 },
-  { name: "CNG", multiplier: 1.1 },
-  { name: "Electric", multiplier: 1.2 }
+  { name: "Petrol", price: 0 },
+  { name: "Diesel", price: 400 },
+  { name: "CNG", price: 200 },
+  { name: "Electric", price: 600 }
 ];
 
 const initialSettings = {

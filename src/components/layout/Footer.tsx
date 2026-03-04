@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Wrench, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Shield, Zap, ArrowRight } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 export function Footer() {
   const { settings } = useData();
@@ -15,9 +16,12 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-4 space-y-8">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-xl shadow-primary/20 group-hover:scale-105 transition-transform">
+              <div className={cn(
+                "rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
+                settings.logoUrl ? "h-14 w-auto" : "h-12 w-12 bg-primary shadow-xl shadow-primary/20"
+              )}>
                 {settings.logoUrl ? (
-                  <img src={settings.logoUrl} alt={settings.logoText} className="h-7 w-7 object-contain" />
+                  <img src={settings.logoUrl} alt={settings.logoText} className="h-full w-auto object-contain" />
                 ) : (
                   <Wrench className="h-6 w-6 text-white" />
                 )}

@@ -40,55 +40,60 @@ export function Booking() {
   });
 
   useEffect(() => {
-    if (location.state?.serviceId) {
-      setFormData(prev => ({ ...prev, service: location.state.serviceId }));
+    const params = new URLSearchParams(location.search);
+    const qServiceId = params.get('serviceId');
+    const qMake = params.get('make');
+    const qModel = params.get('model');
+    const qFuel = params.get('fuel');
+
+    if (location.state?.serviceId || qServiceId) {
+      setFormData(prev => ({ ...prev, service: location.state?.serviceId || qServiceId || "" }));
     }
-    if (location.state?.vehicleDetails) {
+    if (location.state?.vehicleDetails || (qMake && qModel && qFuel)) {
       setFormData(prev => ({
         ...prev,
-        make: location.state.vehicleDetails.make,
-        model: location.state.vehicleDetails.model,
-        fuel: location.state.vehicleDetails.fuel
+        make: location.state?.vehicleDetails?.make || qMake || "",
+        model: location.state?.vehicleDetails?.model || qModel || "",
+        fuel: location.state?.vehicleDetails?.fuel || qFuel || ""
       }));
     }
-  }, [location.state]);
+  }, [location.state, location.search]);
 
   const calculatePrice = (basePrice: number) => {
-    let multiplier = 1;
+    let additionalPrice = 0;
     const { make, model, fuel } = formData;
 
     const selectedMake = carMakes.find(m => m.name === make);
-    if (selectedMake) multiplier *= selectedMake.multiplier;
+    if (selectedMake) additionalPrice += selectedMake.price;
 
     const selectedModel = carModels.find(m => m.name === model);
-    if (selectedModel) multiplier *= selectedModel.multiplier;
+    if (selectedModel) additionalPrice += selectedModel.price;
 
     const selectedFuel = fuelTypes.find(f => f.name === fuel);
-    if (selectedFuel) multiplier *= selectedFuel.multiplier;
+    if (selectedFuel) additionalPrice += selectedFuel.price;
 
-    return Math.round(basePrice * multiplier);
+    return Math.round(basePrice + additionalPrice);
   };
 
   const getPriceBreakdown = (basePrice: number) => {
     const { make, model, fuel } = formData;
     const breakdown = [];
-    let currentPrice = basePrice;
     
     breakdown.push({ label: "Base Price", value: `₹${basePrice}` });
 
     const selectedMake = carMakes.find(m => m.name === make);
-    if (selectedMake && selectedMake.multiplier !== 1) {
-      breakdown.push({ label: `${make} Surcharge`, value: `x${selectedMake.multiplier}` });
+    if (selectedMake && selectedMake.price !== 0) {
+      breakdown.push({ label: `${make} Adjustment`, value: `+₹${selectedMake.price}` });
     }
 
     const selectedModel = carModels.find(m => m.name === model);
-    if (selectedModel && selectedModel.multiplier !== 1) {
-      breakdown.push({ label: `${model} Surcharge`, value: `x${selectedModel.multiplier}` });
+    if (selectedModel && selectedModel.price !== 0) {
+      breakdown.push({ label: `${model} Adjustment`, value: `+₹${selectedModel.price}` });
     }
 
     const selectedFuel = fuelTypes.find(f => f.name === fuel);
-    if (selectedFuel && selectedFuel.multiplier !== 1) {
-      breakdown.push({ label: `${fuel} Surcharge`, value: `x${selectedFuel.multiplier}` });
+    if (selectedFuel && selectedFuel.price !== 0) {
+      breakdown.push({ label: `${fuel} Adjustment`, value: `+₹${selectedFuel.price}` });
     }
 
     return breakdown;

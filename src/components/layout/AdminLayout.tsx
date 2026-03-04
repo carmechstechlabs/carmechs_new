@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 
 export function AdminLayout() {
-  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings } = useData();
+  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings, settings } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
@@ -76,7 +76,7 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex relative font-sans text-slate-900 selection:bg-red-500/20">
+    <div className="min-h-screen bg-[#f8fafc] flex relative font-sans text-slate-900 selection:bg-primary/20">
       {/* Subtle Grid Background */}
       <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0 bg-grid-pattern" />
 
@@ -103,8 +103,15 @@ export function AdminLayout() {
         {/* Sidebar Header */}
         <div className="p-6 flex items-center justify-between shrink-0 border-b border-slate-100 h-20">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="h-10 w-10 bg-[#e31e24] rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 shrink-0">
-              <Terminal className="h-5 w-5 text-white" />
+            <div className={cn(
+              "rounded-xl flex items-center justify-center transition-all shrink-0",
+              settings.logoUrl ? "h-12 w-auto" : "h-10 w-10 bg-primary shadow-lg shadow-primary/20"
+            )}>
+              {settings.logoUrl ? (
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-full w-auto object-contain" />
+              ) : (
+                <Terminal className="h-5 w-5 text-white" />
+              )}
             </div>
             {isSidebarOpen && (
               <motion.div
@@ -112,7 +119,9 @@ export function AdminLayout() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col"
               >
-                <span className="text-lg font-black tracking-tighter uppercase leading-none text-slate-900">Admin</span>
+                <span className="text-lg font-black tracking-tighter uppercase leading-none text-slate-900">
+                  {settings.logoText || "Admin"}
+                </span>
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management Hub</span>
               </motion.div>
             )}

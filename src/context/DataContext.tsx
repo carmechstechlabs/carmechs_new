@@ -80,12 +80,12 @@ export interface Location {
 
 export interface PricingItem {
   name: string;
-  multiplier: number;
+  price: number;
 }
 
 export interface CarModel {
   name: string;
-  multiplier: number;
+  price: number;
   make: string;
   year?: string;
 }

@@ -53,9 +53,12 @@ export function Header() {
       <div className="container mx-auto flex items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+            <div className={cn(
+              "rounded-lg flex items-center justify-center transition-transform group-hover:scale-105",
+              settings.logoUrl ? "h-12 w-auto" : "h-10 w-10 bg-primary shadow-lg shadow-primary/20"
+            )}>
               {settings.logoUrl ? (
-                <img src={settings.logoUrl} alt={settings.logoText} className="h-6 w-6 object-contain" />
+                <img src={settings.logoUrl} alt={settings.logoText} className="h-full w-auto object-contain" />
               ) : (
                 <Wrench className="h-5 w-5 text-white" />
               )}

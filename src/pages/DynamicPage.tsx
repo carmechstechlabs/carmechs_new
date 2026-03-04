@@ -1,11 +1,12 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useData, PageSection } from "@/context/DataContext";
 import { NotFound } from "./NotFound";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ShieldCheck, Clock, IndianRupee, Wrench, Star, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const IconMap: Record<string, any> = {
   ShieldCheck,
@@ -18,6 +19,7 @@ const IconMap: Record<string, any> = {
 export function DynamicPage() {
   const { slug } = useParams();
   const { uiSettings, services, brands } = useData();
+  const [carSelection, setCarSelection] = React.useState({ make: '', model: '', fuel: '' });
   
   const pageSlug = slug || 'home';
   const page = uiSettings.pages?.find(p => p.slug === pageSlug);
@@ -38,6 +40,8 @@ export function DynamicPage() {
             services={services}
             brands={brands}
             idx={idx}
+            carSelection={carSelection}
+            setCarSelection={setCarSelection}
           />
         </React.Fragment>
       ))}
@@ -53,11 +57,26 @@ interface SectionRendererProps {
   services: any[];
   brands: any[];
   idx: number;
+  carSelection: { make: string; model: string; fuel: string };
+  setCarSelection: React.Dispatch<React.SetStateAction<{ make: string; model: string; fuel: string }>>;
 }
 
-function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, services, brands, idx }: SectionRendererProps) {
+function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, services, brands, idx, carSelection, setCarSelection }: SectionRendererProps) {
   const { carMakes, carModels, fuelTypes } = useData();
-  const [carSelection, setCarSelection] = React.useState({ make: '', model: '', fuel: '' });
+  const navigate = useNavigate();
+
+  const calculatePrice = (basePrice: number) => {
+    let additionalPrice = 0;
+    const make = carMakes.find(m => m.name === carSelection.make);
+    if (make) additionalPrice += make.price;
+    const model = carModels.find(m => m.name === carSelection.model);
+    if (model) additionalPrice += model.price;
+    const fuel = fuelTypes.find(f => f.name === carSelection.fuel);
+    if (fuel) additionalPrice += fuel.price;
+    return Math.round(basePrice + additionalPrice);
+  };
+
+  const isVehicleSelected = carSelection.make && carSelection.model && carSelection.fuel;
 
   switch (section.type) {
     case 'hero':
@@ -135,13 +154,13 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                 <h3 className="text-2xl font-black uppercase tracking-tight text-slate-900 mb-8">Select Your Car</h3>
                 
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Make</label>
                       <select 
                         className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                         value={carSelection.make}
-                        onChange={(e) => setCarSelection({ ...carSelection, make: e.target.value, model: '' })}
+                        onChange={(e) => setCarSelection({ ...carSelection, make: e.target.value, model: '', fuel: '' })}
                       >
                         <option value="">Select Make</option>
                         {carMakes.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
@@ -152,11 +171,23 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                       <select 
                         className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                         value={carSelection.model}
-                        onChange={(e) => setCarSelection({ ...carSelection, model: e.target.value })}
+                        onChange={(e) => setCarSelection({ ...carSelection, model: e.target.value, fuel: '' })}
                         disabled={!carSelection.make}
                       >
                         <option value="">Select Model</option>
                         {carModels.filter(m => m.make === carSelection.make).map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fuel</label>
+                      <select 
+                        className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        value={carSelection.fuel}
+                        onChange={(e) => setCarSelection({ ...carSelection, fuel: e.target.value })}
+                        disabled={!carSelection.model}
+                      >
+                        <option value="">Select Fuel</option>
+                        {fuelTypes.map(f => <option key={f.name} value={f.name}>{f.name}</option>)}
                       </select>
                     </div>
                   </div>
@@ -301,13 +332,16 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-slate-50 border border-slate-100 rounded-3xl p-6 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 hover:border-primary/20 transition-all group text-center cursor-pointer"
-                  onClick={() => window.location.href = '/book'}
+                  className="bg-slate-50 border border-slate-100 rounded-3xl p-6 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 hover:border-primary/20 transition-all group text-center cursor-pointer relative"
+                  onClick={() => navigate(`/book?serviceId=${service.id}&make=${carSelection.make}&model=${carSelection.model}&fuel=${carSelection.fuel}`)}
                 >
                   <div className="h-12 w-12 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center shadow-sm border border-slate-100 group-hover:bg-primary transition-colors">
                     <Wrench className="h-5 w-5 text-primary group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-[10px] font-black uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors">{service.title}</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors mb-2">{service.title}</h3>
+                  <div className="text-[10px] font-bold text-primary">
+                    {isVehicleSelected ? `₹${calculatePrice(service.basePrice)}` : service.price}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -365,9 +399,5 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
   }
 }
 
-// Helper for cn
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
-}
 
 

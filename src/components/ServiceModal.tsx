@@ -47,18 +47,18 @@ export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehi
     breakdown.push({ label: "Base Price", value: `₹${service.basePrice}` });
 
     const make = carMakes.find(m => m.name === vehicleDetails.make);
-    if (make && make.multiplier !== 1) {
-      breakdown.push({ label: `${vehicleDetails.make} Surcharge`, value: `x${make.multiplier}` });
+    if (make && make.price !== 0) {
+      breakdown.push({ label: `${vehicleDetails.make} Adjustment`, value: `+₹${make.price}` });
     }
 
     const model = carModels.find(m => m.name === vehicleDetails.model);
-    if (model && model.multiplier !== 1) {
-      breakdown.push({ label: `${vehicleDetails.model} Surcharge`, value: `x${model.multiplier}` });
+    if (model && model.price !== 0) {
+      breakdown.push({ label: `${vehicleDetails.model} Adjustment`, value: `+₹${model.price}` });
     }
 
     const fuel = fuelTypes.find(f => f.name === vehicleDetails.fuel);
-    if (fuel && fuel.multiplier !== 1) {
-      breakdown.push({ label: `${vehicleDetails.fuel} Surcharge`, value: `x${fuel.multiplier}` });
+    if (fuel && fuel.price !== 0) {
+      breakdown.push({ label: `${vehicleDetails.fuel} Adjustment`, value: `+₹${fuel.price}` });
     }
 
     return breakdown;
