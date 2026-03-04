@@ -8,6 +8,8 @@ import { Link } from "react-router-dom";
 import { ShieldCheck, Clock, IndianRupee, Wrench, Star, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { Home } from "./Home";
+
 const IconMap: Record<string, any> = {
   ShieldCheck,
   Clock,
@@ -25,6 +27,9 @@ export function DynamicPage() {
   const page = uiSettings.pages?.find(p => p.slug === pageSlug);
 
   if (!page || (!page.isPublished && pageSlug !== 'home')) {
+    if (pageSlug === 'home') {
+      return <Home />;
+    }
     return <NotFound />;
   }
 

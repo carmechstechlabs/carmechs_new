@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { io, Socket } from 'socket.io-client';
 import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment } from '@/services/supabaseService';
+import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase } from '@/services/supabaseService';
 
 // Types
 export interface Service {
@@ -447,7 +447,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     fetchInitialData();
 
-    // 2. Setup Socket Connection for Real-time Updates
+    // 2. Setup Supabase Realtime Subscriptions (For Production/Vercel)
+    const setupSupabaseRealtime = () => {
+      if (!supabase) return;
+
+      const channel = supabase
+        .channel('db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'car_makes' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'car_models' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'fuel_types' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_config' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'brands' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'coupons' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchInitialData())
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    const cleanupSupabase = setupSupabaseRealtime();
+
+    // 3. Setup Socket Connection for Real-time Updates (For Local/Persistent Server)
     const newSocket = io(); 
     setSocket(newSocket);
 
@@ -501,6 +530,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     return () => {
       newSocket.disconnect();
+      if (cleanupSupabase) cleanupSupabase();
     };
   }, []);
 
