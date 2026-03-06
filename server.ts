@@ -41,6 +41,7 @@ const initialServices = [
     price: "₹1999",
     basePrice: 1999,
     duration: "4-6 Hours",
+    iconName: "Wrench",
     checks: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Wiper Fluid Top-up", "Heater/Spark Plugs Checking", "Car Wash & Vacuuming", "Brake Pads & Shoes Cleaning"]
   },
   {
@@ -51,6 +52,7 @@ const initialServices = [
     price: "₹999",
     basePrice: 999,
     duration: "1-2 Hours",
+    iconName: "Disc",
     checks: ["Automated Wheel Balancing", "Laser Wheel Alignment", "Tyre Rotation (4 Wheels)", "Tyre Health Inspection", "Air Pressure Check", "Steering Adjustment", "Suspension Check"]
   },
   {
@@ -61,6 +63,7 @@ const initialServices = [
     price: "₹3499",
     basePrice: 3499,
     duration: "30-60 Minutes",
+    iconName: "Battery",
     checks: ["Battery Voltage Check", "Alternator Charging Check", "Terminal Cleaning & Greasing", "Distilled Water Top-up", "Battery Health Report", "Old Battery Buyback", "Warranty Registration"]
   },
   {
@@ -71,6 +74,7 @@ const initialServices = [
     price: "Custom",
     basePrice: 4999,
     duration: "2-5 Days",
+    iconName: "Sparkles",
     checks: ["Grade A Primer Application", "Premium Paint Matching", "3-Layer Painting Process", "Clear Coat Application", "Rubbing & Polishing", "Panel Dent Removal", "Rust Protection Coating"]
   },
   {
@@ -81,6 +85,7 @@ const initialServices = [
     price: "₹1499",
     basePrice: 1499,
     duration: "2-3 Hours",
+    iconName: "Wind",
     checks: ["AC Gas Refill (up to 400g)", "Cooling Coil Cleaning", "Condenser Cleaning", "AC Vent Cleaning", "Compressor Oil Check", "Leakage Inspection", "Cabin Filter Cleaning"]
   },
   {
@@ -91,6 +96,7 @@ const initialServices = [
     price: "₹1199",
     basePrice: 1199,
     duration: "3-4 Hours",
+    iconName: "Droplets",
     checks: ["Complete Interior Vacuuming", "Dashboard Cleaning & Polishing", "Seats Dry Cleaning", "Roof & Floor Cleaning", "Exterior Foam Wash", "Tyre Dressing", "Glass Cleaning"]
   },
 ];
@@ -330,7 +336,30 @@ let state = {
   reviews: initialReviews,
   notifications: [] as any[],
   servicePackages: initialServicePackages,
+  missingTables: [] as string[],
 };
+
+const DATA_FILE = path.join(process.cwd(), "data.json");
+
+function saveLocalState(data: any) {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("Error saving local state:", err);
+  }
+}
+
+function loadLocalState() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const data = fs.readFileSync(DATA_FILE, "utf-8");
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error("Error loading local state:", err);
+  }
+  return null;
+}
 
 async function startServer() {
   const app = express();
@@ -343,20 +372,35 @@ async function startServer() {
     }
   });
 
-  // Try to load state from Supabase, fallback to initial data if it fails or not configured
-  let currentState = { ...state };
+  // Try to load state from local file first, then Supabase, fallback to initial data
+  let currentState = loadLocalState() || { ...state };
+  
   try {
     if (supabase) {
       console.log("Supabase client initialized, fetching initial state...");
       const dbState = await getInitialState();
       if (dbState) {
-        // Merge with initial state to ensure all keys exist
+        // Merge with current state, prioritizing DB data if it exists
         currentState = {
-          ...state,
+          ...currentState,
           ...dbState,
+          // Only use DB data if it's not empty
+          services: dbState.services.length > 0 ? dbState.services : currentState.services,
+          carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : currentState.carMakes,
+          carModels: dbState.carModels.length > 0 ? dbState.carModels : currentState.carModels,
+          fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : currentState.fuelTypes,
+          settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : currentState.settings,
+          uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : currentState.uiSettings,
+          brands: dbState.brands.length > 0 ? dbState.brands : currentState.brands,
+          locations: dbState.locations.length > 0 ? dbState.locations : currentState.locations,
+          servicePackages: dbState.servicePackages.length > 0 ? dbState.servicePackages : currentState.servicePackages,
+          appointments: dbState.appointments.length > 0 ? dbState.appointments : currentState.appointments,
+          inventory: dbState.inventory.length > 0 ? dbState.inventory : currentState.inventory,
+          reviews: dbState.reviews.length > 0 ? dbState.reviews : currentState.reviews,
+          users: dbState.users.length > 0 ? dbState.users : currentState.users,
         };
 
-        // Check if we need to seed any tables that are empty
+        // Seed empty tables
         const tablesToSeed = [
           { name: 'services', data: state.services, dbData: dbState.services },
           { name: 'car_makes', data: state.carMakes, dbData: dbState.carMakes },
@@ -367,12 +411,18 @@ async function startServer() {
           { name: 'brands', data: state.brands, dbData: dbState.brands },
           { name: 'locations', data: state.locations, dbData: dbState.locations },
           { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
-          { name: 'appointments', data: state.appointments, dbData: dbState.appointments },
-          { name: 'inventory', data: state.inventory, dbData: dbState.inventory },
-          { name: 'reviews', data: state.reviews, dbData: dbState.reviews },
         ];
 
         for (const table of tablesToSeed) {
+          // Skip seeding if table is missing
+          const isTableMissing = dbState.missingTables?.includes(table.name) || 
+                                (table.isConfig && dbState.missingTables?.includes('site_config'));
+          
+          if (isTableMissing) {
+            console.warn(`Skipping seeding for missing table: ${table.name}`);
+            continue;
+          }
+
           const isEmpty = table.isConfig 
             ? Object.keys(table.dbData || {}).length === 0 
             : (table.dbData || []).length === 0;
@@ -386,51 +436,19 @@ async function startServer() {
             }
           }
         }
-
-        // Re-fetch state after seeding to be sure
-        const seededState = await getInitialState();
-        if (seededState) {
-          currentState = {
-            ...state,
-            ...seededState,
-          };
-        }
         
-        console.log("State loaded and synchronized with Supabase");
+        saveLocalState(currentState);
+        console.log("State synchronized with Supabase and persisted locally");
 
         // Set up Realtime Subscriptions
         supabase
           .channel('db-changes')
           .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
             console.log('Change received from Supabase:', payload.table, payload.eventType);
-            
-            // Refresh the specific part of the state that changed
             const newState = await getInitialState();
             if (newState) {
-              currentState = {
-                ...currentState,
-                ...newState,
-                // Ensure we keep the merged structure
-                services: newState.services.length > 0 ? newState.services : currentState.services,
-                carMakes: newState.carMakes.length > 0 ? newState.carMakes : currentState.carMakes,
-                carModels: newState.carModels.length > 0 ? newState.carModels : currentState.carModels,
-                fuelTypes: newState.fuelTypes.length > 0 ? newState.fuelTypes : currentState.fuelTypes,
-                settings: Object.keys(newState.settings).length > 0 ? newState.settings : currentState.settings,
-                uiSettings: Object.keys(newState.uiSettings).length > 0 ? newState.uiSettings : currentState.uiSettings,
-                apiKeys: Object.keys(newState.apiKeys).length > 0 ? newState.apiKeys : currentState.apiKeys,
-                brands: newState.brands.length > 0 ? newState.brands : currentState.brands,
-                locations: newState.locations?.length > 0 ? newState.locations : currentState.locations,
-                inventory: newState.inventory?.length > 0 ? newState.inventory : currentState.inventory,
-                categories: newState.categories?.length > 0 ? newState.categories : currentState.categories,
-                coupons: newState.coupons?.length > 0 ? newState.coupons : currentState.coupons,
-                reviews: newState.reviews?.length > 0 ? newState.reviews : currentState.reviews,
-                notifications: newState.notifications?.length > 0 ? newState.notifications : currentState.notifications,
-                servicePackages: newState.servicePackages?.length > 0 ? newState.servicePackages : currentState.servicePackages,
-                users: newState.users.length > 0 ? newState.users : currentState.users,
-                appointments: newState.appointments.length > 0 ? newState.appointments : currentState.appointments,
-              };
-
-              // Broadcast to all connected clients
+              currentState = { ...currentState, ...newState };
+              saveLocalState(currentState);
               io.emit("initial_state", currentState);
             }
           })
@@ -438,138 +456,135 @@ async function startServer() {
       }
     }
   } catch (error) {
-    console.error("Failed to load state from Supabase, using in-memory defaults:", error);
+    console.error("Failed to load state from Supabase:", error);
   }
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
-    
-    // Send current state to the newly connected client
     socket.emit("initial_state", currentState);
 
-    // Handle updates from clients
     socket.on("update_services", async (services) => {
-      console.log("Updating services...");
       currentState.services = services;
+      saveLocalState(currentState);
       socket.broadcast.emit("services_updated", services);
       await updateTable('services', services);
     });
 
     socket.on("update_car_makes", async (makes) => {
-      console.log("Updating car makes...");
       currentState.carMakes = makes;
+      saveLocalState(currentState);
       socket.broadcast.emit("car_makes_updated", makes);
       await updateTable('car_makes', makes);
     });
 
     socket.on("update_car_models", async (models) => {
-      console.log("Updating car models...");
       currentState.carModels = models;
+      saveLocalState(currentState);
       socket.broadcast.emit("car_models_updated", models);
       await updateTable('car_models', models);
     });
 
     socket.on("update_fuel_types", async (fuels) => {
-      console.log("Updating fuel types...");
       currentState.fuelTypes = fuels;
+      saveLocalState(currentState);
       socket.broadcast.emit("fuel_types_updated", fuels);
       await updateTable('fuel_types', fuels);
     });
 
     socket.on("update_settings", async (settings) => {
-      console.log("Updating settings...");
       currentState.settings = settings;
+      saveLocalState(currentState);
       socket.broadcast.emit("settings_updated", settings);
       await updateConfig('settings', settings);
     });
 
     socket.on("update_appointments", async (appointments) => {
-      console.log("Updating appointments...");
       currentState.appointments = appointments;
+      saveLocalState(currentState);
       socket.broadcast.emit("appointments_updated", appointments);
       await updateTable('appointments', appointments);
     });
 
     socket.on("add_appointment", async (appointment) => {
-      console.log("Adding appointment...");
       currentState.appointments = [appointment, ...currentState.appointments];
+      saveLocalState(currentState);
       io.emit("appointments_updated", currentState.appointments);
       await addAppointment(appointment);
     });
 
     socket.on("update_users", async (users) => {
-      console.log("Updating users...");
       currentState.users = users;
+      saveLocalState(currentState);
       socket.broadcast.emit("users_updated", users);
       await updateTable('users', users);
     });
 
     socket.on("update_ui_settings", async (uiSettings) => {
-      console.log("Updating UI settings...");
       currentState.uiSettings = uiSettings;
+      saveLocalState(currentState);
       socket.broadcast.emit("ui_settings_updated", uiSettings);
       await updateConfig('ui_settings', uiSettings);
     });
 
     socket.on("update_api_keys", async (apiKeys) => {
-      console.log("Updating API keys...");
       currentState.apiKeys = apiKeys;
+      saveLocalState(currentState);
       socket.broadcast.emit("api_keys_updated", apiKeys);
       await updateConfig('api_keys', apiKeys);
     });
 
     socket.on("update_brands", async (brands) => {
-      console.log("Updating brands...");
       currentState.brands = brands;
+      saveLocalState(currentState);
       socket.broadcast.emit("brands_updated", brands);
       await updateTable('brands', brands);
     });
 
     socket.on("update_locations", async (locations) => {
-      console.log("Updating locations...");
       currentState.locations = locations;
+      saveLocalState(currentState);
       socket.broadcast.emit("locations_updated", locations);
       await updateTable('locations', locations);
     });
 
     socket.on("update_inventory", async (inventory) => {
-      console.log("Updating inventory...");
       currentState.inventory = inventory;
+      saveLocalState(currentState);
       socket.broadcast.emit("inventory_updated", inventory);
       await updateTable('inventory', inventory);
     });
 
     socket.on("update_categories", async (categories) => {
-      console.log("Updating categories...");
       currentState.categories = categories;
+      saveLocalState(currentState);
       socket.broadcast.emit("categories_updated", categories);
       await updateTable('categories', categories);
     });
 
     socket.on("update_coupons", async (coupons) => {
-      console.log("Updating coupons...");
       currentState.coupons = coupons;
+      saveLocalState(currentState);
       socket.broadcast.emit("coupons_updated", coupons);
       await updateTable('coupons', coupons);
     });
 
     socket.on("update_reviews", async (reviews) => {
-      console.log("Updating reviews...");
       currentState.reviews = reviews;
+      saveLocalState(currentState);
       socket.broadcast.emit("reviews_updated", reviews);
       await updateTable('reviews', reviews);
     });
 
     socket.on("update_notifications", async (notifications) => {
-      console.log("Updating notifications...");
       currentState.notifications = notifications;
+      saveLocalState(currentState);
       socket.broadcast.emit("notifications_updated", notifications);
       await updateTable('notifications', notifications);
     });
 
     socket.on("update_service_packages", async (packages) => {
-      console.log("Updating service packages...");
       currentState.servicePackages = packages;
+      saveLocalState(currentState);
       socket.broadcast.emit("service_packages_updated", packages);
       await updateTable('service_packages', packages);
     });

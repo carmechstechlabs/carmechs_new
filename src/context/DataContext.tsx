@@ -15,6 +15,7 @@ export interface Service {
   checks: string[];
   basePrice: number; // Added for booking calculation
   iconUrl?: string;
+  iconName?: string;
 }
 
 export interface ServicePackage {
@@ -276,6 +277,7 @@ interface DataContextType {
   currentUser: FirebaseUser | null;
   logout: () => Promise<void>;
   isLoading: boolean;
+  missingTables: string[];
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -410,6 +412,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [servicePackages, setServicePackages] = useState<ServicePackage[]>(initialServicePackages);
   const [isLoading, setIsLoading] = useState(true);
+  const [missingTables, setMissingTables] = useState<string[]>([]);
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -452,6 +455,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const state = await getInitialState();
         if (state) {
+          setMissingTables(state.missingTables || []);
           setServices(state.services);
           setCarMakes(state.carMakes);
           setCarModels(state.carModels);
@@ -520,6 +524,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSocket(newSocket);
 
     newSocket.on('initial_state', (state) => {
+      setMissingTables(state.missingTables || []);
       setServices(state.services);
       setCarMakes(state.carMakes);
       setCarModels(state.carModels);
@@ -861,7 +866,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       logoutAdmin,
       currentUser,
       logout,
-      isLoading
+      isLoading,
+      missingTables
     }}>
       {children}
     </DataContext.Provider>

@@ -43,31 +43,72 @@ const toCamelCase = (obj: any) => {
 export async function getInitialState() {
   if (!supabase) return null;
   try {
-    const { data: services, error: sErr } = await supabase.from('services').select('*');
-    const { data: carMakes, error: cmErr } = await supabase.from('car_makes').select('*');
-    const { data: carModels, error: cmodErr } = await supabase.from('car_models').select('*');
-    const { data: fuelTypes, error: fErr } = await supabase.from('fuel_types').select('*');
-    const { data: brands, error: bErr } = await supabase.from('brands').select('*');
-    const { data: locations, error: lErr } = await supabase.from('locations').select('*');
-    const { data: inventory, error: iErr } = await supabase.from('inventory').select('*');
-    const { data: categories, error: catErr } = await supabase.from('categories').select('*');
-    const { data: coupons, error: cpErr } = await supabase.from('coupons').select('*');
-    const { data: reviews, error: rErr } = await supabase.from('reviews').select('*');
-    const { data: notifications, error: nErr } = await supabase.from('notifications').select('*');
-    const { data: servicePackages, error: spErr } = await supabase.from('service_packages').select('*');
-    const { data: users, error: uErr } = await supabase.from('users').select('*');
-    const { data: appointments, error: aErr } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
-    const { data: config, error: cfgErr } = await supabase.from('site_config').select('*');
+    const results = await Promise.all([
+      supabase.from('services').select('*'),
+      supabase.from('car_makes').select('*'),
+      supabase.from('car_models').select('*'),
+      supabase.from('fuel_types').select('*'),
+      supabase.from('brands').select('*'),
+      supabase.from('locations').select('*'),
+      supabase.from('inventory').select('*'),
+      supabase.from('categories').select('*'),
+      supabase.from('coupons').select('*'),
+      supabase.from('reviews').select('*'),
+      supabase.from('notifications').select('*'),
+      supabase.from('service_packages').select('*'),
+      supabase.from('users').select('*'),
+      supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+      supabase.from('site_config').select('*')
+    ]);
 
-    if (sErr || cmErr || cmodErr || fErr || bErr || lErr || uErr || aErr || cfgErr || iErr || catErr || cpErr || rErr || nErr || spErr) {
-      console.error('Error fetching initial state from Supabase:', { sErr, cmErr, cmodErr, fErr, bErr, lErr, uErr, aErr, cfgErr, iErr, catErr, cpErr, rErr, nErr, spErr });
-    }
+    const tableNames = [
+      'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
+      'inventory', 'categories', 'coupons', 'reviews', 'notifications',
+      'service_packages', 'users', 'appointments', 'site_config'
+    ];
+
+    const missingTables: string[] = [];
+    results.forEach((res, index) => {
+      if (res.error) {
+        const isMissing = 
+          res.error.code === 'PGRST116' || 
+          res.error.message.includes('relation') || 
+          res.error.message.includes('does not exist') ||
+          res.error.message.includes('schema cache');
+
+        if (isMissing) {
+          console.warn(`Supabase Table Missing: "${tableNames[index]}" does not exist. Please create it in your Supabase dashboard.`);
+          missingTables.push(tableNames[index]);
+        } else {
+          console.error(`Error fetching table "${tableNames[index]}":`, res.error.message);
+        }
+      }
+    });
+
+    const [
+      { data: services },
+      { data: carMakes },
+      { data: carModels },
+      { data: fuelTypes },
+      { data: brands },
+      { data: locations },
+      { data: inventory },
+      { data: categories },
+      { data: coupons },
+      { data: reviews },
+      { data: notifications },
+      { data: servicePackages },
+      { data: users },
+      { data: appointments },
+      { data: config }
+    ] = results;
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
     const uiSettings = config?.find(c => c.key === 'ui_settings')?.value || {};
     const apiKeys = config?.find(c => c.key === 'api_keys')?.value || {};
 
     return {
+      missingTables,
       services: (services || []).map(toCamelCase),
       carMakes: (carMakes || []).map(toCamelCase),
       carModels: (carModels || []).map(toCamelCase),
@@ -75,7 +116,6 @@ export async function getInitialState() {
       settings,
       appointments: (appointments || []).map(a => {
         const camel = toCamelCase(a);
-        // Map service_title back to service for the frontend
         return { ...camel, service: a.service_title };
       }),
       users: (users || []).map(toCamelCase),
@@ -93,6 +133,7 @@ export async function getInitialState() {
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
     return {
+      missingTables: [],
       services: [],
       carMakes: [],
       carModels: [],
@@ -125,7 +166,7 @@ export async function updateTable(table: string, data: any[]) {
 
     if (!data || data.length === 0) {
       // If data is empty, clear the table
-      const { error: delError } = await supabase.from(table).delete().neq(primaryKey, '00000000-0000-0000-0000-000000000000'); // Delete all
+      const { error: delError } = await supabase.from(table).delete().neq(primaryKey, '00000000-0000-0000-0000-000000000000');
       if (delError) console.error(`Error clearing ${table}:`, delError);
       return;
     }
@@ -143,7 +184,8 @@ export async function updateTable(table: string, data: any[]) {
       return snake;
     });
 
-    const { error } = await supabase.from(table).upsert(mappedData);
+    // Use upsert which handles both insert and update
+    const { error } = await supabase.from(table).upsert(mappedData, { onConflict: primaryKey });
     if (error) console.error(`Error updating ${table}:`, error);
 
     // Handle deletions: Remove items from DB that are not in the new data list
@@ -152,7 +194,7 @@ export async function updateTable(table: string, data: any[]) {
       const { error: delError } = await supabase
         .from(table)
         .delete()
-        .not(primaryKey, 'in', `(${currentIds.map(id => `"${id}"`).join(',')})`);
+        .not(primaryKey, 'in', `(${currentIds.map(id => typeof id === 'string' ? `"${id}"` : id).join(',')})`);
       if (delError) console.error(`Error cleaning up ${table}:`, delError);
     }
   } catch (error) {

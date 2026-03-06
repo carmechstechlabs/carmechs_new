@@ -28,18 +28,26 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 
+import * as LucideIcons from "lucide-react";
+
 const getIcon = (service: any) => {
   if (service.iconUrl) {
     return <img src={service.iconUrl} alt={service.title} className="h-12 w-12 object-contain" />;
   }
+  
+  if (service.iconName) {
+    const Icon = (LucideIcons as any)[service.iconName] || LucideIcons.Wrench;
+    return <Icon className="h-10 w-10 text-primary" />;
+  }
+
   switch (service.id) {
-    case "periodic": return <Wrench className="h-10 w-10 text-primary" />;
-    case "tyres": return <Disc className="h-10 w-10 text-primary" />;
-    case "batteries": return <Battery className="h-10 w-10 text-primary" />;
-    case "denting": return <PaintBucket className="h-10 w-10 text-primary" />;
-    case "ac": return <Car className="h-10 w-10 text-primary" />;
-    case "spa": return <ShieldCheck className="h-10 w-10 text-primary" />;
-    default: return <Wrench className="h-10 w-10 text-primary" />;
+    case "periodic": return <LucideIcons.Wrench className="h-10 w-10 text-primary" />;
+    case "tyres": return <LucideIcons.Disc className="h-10 w-10 text-primary" />;
+    case "batteries": return <LucideIcons.Battery className="h-10 w-10 text-primary" />;
+    case "denting": return <LucideIcons.PaintBucket className="h-10 w-10 text-primary" />;
+    case "ac": return <LucideIcons.Car className="h-10 w-10 text-primary" />;
+    case "spa": return <LucideIcons.ShieldCheck className="h-10 w-10 text-primary" />;
+    default: return <LucideIcons.Wrench className="h-10 w-10 text-primary" />;
   }
 };
 

@@ -18,7 +18,8 @@ export function Dashboard() {
   const { 
     services, carMakes, carModels, fuelTypes, appointments, 
     users, brands, settings, uiSettings, updateUiSettings, 
-    locations, updateLocations, inventory, reviews, categories, coupons 
+    locations, updateLocations, inventory, reviews, categories, coupons,
+    missingTables
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
@@ -189,6 +190,55 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8 pb-12">
+      {/* Database Health Warning */}
+      {missingTables.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-8"
+        >
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Database className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-1">Database Setup Required</h3>
+              <p className="text-sm text-slate-500 mb-4">
+                The following tables are missing in your Supabase project: 
+                <span className="font-bold text-primary ml-1">{missingTables.join(', ')}</span>.
+                Please run the SQL schema in your Supabase SQL Editor to enable all features.
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-white border-primary/20 text-primary hover:bg-primary/5 rounded-xl font-black uppercase tracking-widest text-[9px]"
+                  onClick={() => {
+                    const sql = `
+-- Run this in your Supabase SQL Editor
+${missingTables.map(table => `-- Table: ${table}`).join('\n')}
+-- See /supabase_schema.sql for the full schema
+                    `;
+                    navigator.clipboard.writeText(sql);
+                    toast.success("SQL snippet copied to clipboard");
+                  }}
+                >
+                  Copy SQL Snippet
+                </Button>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="text-primary font-black uppercase tracking-widest text-[9px]"
+                  asChild
+                >
+                  <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Open Supabase Dashboard</a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">

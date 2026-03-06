@@ -4,17 +4,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Save, X, ImageIcon, Activity, Zap, Wrench, Clock, IndianRupee, ArrowRight, Layers, Shield } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, ImageIcon, Activity, Zap, Wrench, Clock, IndianRupee, ArrowRight, Layers, Shield, Car, Battery, Disc, Droplets, Wind, Sparkles, Search, CheckCircle2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+
+const COMMON_ICONS = [
+  { name: "Zap", icon: Zap },
+  { name: "Wrench", icon: Wrench },
+  { name: "Clock", icon: Clock },
+  { name: "Shield", icon: Shield },
+  { name: "Car", icon: Car },
+  { name: "Battery", icon: Battery },
+  { name: "Disc", icon: Disc },
+  { name: "Droplets", icon: Droplets },
+  { name: "Wind", icon: Wind },
+  { name: "Sparkles", icon: Sparkles },
+  { name: "Activity", icon: Activity },
+  { name: "Layers", icon: Layers },
+];
 
 export function Services() {
   const { services, updateServices, adminRole } = useData();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Service>>({});
+
+  const getIconComponent = (name: string) => {
+    const Icon = (LucideIcons as any)[name] || Zap;
+    return <Icon className="h-5 w-5" />;
+  };
 
   const handleEdit = (service: Service) => {
     if (adminRole !== 'admin') {
@@ -56,6 +77,7 @@ export function Services() {
       basePrice: Number(formData.basePrice) || 0,
       duration: formData.duration || "",
       iconUrl: formData.iconUrl || "",
+      iconName: formData.iconName || "Zap",
       features: Array.isArray(formData.features) 
         ? formData.features 
         : (formData.features as string || "").split(',').map(s => s.trim()).filter(Boolean),
@@ -169,15 +191,32 @@ export function Services() {
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Service Icon</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Service Icon (Upload)</label>
                       <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-primary/30 transition-all group/upload">
                         <ImageUpload 
                           value={formData.iconUrl || ""}
                           onChange={(url) => setFormData({ ...formData, iconUrl: url })}
                         />
-                        <div className="mt-4 flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                          <Shield className="h-3 w-3 text-primary" /> Recommended size: 512x512px.
-                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Or Select Library Icon</label>
+                      <div className="grid grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        {COMMON_ICONS.map((item) => (
+                          <button
+                            key={item.name}
+                            onClick={() => setFormData({ ...formData, iconName: item.name })}
+                            className={cn(
+                              "h-12 flex items-center justify-center rounded-xl border transition-all",
+                              formData.iconName === item.name 
+                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                                : "bg-white text-slate-400 border-slate-100 hover:border-primary/30"
+                            )}
+                          >
+                            <item.icon className="h-5 w-5" />
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -244,7 +283,9 @@ export function Services() {
                         {service.iconUrl ? (
                           <img src={service.iconUrl} alt={service.title} className="max-h-[60%] max-w-[60%] object-contain group-hover:scale-110 transition-transform duration-500" />
                         ) : (
-                          <ImageIcon className="h-8 w-8 text-slate-300" />
+                          <div className="text-primary group-hover:scale-110 transition-transform duration-500">
+                            {getIconComponent(service.iconName || "Zap")}
+                          </div>
                         )}
                       </div>
                     </div>
