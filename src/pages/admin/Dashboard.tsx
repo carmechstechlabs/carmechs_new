@@ -7,7 +7,7 @@ import {
   Wrench, Car, Users, Calendar, Clock, CheckCircle2, 
   XCircle, Shield, IndianRupee, TrendingUp, ArrowUpRight, 
   ArrowDownRight, Gift, Wallet, Activity, Zap, Cpu, 
-  Globe, Database, Palette, Plus, MapPin, Package, Star 
+  Globe, Database, Palette, Plus, MapPin, Package, Star, AlertCircle
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
 import { cn } from "@/lib/utils";
@@ -70,14 +70,14 @@ export function Dashboard() {
       trendUp: true
     },
     { 
-      title: "Pending Tasks", 
-      value: pendingAppointments, 
-      description: "Requires attention",
-      icon: Clock, 
-      color: "text-amber-400",
-      glowColor: "shadow-amber-500/20",
-      trend: "-2.1%",
-      trendUp: false
+      title: "Workshop Load", 
+      value: "84%", 
+      description: "6/8 Bays Occupied",
+      icon: Activity, 
+      color: "text-primary",
+      glowColor: "shadow-primary/20",
+      trend: "High",
+      trendUp: true
     },
     { 
       title: "Active Users", 
@@ -153,7 +153,7 @@ export function Dashboard() {
       case 'pending': return <Clock className="h-3 w-3 text-amber-400" />;
       case 'confirmed': return <CheckCircle2 className="h-3 w-3 text-blue-400" />;
       case 'completed': return <CheckCircle2 className="h-3 w-3 text-emerald-400" />;
-      case 'cancelled': return <XCircle className="h-3 w-3 text-red-400" />;
+      case 'cancelled': return <XCircle className="h-3 w-3 text-primary" />;
       default: return null;
     }
   };
@@ -163,7 +163,7 @@ export function Dashboard() {
       case 'pending': return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
       case 'confirmed': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
       case 'completed': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-      case 'cancelled': return 'text-red-400 bg-red-400/10 border-red-400/20';
+      case 'cancelled': return 'text-primary bg-primary/10 border-primary/20';
       default: return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
     }
   };
@@ -172,7 +172,7 @@ export function Dashboard() {
     { name: 'Pending', value: pendingAppointments, color: '#f59e0b' },
     { name: 'Confirmed', value: confirmedAppointments, color: '#3b82f6' },
     { name: 'Completed', value: completedAppointments, color: '#10b981' },
-    { name: 'Cancelled', value: cancelledAppointments, color: '#ef4444' },
+    { name: 'Cancelled', value: cancelledAppointments, color: 'var(--primary)' },
   ].filter(item => item.value > 0);
 
   const appointmentsByDate = appointments.reduce((acc: any, curr) => {
@@ -192,7 +192,7 @@ export function Dashboard() {
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+          <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.3em]">
             <Activity className="h-3 w-3" /> System Overview
           </div>
           <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-3">
@@ -205,16 +205,24 @@ export function Dashboard() {
           <p className="text-slate-500 text-sm font-medium">Real-time operational monitoring and business analysis.</p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-3 px-5 py-3 bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50">
-            <Calendar className="h-4 w-4 text-red-600" />
+            <Calendar className="h-4 w-4 text-primary" />
             <span className="text-xs font-black text-slate-900 uppercase tracking-widest">
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
-          <Button className="bg-red-600 hover:bg-red-700 text-white rounded-2xl px-6 h-12 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20 border-none">
-            <TrendingUp className="mr-2 h-3 w-3" /> View Reports
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="bg-white border-slate-100 text-slate-500 hover:bg-slate-50 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
+              <a href="/admin/workshop"><Wrench className="mr-2 h-3 w-3" /> Workshop</a>
+            </Button>
+            <Button variant="outline" className="bg-white border-slate-100 text-slate-500 hover:bg-slate-50 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
+              <a href="/admin/inventory"><Package className="mr-2 h-3 w-3" /> Inventory</a>
+            </Button>
+            <Button className="bg-primary hover:opacity-90 text-white rounded-2xl px-6 h-12 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 border-none">
+              <TrendingUp className="mr-2 h-3 w-3" /> Reports
+            </Button>
+          </div>
         </div>
       </div>
       
@@ -227,16 +235,16 @@ export function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-red-600/30 transition-all duration-500 group relative overflow-hidden">
-              <div className={cn("absolute top-0 right-0 w-32 h-32 bg-red-600/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-red-600/10 transition-colors")} />
+            <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-primary/30 transition-all duration-500 group relative overflow-hidden">
+              <div className={cn("absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors")} />
               <CardContent className="p-6 relative z-10">
                 <div className="flex justify-between items-start mb-6">
-                  <div className={cn("p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner group-hover:border-red-600/50 transition-colors")}>
+                  <div className={cn("p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner group-hover:border-primary/50 transition-colors")}>
                     <stat.icon className={cn("h-6 w-6", stat.color.replace('text-blue-400', 'text-blue-600').replace('text-amber-400', 'text-amber-600').replace('text-indigo-400', 'text-indigo-600').replace('text-emerald-400', 'text-emerald-600'))} />
                   </div>
                   <div className={cn(
                     "flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest",
-                    stat.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                    stat.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-primary/10 text-primary"
                   )}>
                     {stat.trendUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                     {stat.trend}
@@ -246,7 +254,7 @@ export function Dashboard() {
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">{stat.title}</p>
                   <h3 className="text-3xl font-black text-slate-900 tracking-tighter mb-2">{stat.value}</h3>
                   <div className="flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-red-600" />
+                    <div className="h-1 w-1 rounded-full bg-primary" />
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.description}</p>
                   </div>
                 </div>
@@ -261,8 +269,8 @@ export function Dashboard() {
         <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
           <CardHeader>
             <div className="flex items-center gap-2 mb-1">
-              <Database className="h-3 w-3 text-red-600" />
-              <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Distribution</span>
+              <Database className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Distribution</span>
             </div>
             <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Appointment Status</CardTitle>
           </CardHeader>
@@ -307,8 +315,8 @@ export function Dashboard() {
         <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
           <CardHeader>
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-3 w-3 text-red-600" />
-              <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Analytics</span>
+              <TrendingUp className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Analytics</span>
             </div>
             <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Booking Trends</CardTitle>
           </CardHeader>
@@ -318,8 +326,8 @@ export function Dashboard() {
                 <AreaChart data={barChartData}>
                   <defs>
                     <linearGradient id="colorApts" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#dc2626" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0}/>
+                      <stop offset="5%" stopColor={primaryColor} stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor={primaryColor} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
@@ -339,7 +347,7 @@ export function Dashboard() {
                     contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ color: '#0f172a', fontSize: '12px', fontWeight: 'bold' }}
                   />
-                  <Area type="monotone" dataKey="appointments" stroke="#dc2626" strokeWidth={3} fillOpacity={1} fill="url(#colorApts)" />
+                  <Area type="monotone" dataKey="appointments" stroke={primaryColor} strokeWidth={3} fillOpacity={1} fill="url(#colorApts)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -352,14 +360,83 @@ export function Dashboard() {
         </Card>
       </div>
 
+      {/* Workshop Status Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 pb-6">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Wrench className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Workshop Live</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Bay Utilization</CardTitle>
+            </div>
+            <Button variant="outline" size="sm" className="bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100 rounded-xl font-black uppercase tracking-widest text-[9px]" asChild>
+              <a href="/admin/workshop">Manage Workshop</a>
+            </Button>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((bay) => (
+                <div key={bay} className={cn(
+                  "p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all group",
+                  bay <= 6 ? "bg-blue-50 border-blue-100 text-blue-600" : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                )}>
+                  <div className="text-[8px] font-black uppercase tracking-widest opacity-60">Bay {bay}</div>
+                  {bay <= 6 ? <Car className="h-5 w-5 animate-pulse" /> : <CheckCircle2 className="h-5 w-5" />}
+                  <div className="text-[9px] font-black uppercase tracking-widest">{bay <= 6 ? "Occupied" : "Ready"}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+          <CardHeader className="border-b border-slate-50 pb-6">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertCircle className="h-3 w-3 text-amber-600" />
+              <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.3em]">Inventory Alerts</span>
+            </div>
+            <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Low Stock Items</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-slate-50">
+              {inventory.filter(i => i.status === 'low_stock' || i.status === 'out_of_stock').slice(0, 5).map((item) => (
+                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{item.name}</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">SKU: {item.sku}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
+                      item.status === 'out_of_stock' ? "bg-primary/5 text-primary" : "bg-amber-50 text-amber-600"
+                    )}>
+                      {item.quantity} Left
+                    </span>
+                    <Button variant="link" className="h-auto p-0 text-[8px] font-black text-primary uppercase tracking-widest">Restock</Button>
+                  </div>
+                </div>
+              ))}
+              {inventory.filter(i => i.status === 'low_stock' || i.status === 'out_of_stock').length === 0 && (
+                <div className="p-12 text-center">
+                  <CheckCircle2 className="h-8 w-8 text-emerald-200 mx-auto mb-2" />
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">All Stock Levels Normal</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 pb-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Globe className="h-3 w-3 text-red-600" />
-                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Live Feed</span>
+                <Globe className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Live Feed</span>
               </div>
               <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Recent Bookings</CardTitle>
             </div>
@@ -384,7 +461,7 @@ export function Dashboard() {
                       <tr key={apt.id} className="hover:bg-slate-50 transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 group-hover:text-red-600 transition-colors">{apt.name}</span>
+                            <span className="font-bold text-slate-900 group-hover:text-primary transition-colors">{apt.name}</span>
                             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{apt.phone}</span>
                           </div>
                         </td>
@@ -397,7 +474,7 @@ export function Dashboard() {
                         <td className="px-6 py-4">
                           <span className={cn(
                             "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border",
-                            getStatusColor(apt.status).replace('text-amber-400', 'text-amber-600').replace('bg-amber-400/10', 'bg-amber-50').replace('border-amber-400/20', 'border-amber-100').replace('text-blue-400', 'text-blue-600').replace('bg-blue-400/10', 'bg-blue-50').replace('border-blue-400/20', 'border-blue-100').replace('text-emerald-400', 'text-emerald-600').replace('bg-emerald-400/10', 'bg-emerald-50').replace('border-emerald-400/20', 'border-emerald-100').replace('text-red-400', 'text-red-600').replace('bg-red-400/10', 'bg-red-50').replace('border-red-400/20', 'border-red-100')
+                            getStatusColor(apt.status).replace('text-amber-400', 'text-amber-600').replace('bg-amber-400/10', 'bg-amber-50').replace('border-amber-400/20', 'border-amber-100').replace('text-blue-400', 'text-blue-600').replace('bg-blue-400/10', 'bg-blue-50').replace('border-blue-400/20', 'border-blue-100').replace('text-emerald-400', 'text-emerald-600').replace('bg-emerald-400/10', 'bg-emerald-50').replace('border-emerald-400/20', 'border-emerald-100').replace('text-primary', 'text-primary').replace('bg-primary/10', 'bg-primary/5').replace('border-primary/20', 'border-primary/10')
                           )}>
                             {getStatusIcon(apt.status)}
                             {apt.status}
@@ -420,8 +497,8 @@ export function Dashboard() {
           <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
             <CardHeader className="border-b border-slate-50 pb-6">
               <div className="flex items-center gap-2 mb-1">
-                <Cpu className="h-3 w-3 text-red-600" />
-                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Activity Log</span>
+                <Cpu className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Activity Log</span>
               </div>
               <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Recent Events</CardTitle>
             </CardHeader>
@@ -430,11 +507,11 @@ export function Dashboard() {
                 <div className="space-y-6">
                   {recentActivity.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-4 group">
-                      <div className={cn("mt-1 h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 group-hover:border-red-600/50 transition-all shadow-sm", activity.bgColor.replace('bg-blue-500/10', 'bg-blue-50').replace('bg-indigo-500/10', 'bg-indigo-50'))}>
+                      <div className={cn("mt-1 h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 group-hover:border-primary/50 transition-all shadow-sm", activity.bgColor.replace('bg-blue-500/10', 'bg-blue-50').replace('bg-indigo-500/10', 'bg-indigo-50'))}>
                         <activity.icon className={cn("h-4 w-4", activity.color.replace('text-blue-400', 'text-blue-600').replace('text-indigo-400', 'text-indigo-600'))} />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-red-600 transition-colors">{activity.title}</p>
+                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-primary transition-colors">{activity.title}</p>
                         <div className="flex items-center justify-between">
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activity.subtitle}</p>
                           <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
@@ -452,10 +529,45 @@ export function Dashboard() {
           </Card>
 
           <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden group">
+            <CardHeader className="pb-4 border-b border-slate-50">
+              <div className="flex items-center gap-2 mb-1">
+                <Star className="h-3 w-3 text-yellow-500" />
+                <span className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.3em]">Customer Voice</span>
+              </div>
+              <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Recent Reviews</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-50">
+                {reviews.slice(0, 3).map((review) => (
+                  <div key={review.id} className="p-4 space-y-2 hover:bg-slate-50 transition-colors">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{review.userName}</span>
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={cn("h-2 w-2", i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-slate-200")} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 line-clamp-2 italic">"{review.comment}"</p>
+                  </div>
+                ))}
+                {reviews.length === 0 && (
+                  <div className="p-8 text-center text-slate-300">
+                    <p className="text-[10px] font-black uppercase tracking-widest">No Reviews Yet</p>
+                  </div>
+                )}
+              </div>
+              <Button variant="ghost" className="w-full h-10 rounded-none border-t border-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50" asChild>
+                <a href="/admin/reviews">View All Reviews</a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden group">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2 mb-1">
-                <Palette className="h-3 w-3 text-red-600" />
-                <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">Quick Config</span>
+                <Palette className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Quick Config</span>
               </div>
               <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Layout & Regions</CardTitle>
             </CardHeader>
@@ -513,7 +625,7 @@ export function Dashboard() {
                   </div>
                   <Button 
                     onClick={handleAddCity}
-                    className="h-11 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/10"
+                    className="h-11 px-4 bg-primary hover:opacity-90 text-white rounded-xl shadow-lg shadow-primary/10"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>

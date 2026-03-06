@@ -8,17 +8,17 @@ export function Contact() {
       {/* Hero Header */}
       <div className="bg-white pt-40 pb-32 relative overflow-hidden border-b border-slate-100">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="absolute top-0 left-0 w-1/2 h-full bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 left-0 w-1/2 h-full bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2" />
         
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <div className="max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 mb-6"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-6"
             >
-              <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Support Terminal</span>
+              <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Support Terminal</span>
             </motion.div>
             
             <motion.h1 
@@ -56,8 +56,8 @@ export function Contact() {
               
               <div className="space-y-10">
                 <div className="flex items-start gap-6 group">
-                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors shadow-sm border border-slate-100">
-                    <MapPin className="h-6 w-6 text-red-600 group-hover:text-white transition-colors" />
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <MapPin className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Base Operations</h3>
@@ -67,8 +67,8 @@ export function Contact() {
                 </div>
 
                 <div className="flex items-start gap-6 group">
-                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors shadow-sm border border-slate-100">
-                    <Phone className="h-6 w-6 text-red-600 group-hover:text-white transition-colors" />
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <Phone className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Voice Uplink</h3>
@@ -78,8 +78,8 @@ export function Contact() {
                 </div>
 
                 <div className="flex items-start gap-6 group">
-                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-red-600 transition-colors shadow-sm border border-slate-100">
-                    <Mail className="h-6 w-6 text-red-600 group-hover:text-white transition-colors" />
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <Mail className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Data Transmission</h3>
@@ -94,12 +94,12 @@ export function Contact() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-red-600 p-10 rounded-[3rem] text-white shadow-2xl shadow-red-600/20"
+              className="bg-primary p-10 rounded-[3rem] text-white shadow-2xl shadow-primary/20"
             >
               <MessageSquare className="h-10 w-10 mb-6" />
               <h3 className="text-2xl font-black uppercase tracking-tight mb-4">Live Chat</h3>
               <p className="text-white/80 font-medium mb-8 leading-relaxed">Need a quick diagnostic? Our technical advisors are available for real-time consultation.</p>
-              <Button className="w-full h-14 bg-white text-red-600 hover:bg-slate-100 rounded-2xl font-black uppercase tracking-widest text-xs border-none">
+              <Button className="w-full h-14 bg-white text-primary hover:bg-slate-100 rounded-2xl font-black uppercase tracking-widest text-xs border-none">
                 Start Session
               </Button>
             </motion.div>
@@ -119,7 +119,7 @@ export function Contact() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">First Name</label>
                   <input 
                     type="text" 
-                    className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-bold"
+                    className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                     placeholder="John"
                   />
                 </div>
@@ -127,7 +127,7 @@ export function Contact() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Last Name</label>
                   <input 
                     type="text" 
-                    className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-bold"
+                    className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                     placeholder="Doe"
                   />
                 </div>
@@ -137,7 +137,7 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
                 <input 
                   type="email" 
-                  className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-bold"
+                  className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                   placeholder="john@example.com"
                 />
               </div>
@@ -146,7 +146,7 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Subject</label>
                 <input 
                   type="text" 
-                  className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-bold"
+                  className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                   placeholder="Service Inquiry"
                 />
               </div>
@@ -155,12 +155,12 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Message</label>
                 <textarea 
                   rows={5}
-                  className="w-full p-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-bold resize-none"
+                  className="w-full p-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold resize-none"
                   placeholder="Describe your vehicle's symptoms or your specific inquiry..."
                 ></textarea>
               </div>
 
-              <Button size="lg" className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-red-600/20 group bg-red-600 hover:bg-red-700 text-white border-none">
+              <Button size="lg" className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group bg-primary hover:bg-primary/90 text-white border-none">
                 Send Transmission <Send className="ml-3 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </Button>
             </form>

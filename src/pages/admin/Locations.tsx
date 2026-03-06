@@ -70,7 +70,7 @@ export function Locations() {
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+          <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.3em]">
             <MapPin className="h-3 w-3" /> Geography
           </div>
           <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">City Management</h1>
@@ -79,7 +79,7 @@ export function Locations() {
         
         <Button 
           onClick={() => setIsAdding(true)}
-          className="h-14 px-8 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 group"
+          className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 group"
         >
           <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
           Add New City
@@ -89,12 +89,12 @@ export function Locations() {
       {/* Search & Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="SEARCH CITIES..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-16 pl-14 bg-white border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-sm uppercase tracking-widest shadow-sm"
+            className="h-16 pl-14 bg-white border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest shadow-sm"
           />
         </div>
         <Card className="bg-white border-slate-100 shadow-sm rounded-2xl flex items-center justify-center p-4">
@@ -113,7 +113,7 @@ export function Locations() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <Card className="bg-white border-red-600/20 shadow-2xl rounded-[2.5rem] overflow-hidden">
+            <Card className="bg-white border-primary/20 shadow-2xl rounded-[2.5rem] overflow-hidden">
               <div className="p-8 flex flex-col md:flex-row items-end gap-6">
                 <div className="flex-1 space-y-3 w-full">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">City Name</label>
@@ -121,7 +121,7 @@ export function Locations() {
                     value={newLocation.name}
                     onChange={(e) => setNewLocation({...newLocation, name: e.target.value})}
                     placeholder="E.G. GURGAON"
-                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-sm uppercase tracking-widest"
+                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
                   />
                 </div>
                 <div className="flex items-center gap-4 h-14 px-6 bg-slate-50 rounded-2xl border border-slate-100">
@@ -130,7 +130,7 @@ export function Locations() {
                     onClick={() => setNewLocation({...newLocation, isPopular: !newLocation.isPopular})}
                     className={cn(
                       "h-6 w-11 rounded-full transition-all relative",
-                      newLocation.isPopular ? "bg-red-600" : "bg-slate-200"
+                      newLocation.isPopular ? "bg-primary" : "bg-slate-200"
                     )}
                   >
                     <div className={cn(
@@ -141,7 +141,7 @@ export function Locations() {
                 </div>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setIsAdding(false)} className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200">Cancel</Button>
-                  <Button onClick={handleAdd} className="h-14 px-8 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-600/20">Confirm Add</Button>
+                  <Button onClick={handleAdd} className="h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">Confirm Add</Button>
                 </div>
               </div>
             </Card>
@@ -159,8 +159,8 @@ export function Locations() {
             animate={{ opacity: 1, scale: 1 }}
           >
             <Card className={cn(
-              "bg-white border-slate-100 shadow-sm hover:shadow-xl hover:border-red-600/20 transition-all duration-500 rounded-[2rem] overflow-hidden group",
-              editingId === location.id && "ring-2 ring-red-600/50 border-transparent"
+              "bg-white border-slate-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500 rounded-[2rem] overflow-hidden group",
+              editingId === location.id && "ring-2 ring-primary/50 border-transparent"
             )}>
               <CardContent className="p-6">
                 {editingId === location.id ? (
@@ -177,7 +177,7 @@ export function Locations() {
                         onClick={() => setEditLocation({...editLocation, isPopular: !editLocation.isPopular})}
                         className={cn(
                           "h-5 w-9 rounded-full transition-all relative",
-                          editLocation.isPopular ? "bg-red-600" : "bg-slate-200"
+                          editLocation.isPopular ? "bg-primary" : "bg-slate-200"
                         )}
                       >
                         <div className={cn(
@@ -192,20 +192,20 @@ export function Locations() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className={cn(
                         "h-12 w-12 rounded-2xl flex items-center justify-center transition-all shadow-sm border",
-                        location.isPopular ? "bg-red-50 border-red-100 text-red-600" : "bg-slate-50 border-slate-100 text-slate-400"
+                        location.isPopular ? "bg-primary/5 border-primary/10 text-primary" : "bg-slate-50 border-slate-100 text-slate-400"
                       )}>
                         <MapPin className="h-6 w-6" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest group-hover:text-red-600 transition-colors">{location.name}</h3>
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest group-hover:text-primary transition-colors">{location.name}</h3>
                         <div className="flex items-center gap-2 mt-1">
                           {location.isPopular && (
-                            <span className="flex items-center gap-1 text-[8px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-1.5 py-0.5 rounded-full">
-                              <Star className="h-2 w-2 fill-red-600" /> Popular
+                            <span className="flex items-center gap-1 text-[8px] font-black text-primary uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded-full">
+                              <Star className="h-2 w-2 fill-primary" /> Popular
                             </span>
                           )}
                           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">ID: {location.id}</span>
@@ -219,13 +219,13 @@ export function Locations() {
                           setEditingId(location.id);
                           setEditLocation({ name: location.name, isPopular: location.isPopular });
                         }}
-                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                        className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button 
                         onClick={() => handleDelete(location.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+                        className="p-2 hover:bg-primary/5 rounded-lg text-slate-400 hover:text-primary transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

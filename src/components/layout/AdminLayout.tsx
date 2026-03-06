@@ -57,23 +57,44 @@ export function AdminLayout() {
 
   if (!isAdminLoggedIn) return null;
 
-  const navItems = [
-    { path: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-    { path: "/admin/appointments", label: "Bookings", icon: Calendar },
-    { path: "/admin/customers", label: "Customers", icon: UsersRound },
-    { path: "/admin/services", label: "Catalog", icon: Wrench },
-    { path: "/admin/service-packages", label: "Bundles", icon: Package },
-    { path: "/admin/categories", label: "Categories", icon: LayoutGrid },
-    { path: "/admin/inventory", label: "Inventory", icon: Package },
-    { path: "/admin/coupons", label: "Coupons", icon: Ticket },
-    { path: "/admin/reviews", label: "Reviews", icon: Star },
-    { path: "/admin/brands", label: "Brands", icon: Shield },
-    { path: "/admin/locations", label: "Cities", icon: MapPin },
-    { path: "/admin/cars", label: "Car DB", icon: Car },
-    { path: "/admin/users", label: "Staff", icon: Users },
-    { path: "/admin/ui-settings", label: "Interface", icon: Palette },
-    { path: "/admin/api-keys", label: "Integrations", icon: Key },
-    { path: "/admin/settings", label: "System", icon: Settings },
+  const navGroups = [
+    {
+      title: "Operations",
+      items: [
+        { path: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
+        { path: "/admin/workshop", label: "Workshop", icon: Activity },
+        { path: "/admin/appointments", label: "Bookings", icon: Calendar },
+        { path: "/admin/inventory", label: "Inventory", icon: Package },
+      ]
+    },
+    {
+      title: "Catalog",
+      items: [
+        { path: "/admin/services", label: "Services", icon: Wrench },
+        { path: "/admin/service-packages", label: "Bundles", icon: Package },
+        { path: "/admin/categories", label: "Categories", icon: LayoutGrid },
+        { path: "/admin/brands", label: "Brands", icon: Shield },
+        { path: "/admin/cars", label: "Car DB", icon: Car },
+      ]
+    },
+    {
+      title: "CRM & Marketing",
+      items: [
+        { path: "/admin/customers", label: "Customers", icon: UsersRound },
+        { path: "/admin/reviews", label: "Reviews", icon: Star },
+        { path: "/admin/coupons", label: "Coupons", icon: Ticket },
+      ]
+    },
+    {
+      title: "Configuration",
+      items: [
+        { path: "/admin/locations", label: "Cities", icon: MapPin },
+        { path: "/admin/users", label: "Staff", icon: Users },
+        { path: "/admin/ui-settings", label: "Interface", icon: Palette },
+        { path: "/admin/api-keys", label: "Integrations", icon: Key },
+        { path: "/admin/settings", label: "System", icon: Settings },
+      ]
+    }
   ];
 
   return (
@@ -133,33 +154,44 @@ export function AdminLayout() {
         </div>
         
         {/* Navigation */}
-        <nav className="px-3 py-6 space-y-1 flex-1 overflow-y-auto scrollbar-none">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative overflow-hidden",
-                  isActive 
-                    ? "bg-[#e31e24] text-white shadow-lg shadow-red-500/20" 
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                )}
-              >
-                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-400")} />
-                {isSidebarOpen && (
-                  <motion.span 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm font-bold uppercase tracking-widest"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </Link>
-            );
-          })}
+        <nav className="px-3 py-6 space-y-8 flex-1 overflow-y-auto scrollbar-none">
+          {navGroups.map((group, gIndex) => (
+            <div key={gIndex} className="space-y-2">
+              {isSidebarOpen && (
+                <h3 className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">
+                  {group.title}
+                </h3>
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={cn(
+                        "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group relative overflow-hidden",
+                        isActive 
+                          ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                      )}
+                    >
+                      <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-400")} />
+                      {isSidebarOpen && (
+                        <motion.span 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-xs font-bold uppercase tracking-widest"
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Sidebar Footer */}
@@ -170,7 +202,7 @@ export function AdminLayout() {
               toast.success("Logged out successfully");
               navigate("/admin");
             }}
-            className="flex items-center gap-4 px-4 py-4 text-slate-400 hover:text-red-600 hover:bg-red-50 w-full transition-all rounded-2xl text-xs font-black uppercase tracking-widest group"
+            className="flex items-center gap-4 px-4 py-4 text-slate-400 hover:text-primary hover:bg-primary/5 w-full transition-all rounded-2xl text-xs font-black uppercase tracking-widest group"
           >
             <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
             {isSidebarOpen && <span>Logout</span>}
@@ -195,11 +227,11 @@ export function AdminLayout() {
               onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
               className="p-2.5 bg-white hover:bg-slate-50 rounded-xl transition-all border border-slate-200 group shadow-sm"
             >
-              <Menu className="h-5 w-5 text-slate-400 group-hover:text-red-600" />
+              <Menu className="h-5 w-5 text-slate-400 group-hover:text-primary" />
             </button>
             <div className="hidden sm:flex flex-col">
               <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">
-                {navItems.find(item => item.path === location.pathname)?.label || "Overview"}
+                {navGroups.flatMap(g => g.items).find(item => item.path === location.pathname)?.label || "Overview"}
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Online</span>
@@ -217,7 +249,7 @@ export function AdminLayout() {
                   Live
                 </span>
               </div>
-              <div className="h-10 w-10 bg-[#e31e24] rounded-xl flex items-center justify-center text-white font-black uppercase shadow-md shadow-red-500/20">
+              <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white font-black uppercase shadow-md shadow-primary/20">
                 {adminRole ? adminRole[0] : 'U'}
               </div>
             </div>

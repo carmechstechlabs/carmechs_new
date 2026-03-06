@@ -127,8 +127,8 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 bg-white">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 blur-[120px] rounded-full opacity-10" style={{ backgroundColor: '#e31e24' }} />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 blur-[120px] rounded-full opacity-5" style={{ backgroundColor: '#e31e24' }} />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 blur-[120px] rounded-full opacity-10 bg-primary/20" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 blur-[120px] rounded-full opacity-5 bg-primary/10" />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
@@ -141,7 +141,7 @@ export function Login() {
               {userLogin.loginLogoUrl ? (
                 <img src={userLogin.loginLogoUrl} alt="Logo" className="h-12 w-auto" />
               ) : (
-                <div className="h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:rotate-12 bg-[#e31e24]">
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:rotate-12 bg-primary">
                   <Wrench className="h-6 w-6 text-white" />
                 </div>
               )}
@@ -164,24 +164,24 @@ export function Login() {
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="space-y-4">
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#e31e24] transition-colors" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Email address"
                       />
                     </div>
                     <div className="relative group">
-                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#e31e24] transition-colors" />
+                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <input
                         type="password"
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Password"
                       />
                     </div>
@@ -189,16 +189,16 @@ export function Login() {
 
                   <div className="flex items-center justify-between px-2">
                     <label className="flex items-center gap-2 cursor-pointer group">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-[#e31e24] focus:ring-[#e31e24]" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-primary focus:ring-primary" />
                       <span className="text-sm text-slate-500 group-hover:text-slate-700 transition-colors">Remember me</span>
                     </label>
-                    <a href="#" className="text-sm font-bold text-[#e31e24] hover:text-[#c4191f] transition-colors">
+                    <a href="#" className="text-sm font-bold text-primary hover:opacity-80 transition-colors">
                       Forgot password?
                     </a>
                   </div>
 
                   <Button 
-                    className="w-full h-14 rounded-2xl text-white font-bold text-lg shadow-lg group bg-[#e31e24] hover:bg-[#c4191f]"
+                    className="w-full h-14 rounded-2xl text-white font-bold text-lg shadow-lg group bg-primary hover:opacity-90"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -234,7 +234,7 @@ export function Login() {
                           <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
                           <div className="flex items-center justify-center gap-3">
-                            <Mail className="h-5 w-5 text-red-500" />
+                            <Mail className="h-5 w-5 text-primary" />
                             Continue with Google
                           </div>
                         )}
@@ -248,7 +248,7 @@ export function Login() {
                           placeholder="+1 234 567 890"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                         <Button 
                           variant="outline" 
@@ -291,13 +291,13 @@ export function Login() {
                     type="text"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-6 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-6 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     placeholder="000000"
                     maxLength={6}
                   />
                   
                   <Button 
-                    className="w-full h-14 rounded-2xl text-white font-bold text-lg shadow-lg bg-[#e31e24] hover:bg-[#c4191f]"
+                    className="w-full h-14 rounded-2xl text-white font-bold text-lg shadow-lg bg-primary hover:opacity-90"
                     onClick={handleVerifyOtp}
                     disabled={isPhoneLoading || !otpCode}
                   >
@@ -323,7 +323,7 @@ export function Login() {
           <div className="mt-12 text-center">
             <p className="text-slate-500 font-medium">
               New to CarMechs?{" "}
-              <Link to="/signup" className="text-[#e31e24] font-bold hover:text-[#c4191f] transition-colors">
+              <Link to="/signup" className="text-primary font-bold hover:opacity-80 transition-colors">
                 Create Account
               </Link>
             </p>

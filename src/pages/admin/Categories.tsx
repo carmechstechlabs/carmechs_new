@@ -94,7 +94,7 @@ export function Categories() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditingCategory(null); setNewCategory({ name: "", description: "", iconName: "Wrench" }); }} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl shadow-xl shadow-red-500/10 h-12 px-6">
+            <Button onClick={() => { setEditingCategory(null); setNewCategory({ name: "", description: "", iconName: "Wrench" }); }} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/10 h-12 px-6">
               <Plus className="h-4 w-4 mr-2" /> Create Category
             </Button>
           </DialogTrigger>
@@ -133,7 +133,7 @@ export function Categories() {
                       className={cn(
                         "h-12 w-full rounded-xl border flex items-center justify-center transition-all",
                         newCategory.iconName === opt.name 
-                          ? "bg-red-50 border-red-200 text-red-600 shadow-inner" 
+                          ? "bg-primary/5 border-primary/20 text-primary shadow-inner" 
                           : "bg-white border-slate-100 text-slate-400 hover:bg-slate-50"
                       )}
                     >
@@ -145,7 +145,7 @@ export function Categories() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button onClick={handleSave} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl px-8">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8">
                 {editingCategory ? "Update Category" : "Create Category"}
               </Button>
             </DialogFooter>
@@ -178,7 +178,7 @@ export function Categories() {
                 <Card className="rounded-[2.5rem] border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden bg-white h-full flex flex-col">
                   <div className="p-8 flex-1">
                     <div className="flex items-start justify-between mb-8">
-                      <div className="h-16 w-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-slate-400 group-hover:bg-red-50 group-hover:text-red-600 group-hover:scale-110 transition-all duration-500 border border-slate-100 group-hover:border-red-100">
+                      <div className="h-16 w-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-slate-400 group-hover:bg-primary/5 group-hover:text-primary group-hover:scale-110 transition-all duration-500 border border-slate-100 group-hover:border-primary/10">
                         <Icon className="h-8 w-8" />
                       </div>
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -194,14 +194,14 @@ export function Categories() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleDelete(cat.id)}
-                          className="h-10 w-10 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          className="h-10 w-10 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                     
-                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-3 group-hover:text-red-600 transition-colors">
+                    <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-3 group-hover:text-primary transition-colors">
                       {cat.name}
                     </h3>
                     <p className="text-slate-500 text-sm font-medium leading-relaxed">
@@ -213,7 +213,7 @@ export function Categories() {
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                       Active Services: <span className="text-slate-900">12</span>
                     </span>
-                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-red-600 group-hover:translate-x-1 transition-all" />
+                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                 </Card>
               </motion.div>

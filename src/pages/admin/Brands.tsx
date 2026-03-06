@@ -192,7 +192,7 @@ export function Brands() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => handleDelete(brand.id)}
-                        className="h-10 w-10 bg-white/5 border border-white/5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30 rounded-xl transition-all"
+                        className="h-10 w-10 bg-white/5 border border-white/5 text-slate-500 hover:text-primary hover:bg-primary/10 hover:border-primary/30 rounded-xl transition-all"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

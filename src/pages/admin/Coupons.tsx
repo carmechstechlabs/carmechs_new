@@ -100,7 +100,7 @@ export function Coupons() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditingCoupon(null); setNewCoupon({ code: "", discountType: "percentage", discountValue: 0, minOrderAmount: 0, maxDiscount: 0, expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], isActive: true }); }} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl shadow-xl shadow-red-500/10 h-12 px-6">
+            <Button onClick={() => { setEditingCoupon(null); setNewCoupon({ code: "", discountType: "percentage", discountValue: 0, minOrderAmount: 0, maxDiscount: 0, expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], isActive: true }); }} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/10 h-12 px-6">
               <Plus className="h-4 w-4 mr-2" /> New Coupon
             </Button>
           </DialogTrigger>
@@ -174,7 +174,7 @@ export function Coupons() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">Cancel</Button>
-              <Button onClick={handleSave} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl px-8">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8">
                 {editingCoupon ? "Update Coupon" : "Create Coupon"}
               </Button>
             </DialogFooter>
@@ -195,7 +195,7 @@ export function Coupons() {
               <Card className="rounded-[2.5rem] border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 overflow-hidden bg-white">
                 <div className="p-8">
                   <div className="flex items-start justify-between mb-8">
-                    <div className="h-16 w-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-slate-400 group-hover:bg-red-50 group-hover:text-red-600 group-hover:scale-110 transition-all duration-500 border border-slate-100 group-hover:border-red-100">
+                    <div className="h-16 w-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center text-slate-400 group-hover:bg-primary/5 group-hover:text-primary group-hover:scale-110 transition-all duration-500 border border-slate-100 group-hover:border-primary/10">
                       <Ticket className="h-8 w-8" />
                     </div>
                     <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export function Coupons() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => handleDelete(coupon.id)}
-                        className="h-10 w-10 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        className="h-10 w-10 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -219,7 +219,7 @@ export function Coupons() {
                   </div>
                   
                   <div className="flex items-center gap-3 mb-4">
-                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">
+                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">
                       {coupon.code}
                     </h3>
                     <button 

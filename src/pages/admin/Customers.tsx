@@ -119,7 +119,7 @@ export function Customers() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card className={cn(
-                    "bg-white border-slate-200 shadow-sm hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-[2rem]",
+                    "bg-white border-slate-200 shadow-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden rounded-[2rem]",
                     user.blocked && "opacity-60 grayscale-[0.5]"
                   )}>
                     <CardHeader className="p-6 border-b border-slate-100 bg-slate-50/50">
@@ -127,12 +127,12 @@ export function Customers() {
                         <div className="flex items-center gap-4">
                           <div className={cn(
                             "h-14 w-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg transition-transform group-hover:scale-110 duration-500",
-                            user.blocked ? "bg-slate-400 shadow-slate-400/20" : "bg-[#e31e24] shadow-red-500/20"
+                            user.blocked ? "bg-slate-400 shadow-slate-400/20" : "bg-primary shadow-primary/20"
                           )}>
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="space-y-1">
-                            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{user.name}</h3>
+                            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">{user.name}</h3>
                             <div className="flex flex-wrap gap-2">
                               {user.verified ? (
                                 <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md border border-emerald-100">
@@ -144,7 +144,7 @@ export function Customers() {
                                 </span>
                               )}
                               {user.blocked && (
-                                <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest bg-red-50 text-red-600 px-2 py-0.5 rounded-md border border-red-100">
+                                <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest bg-primary/5 text-primary px-2 py-0.5 rounded-md border border-primary/10">
                                   <Ban className="h-2.5 w-2.5" /> Blocked
                                 </span>
                               )}
@@ -155,7 +155,7 @@ export function Customers() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 bg-white border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl transition-all"
+                            className="h-9 w-9 bg-white border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-xl transition-all"
                             onClick={() => setEditingUser(user)}
                             disabled={adminRole !== 'admin'}
                           >
@@ -166,7 +166,7 @@ export function Customers() {
                             size="icon" 
                             className={cn(
                               "h-9 w-9 bg-white border border-slate-100 rounded-xl transition-all",
-                              user.blocked ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200" : "text-red-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200"
+                              user.blocked ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200" : "text-primary/60 hover:text-primary hover:bg-primary/5 hover:border-primary/20"
                             )}
                             onClick={() => handleBlockToggle(user)}
                             disabled={adminRole !== 'admin'}
@@ -178,14 +178,14 @@ export function Customers() {
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
                       <div className="grid grid-cols-1 gap-3">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 group/item hover:bg-white hover:border-red-600/20 transition-all">
-                          <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover/item:text-red-600 transition-colors">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 group/item hover:bg-white hover:border-primary/20 transition-all">
+                          <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover/item:text-primary transition-colors">
                             <Phone className="h-4 w-4" />
                           </div>
                           <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{user.phone}</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 group/item hover:bg-white hover:border-red-600/20 transition-all">
-                          <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover/item:text-red-600 transition-colors">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 group/item hover:bg-white hover:border-primary/20 transition-all">
+                          <div className="h-8 w-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover/item:text-primary transition-colors">
                             <Mail className="h-4 w-4" />
                           </div>
                           <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest truncate">{user.email}</span>
@@ -195,9 +195,9 @@ export function Customers() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Calendar className="h-3 w-3 text-red-600" /> Booking History
+                            <Calendar className="h-3 w-3 text-primary" /> Booking History
                           </h4>
-                          <span className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest border border-red-100">
+                          <span className="px-2 py-0.5 rounded-md bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/10">
                             {userApps.length} {userApps.length === 1 ? 'Entry' : 'Entries'}
                           </span>
                         </div>
@@ -211,7 +211,7 @@ export function Customers() {
 
                       <div className="space-y-3">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                          <Car className="h-3 w-3 text-red-600" /> Registered Fleet
+                          <Car className="h-3 w-3 text-primary" /> Registered Fleet
                         </h4>
                         {userCars.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
@@ -254,8 +254,8 @@ export function Customers() {
             >
               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                    <Edit2 className="h-5 w-5 text-red-600" />
+                  <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <Edit2 className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Edit Profile</h3>
@@ -273,7 +273,7 @@ export function Customers() {
                   <Input 
                     value={editingUser.name}
                     onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
                 </div>
                 <div className="space-y-2">
@@ -282,7 +282,7 @@ export function Customers() {
                     type="email"
                     value={editingUser.email}
                     onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
                 </div>
                 <div className="space-y-2">
@@ -290,7 +290,7 @@ export function Customers() {
                   <Input 
                     value={editingUser.phone}
                     onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -300,7 +300,7 @@ export function Customers() {
                       id="verified"
                       checked={editingUser.verified}
                       onChange={(e) => setEditingUser({...editingUser, verified: e.target.checked})}
-                      className="h-5 w-5 rounded-lg border-slate-300 text-red-600 focus:ring-red-600/20 cursor-pointer"
+                      className="h-5 w-5 rounded-lg border-slate-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </div>
                   <label htmlFor="verified" className="text-[10px] font-black text-slate-900 uppercase tracking-widest cursor-pointer flex items-center gap-2">
@@ -318,7 +318,7 @@ export function Customers() {
                   Cancel
                 </Button>
                 <Button 
-                  className="flex-1 h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20" 
+                  className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20" 
                   onClick={handleSaveEdit} 
                   disabled={isSaving}
                 >

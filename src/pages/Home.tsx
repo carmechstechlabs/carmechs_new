@@ -254,7 +254,7 @@ export function Home() {
                   className="absolute bottom-12 -right-12 bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-2xl max-w-[220px] border border-slate-100"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 bg-red-500/10 rounded-2xl flex items-center justify-center">
+                    <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center">
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <span className="text-[11px] font-bold uppercase tracking-widest text-slate-900">Express</span>
@@ -266,7 +266,7 @@ export function Home() {
               {/* Decorative Elements */}
               <div className="absolute -inset-10 border border-slate-100 rounded-[5rem] -z-10" />
               <div className="absolute -inset-20 border border-slate-100 rounded-[6rem] -z-20" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-red-500/5 blur-[100px] -z-30" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-[100px] -z-30" />
             </motion.div>
           </div>
         </div>
@@ -326,10 +326,10 @@ export function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -15 }}
-                className="group relative bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-red-500/30 transition-all cursor-pointer overflow-hidden shadow-xl"
+                className="group relative bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-primary/30 transition-all cursor-pointer overflow-hidden shadow-xl"
                 onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
               >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-red-500/5 rounded-bl-[6rem] -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
+                <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-bl-[6rem] -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
                 
                 <div className="relative z-10">
                   <div className="mb-10 bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden group-hover:bg-primary transition-colors shadow-sm">
@@ -387,7 +387,7 @@ export function Home() {
                     transition={{ delay: index * 0.1 }}
                     className="flex items-center gap-8 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
                   >
-                    <div className="bg-red-500/10 p-5 rounded-2xl group-hover:scale-110 transition-transform">
+                    <div className="bg-primary/10 p-5 rounded-2xl group-hover:scale-110 transition-transform">
                       {'iconName' in feature ? getLucideIcon(feature.iconName) : (feature as any).icon}
                     </div>
                     <div>
@@ -438,7 +438,7 @@ export function Home() {
               </div>
 
               <div className="bg-slate-50 rounded-[3.5rem] p-12 flex flex-col justify-between group cursor-pointer overflow-hidden relative border border-slate-100 hover:bg-slate-100 transition-colors shadow-xl">
-                <div className="absolute bottom-0 right-0 w-48 h-48 bg-red-500/5 rounded-tl-[12rem] group-hover:scale-150 transition-transform duration-700" />
+                <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-tl-[12rem] group-hover:scale-150 transition-transform duration-700" />
                 <div className="relative z-10">
                   <h3 className="text-4xl font-bold uppercase tracking-tighter leading-none mb-6 text-slate-900">Expert <br />Network</h3>
                   <p className="text-slate-500 text-base font-medium leading-relaxed">Access our network of 250+ certified master mechanics.</p>

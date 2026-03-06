@@ -265,6 +265,52 @@ const initialServicePackages = [
   }
 ];
 
+const initialAppointments = [
+  {
+    id: "apt-1",
+    name: "John Doe",
+    phone: "9876543210",
+    email: "john@example.com",
+    service: "periodic",
+    make: "Toyota",
+    model: "Corolla",
+    fuel: "Petrol",
+    date: new Date().toISOString(),
+    time: "10:00 AM",
+    status: "confirmed",
+    amount: 1999,
+    technicianId: "1",
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: "apt-2",
+    name: "Jane Smith",
+    phone: "8765432109",
+    email: "jane@example.com",
+    service: "spa",
+    make: "Honda",
+    model: "City",
+    fuel: "Diesel",
+    date: new Date().toISOString(),
+    time: "02:00 PM",
+    status: "pending",
+    amount: 1200,
+    createdAt: new Date().toISOString()
+  }
+];
+
+const initialInventory = [
+  { id: "inv-1", name: "Synthetic Engine Oil", sku: "OIL-5W30-SYN", category: "Consumables", quantity: 12, minQuantity: 15, price: 850, status: "low_stock" },
+  { id: "inv-2", name: "Oil Filter - Type A", sku: "FLT-TYP-A", category: "Spare Parts", quantity: 45, minQuantity: 10, price: 350, status: "in_stock" },
+  { id: "inv-3", name: "Brake Pads - Front", sku: "BRK-FR-01", category: "Spare Parts", quantity: 2, minQuantity: 5, price: 1200, status: "low_stock" },
+  { id: "inv-4", name: "Coolant - 1L", sku: "CLT-GRN-1L", category: "Consumables", quantity: 0, minQuantity: 5, price: 450, status: "out_of_stock" },
+];
+
+const initialReviews = [
+  { id: "rev-1", userId: "user-1", userName: "Rahul Sharma", rating: 5, comment: "Excellent service! The technician was very professional and the pickup/drop was seamless.", createdAt: new Date().toISOString(), isPublished: true },
+  { id: "rev-2", userId: "user-2", userName: "Priya Singh", rating: 4, comment: "Good experience overall. The car feels much smoother now.", createdAt: new Date().toISOString(), isPublished: true },
+];
+
 // In-memory state
 let state = {
   services: initialServices,
@@ -272,16 +318,16 @@ let state = {
   carModels: initialCarModels,
   fuelTypes: initialFuelTypes,
   settings: initialSettings,
-  appointments: [] as any[],
+  appointments: initialAppointments,
   users: initialUsers,
   uiSettings: initialUiSettings,
   apiKeys: initialApiKeys,
   brands: initialBrands,
   locations: initialLocations,
-  inventory: [] as any[],
+  inventory: initialInventory,
   categories: [] as any[],
   coupons: [] as any[],
-  reviews: [] as any[],
+  reviews: initialReviews,
   notifications: [] as any[],
   servicePackages: initialServicePackages,
 };
@@ -321,6 +367,9 @@ async function startServer() {
           { name: 'brands', data: state.brands, dbData: dbState.brands },
           { name: 'locations', data: state.locations, dbData: dbState.locations },
           { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
+          { name: 'appointments', data: state.appointments, dbData: dbState.appointments },
+          { name: 'inventory', data: state.inventory, dbData: dbState.inventory },
+          { name: 'reviews', data: state.reviews, dbData: dbState.reviews },
         ];
 
         for (const table of tablesToSeed) {

@@ -112,7 +112,7 @@ export function ServicePackages() {
         <Button 
           onClick={() => { setIsAdding(true); setEditingId(null); setFormData({ serviceIds: [], features: [], discountPercentage: 10, isPopular: false }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           disabled={adminRole !== 'admin'}
-          className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl px-8 shadow-xl shadow-red-500/20 group border-none"
+          className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl px-8 shadow-xl shadow-primary/20 group border-none"
         >
           <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform" /> Create Package
         </Button>
@@ -127,11 +127,11 @@ export function ServicePackages() {
             className="relative"
           >
             <Card className="bg-white border-slate-200 shadow-2xl overflow-hidden rounded-[2rem]">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#e31e24] opacity-50" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-50" />
               <CardHeader className="border-b border-slate-100 p-8">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                    <Zap className="h-5 w-5 text-[#e31e24]" />
+                  <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <Zap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tighter">
@@ -152,7 +152,7 @@ export function ServicePackages() {
                         placeholder="e.g. Complete Car Rejuvenation" 
                         value={formData.title || ""} 
                         onChange={e => setFormData({...formData, title: e.target.value})}
-                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                     
@@ -164,7 +164,7 @@ export function ServicePackages() {
                           placeholder="10" 
                           value={formData.discountPercentage || ""} 
                           onChange={e => setFormData({...formData, discountPercentage: Number(e.target.value)})}
-                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                         />
                       </div>
                       <div className="space-y-2">
@@ -208,7 +208,7 @@ export function ServicePackages() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Package Image</label>
-                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-red-600/30 transition-all group/upload">
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-primary/30 transition-all group/upload">
                         <ImageUpload 
                           value={formData.imageUrl || ""}
                           onChange={(url) => setFormData({ ...formData, imageUrl: url })}
@@ -222,7 +222,7 @@ export function ServicePackages() {
                         placeholder="Describe the value of this package..." 
                         value={formData.description || ""} 
                         onChange={e => setFormData({...formData, description: e.target.value})}
-                        className="min-h-[100px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-medium text-sm"
+                        className="min-h-[100px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-medium text-sm"
                       />
                     </div>
 
@@ -249,7 +249,7 @@ export function ServicePackages() {
                   </Button>
                   <Button 
                     onClick={handleSave}
-                    className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl px-12 shadow-xl shadow-red-500/20"
+                    className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl px-12 shadow-xl shadow-primary/20"
                   >
                     Save Package
                   </Button>
@@ -269,7 +269,7 @@ export function ServicePackages() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-[2rem] h-full flex flex-col">
+              <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-primary/30 transition-all duration-500 group overflow-hidden rounded-[2rem] h-full flex flex-col">
                 <div className="relative h-48 overflow-hidden">
                   {pkg.imageUrl ? (
                     <img src={pkg.imageUrl} alt={pkg.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
@@ -290,7 +290,7 @@ export function ServicePackages() {
                 
                 <CardContent className="p-8 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{pkg.title}</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">{pkg.title}</h3>
                     <div className="text-right">
                       <p className="text-lg font-black text-slate-900">₹{pkg.basePrice.toLocaleString()}</p>
                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest line-through">
@@ -318,14 +318,14 @@ export function ServicePackages() {
                     <Button 
                       variant="ghost" 
                       onClick={() => handleEdit(pkg)}
-                      className="flex-1 h-10 bg-slate-50 border border-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl font-black uppercase tracking-widest text-[10px]"
+                      className="flex-1 h-10 bg-slate-50 border border-slate-100 text-slate-600 hover:text-primary hover:bg-primary/5 rounded-xl font-black uppercase tracking-widest text-[10px]"
                     >
                       <Edit2 className="h-3 w-3 mr-2" /> Edit
                     </Button>
                     <Button 
                       variant="ghost" 
                       onClick={() => handleDelete(pkg.id)}
-                      className="h-10 w-10 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                      className="h-10 w-10 bg-slate-50 border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>

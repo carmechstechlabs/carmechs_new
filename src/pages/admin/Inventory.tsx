@@ -95,7 +95,7 @@ export function Inventory() {
     switch (status) {
       case 'in_stock': return 'bg-emerald-100 text-emerald-600';
       case 'low_stock': return 'bg-amber-100 text-amber-600';
-      case 'out_of_stock': return 'bg-red-100 text-red-600';
+      case 'out_of_stock': return 'bg-primary/10 text-primary';
       default: return 'bg-slate-100 text-slate-600';
     }
   };
@@ -114,7 +114,7 @@ export function Inventory() {
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setEditingItem(null); setNewItem({ name: "", sku: "", category: "", quantity: 0, minQuantity: 5, price: 0, status: "in_stock" }); }} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl shadow-xl shadow-red-500/10 h-12 px-6">
+              <Button onClick={() => { setEditingItem(null); setNewItem({ name: "", sku: "", category: "", quantity: 0, minQuantity: 5, price: 0, status: "in_stock" }); }} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/10 h-12 px-6">
                 <Plus className="h-4 w-4 mr-2" /> Add New Item
               </Button>
             </DialogTrigger>
@@ -186,7 +186,7 @@ export function Inventory() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                <Button onClick={handleSave} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl px-8">
+                <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl px-8">
                   {editingItem ? "Update Item" : "Add Item"}
                 </Button>
               </DialogFooter>
@@ -225,7 +225,7 @@ export function Inventory() {
         <Card className="rounded-[2rem] border-slate-200 shadow-sm bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
+              <div className="h-12 w-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
                 <XCircle className="h-6 w-6" />
               </div>
               <div>
@@ -350,7 +350,7 @@ export function Inventory() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleDelete(item.id)}
-                          className="h-8 w-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                          className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

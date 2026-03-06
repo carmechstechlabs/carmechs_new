@@ -125,8 +125,8 @@ export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehi
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {isVehicleSelected && (
-                <div className="flex items-start gap-2 text-sm text-red-600 font-bold">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+                <div className="flex items-start gap-2 text-sm text-primary font-bold">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                   <span>{vehicleDetails?.make} {vehicleDetails?.model} Specific Inspection</span>
                 </div>
               )}

@@ -123,7 +123,7 @@ export function AdminLogin() {
                 {(adminUi.loginLogoUrl || settings.logoUrl) ? (
                   <img src={adminUi.loginLogoUrl || settings.logoUrl} alt="Logo" className="h-12 w-12 object-contain" />
                 ) : (
-                  <ShieldCheck className="h-10 w-10 text-[#e31e24]" />
+                  <ShieldCheck className="h-10 w-10 text-primary" />
                 )}
               </div>
             </div>
@@ -135,7 +135,7 @@ export function AdminLogin() {
             transition={{ delay: 0.4, duration: 1 }}
             className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-3"
           >
-            Admin <span className="text-[#e31e24]">Portal</span>
+            Admin <span className="text-primary">Portal</span>
           </motion.h2>
           
           <div className="flex flex-col items-center gap-3">
@@ -148,8 +148,8 @@ export function AdminLogin() {
             </div>
             
             {/* Connection Status Badge */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-600'}`}>
-              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : 'bg-red-500'}`} />
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-primary/5 border-primary/10 text-primary'}`}>
+              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : 'bg-primary'}`} />
               <span className="text-[8px] font-black uppercase tracking-widest">
                 Database: {supabase ? 'Connected' : 'Configuration Missing'}
               </span>
@@ -169,19 +169,19 @@ export function AdminLogin() {
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e31e24]/50 transition-all font-bold text-sm"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary/50 transition-all font-bold text-sm"
                     placeholder="Enter your username"
                   />
                 </div>
               </div>
-
+ 
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password</label>
                   <button 
                     type="button"
                     onClick={() => toast.info("Please contact the system administrator to reset your password.")}
-                    className="text-[9px] font-black text-red-600 uppercase tracking-widest hover:underline"
+                    className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -192,22 +192,22 @@ export function AdminLogin() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#e31e24]/50 transition-all font-bold text-sm"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary/50 transition-all font-bold text-sm"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-[#e31e24] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
             </div>
-
+ 
             <Button 
-              className="w-full h-14 bg-[#e31e24] text-white font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-red-600/20 hover:bg-[#c4191f]"
+              className="w-full h-14 bg-primary text-white font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-primary/20 hover:opacity-90"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -231,7 +231,7 @@ export function AdminLogin() {
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Default Credentials</p>
             <p className="text-[10px] text-slate-600 font-bold">admin@carmechs.in / admin</p>
           </div>
-          <Link to="/" className="text-[10px] text-slate-400 hover:text-[#e31e24] uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
+          <Link to="/" className="text-[10px] text-slate-400 hover:text-primary uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
             Back to Website
           </Link>

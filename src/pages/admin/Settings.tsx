@@ -37,7 +37,7 @@ export function SettingsPage() {
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-red-600 font-bold text-[10px] uppercase tracking-[0.3em]">
+          <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.3em]">
             <SettingsIcon className="h-3 w-3" /> Configuration
           </div>
           <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">System Settings</h1>
@@ -48,7 +48,7 @@ export function SettingsPage() {
           size="lg" 
           onClick={handleSave} 
           disabled={isSaving || adminRole !== 'admin'}
-          className="h-14 px-10 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 group"
+          className="h-14 px-10 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 group"
         >
           {isSaving ? (
             <>
@@ -67,11 +67,11 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Branding Section */}
         <Card className="bg-white border-slate-200 shadow-sm lg:col-span-2 rounded-[2.5rem] overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-1 bg-red-600 opacity-50" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-50" />
           <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                <Globe className="h-5 w-5 text-red-600" />
+              <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                <Globe className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Branding & Identity</CardTitle>
@@ -88,7 +88,7 @@ export function SettingsPage() {
                     value={formData.logoText} 
                     onChange={(e) => setFormData({...formData, logoText: e.target.value})}
                     placeholder="CarMechs"
-                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-sm uppercase tracking-widest"
+                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
                   />
                   <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">Primary text identifier for the navigation interface.</p>
                 </div>
@@ -108,7 +108,7 @@ export function SettingsPage() {
               <div className="space-y-4">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Logo Preview</label>
                 <div className="border-2 border-dashed border-slate-100 rounded-[2.5rem] p-12 flex flex-col items-center justify-center bg-slate-50 relative min-h-[280px] group/preview overflow-hidden">
-                  <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover/preview:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/preview:opacity-100 transition-opacity" />
                   {formData.logoUrl ? (
                     <motion.img 
                       initial={{ opacity: 0, scale: 0.9 }}
@@ -151,7 +151,7 @@ export function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                  <Mail className="h-3 w-3 text-red-600" />
+                  <Mail className="h-3 w-3 text-primary" />
                   Support Email
                 </label>
                 <Input 
@@ -159,32 +159,32 @@ export function SettingsPage() {
                   value={formData.email} 
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="support@carmechs.com"
-                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                  <Phone className="h-3 w-3 text-red-600" />
+                  <Phone className="h-3 w-3 text-primary" />
                   Phone Number
                 </label>
                 <Input 
                   value={formData.phone} 
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   placeholder="+91 98765 43210"
-                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                <MapPin className="h-3 w-3 text-red-600" />
+                <MapPin className="h-3 w-3 text-primary" />
                 Physical Address
               </label>
               <Input 
                 value={formData.address} 
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
                 placeholder="123, Auto Plaza, Sector 18, Gurgaon"
-                className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
               />
             </div>
           </CardContent>
@@ -229,7 +229,7 @@ export function SettingsPage() {
                   value={formData.facebook || ""} 
                   onChange={(e) => setFormData({...formData, facebook: e.target.value})}
                   placeholder="URL"
-                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
@@ -241,7 +241,7 @@ export function SettingsPage() {
                   value={formData.instagram || ""} 
                   onChange={(e) => setFormData({...formData, instagram: e.target.value})}
                   placeholder="URL"
-                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
@@ -253,7 +253,7 @@ export function SettingsPage() {
                   value={formData.twitter || ""} 
                   onChange={(e) => setFormData({...formData, twitter: e.target.value})}
                   placeholder="URL"
-                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-[10px] uppercase tracking-widest"
+                  className="h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-[10px] uppercase tracking-widest"
                 />
               </div>
             </div>
@@ -281,7 +281,7 @@ export function SettingsPage() {
                 onChange={(e) => setFormData({...formData, footerDescription: e.target.value})}
                 placeholder="Brief description of your business for the footer."
                 rows={4}
-                className="bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-medium text-sm"
+                className="bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-medium text-sm"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -291,7 +291,7 @@ export function SettingsPage() {
                   value={formData.privacyPolicyUrl || ""} 
                   onChange={(e) => setFormData({...formData, privacyPolicyUrl: e.target.value})}
                   placeholder="/privacy"
-                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
               <div className="space-y-2">
@@ -300,7 +300,7 @@ export function SettingsPage() {
                   value={formData.termsOfServiceUrl || ""} 
                   onChange={(e) => setFormData({...formData, termsOfServiceUrl: e.target.value})}
                   placeholder="/terms"
-                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                  className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                 />
               </div>
             </div>
@@ -331,7 +331,7 @@ export function SettingsPage() {
                 value={formData.referralRewardAmount} 
                 onChange={(e) => setFormData({...formData, referralRewardAmount: Number(e.target.value)})}
                 placeholder="500"
-                className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-xl uppercase tracking-widest"
+                className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-xl uppercase tracking-widest"
               />
               <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
                 Amount credited to referrer's wallet upon successful user sign-up.
@@ -344,8 +344,8 @@ export function SettingsPage() {
         <Card className="bg-white border-slate-200 shadow-sm rounded-[2.5rem] overflow-hidden lg:col-span-2">
           <CardHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                <Shield className="h-5 w-5 text-red-600" />
+              <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                <Shield className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Security & Access</CardTitle>
@@ -361,24 +361,24 @@ export function SettingsPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">New Password</label>
                     <div className="relative">
-                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-600" />
+                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                       <Input 
                         type="password"
                         placeholder="Enter new password"
                         id="new-admin-password"
-                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Confirm Password</label>
                     <div className="relative">
-                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-600" />
+                      <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                       <Input 
                         type="password"
                         placeholder="Confirm new password"
                         id="confirm-admin-password"
-                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                   </div>
@@ -413,7 +413,7 @@ export function SettingsPage() {
               </div>
               <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 flex flex-col items-center justify-center text-center">
                 <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm mb-4">
-                  <ShieldCheck className="h-8 w-8 text-red-600" />
+                  <ShieldCheck className="h-8 w-8 text-primary" />
                 </div>
                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-2">Security Recommendation</h4>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">

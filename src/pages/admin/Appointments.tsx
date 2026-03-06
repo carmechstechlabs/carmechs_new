@@ -67,7 +67,7 @@ export function Appointments() {
       case 'pending': return 'text-amber-600 bg-amber-50 border-amber-100';
       case 'confirmed': return 'text-blue-600 bg-blue-50 border-blue-100';
       case 'completed': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-      case 'cancelled': return 'text-red-600 bg-red-50 border-red-100';
+      case 'cancelled': return 'text-primary bg-primary/5 border-primary/10';
       default: return 'text-slate-400 bg-slate-50 border-slate-100';
     }
   };
@@ -86,16 +86,16 @@ export function Appointments() {
         
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Search Customer, Vehicle..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 transition-all placeholder:text-slate-300 font-bold text-xs uppercase tracking-widest shadow-sm"
+              className="pl-12 h-12 bg-white border-slate-200 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-slate-300 font-bold text-xs uppercase tracking-widest shadow-sm"
             />
           </div>
             <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">
-              <Wrench className="h-4 w-4 text-[#e31e24]" />
+              <Wrench className="h-4 w-4 text-primary" />
               <select
                 className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 focus:outline-none cursor-pointer pr-4"
                 value={serviceFilter}
@@ -108,7 +108,7 @@ export function Appointments() {
               </select>
             </div>
             <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">
-              <Calendar className="h-4 w-4 text-[#e31e24]" />
+              <Calendar className="h-4 w-4 text-primary" />
               <select
                 className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 focus:outline-none cursor-pointer pr-4"
                 value={dateFilter}
@@ -121,7 +121,7 @@ export function Appointments() {
               </select>
             </div>
             <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">
-              <Filter className="h-4 w-4 text-[#e31e24]" />
+              <Filter className="h-4 w-4 text-primary" />
               <select
                 className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 focus:outline-none cursor-pointer pr-4"
                 value={statusFilter}
@@ -166,19 +166,19 @@ export function Appointments() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="bg-white border-slate-200 shadow-sm hover:border-red-600/30 transition-all duration-500 group overflow-hidden">
+                <Card className="bg-white border-slate-200 shadow-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden">
                   <CardContent className="p-0">
                     <div className="flex flex-col lg:flex-row">
                       {/* Left Column: Customer & Vehicle */}
                       <div className="p-8 lg:w-1/3 bg-slate-50 border-r border-slate-100 relative">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-red-600/10 transition-colors" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
                         
                         <div className="flex justify-between items-start mb-8 relative z-10">
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-[10px] font-black text-red-600 uppercase tracking-[0.3em] mb-1">
+                            <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1">
                               <User className="h-3 w-3" /> Customer
                             </div>
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{appointment.name}</h3>
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">{appointment.name}</h3>
                           </div>
                           <span className={cn(
                             "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all duration-500",
@@ -193,14 +193,14 @@ export function Appointments() {
                             <div className="space-y-1">
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Phone</span>
                               <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
-                                <Phone className="h-3 w-3 text-red-600" /> {appointment.phone}
+                                <Phone className="h-3 w-3 text-primary" /> {appointment.phone}
                               </div>
                             </div>
                             {appointment.email && (
                               <div className="space-y-1">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email</span>
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 truncate">
-                                  <span className="text-red-600 font-black">@</span> {appointment.email}
+                                  <span className="text-primary font-black">@</span> {appointment.email}
                                 </div>
                               </div>
                             )}
@@ -208,9 +208,9 @@ export function Appointments() {
                           
                           <div className="pt-6 border-t border-slate-200">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Vehicle Details</span>
-                            <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 group-hover:border-red-600/20 transition-all shadow-sm">
-                              <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                                <Car className="h-5 w-5 text-red-600" />
+                            <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 group-hover:border-primary/20 transition-all shadow-sm">
+                              <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                                <Car className="h-5 w-5 text-primary" />
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[13px] font-black text-slate-900 uppercase tracking-tighter">
@@ -225,12 +225,12 @@ export function Appointments() {
 
                       {/* Right Column: Service & Details */}
                       <div className="p-8 lg:w-2/3 flex flex-col justify-between relative bg-white">
-                        <div className="absolute bottom-0 right-0 w-48 h-48 bg-red-600/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2" />
                         
                         <div className="relative z-10">
                           <div className="flex flex-col sm:flex-row items-start justify-between gap-6 mb-10">
                             <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-[10px] font-black text-red-600 uppercase tracking-[0.3em] mb-1">
+                              <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1">
                                 <Wrench className="h-3 w-3" /> Service
                               </div>
                               <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
@@ -244,37 +244,37 @@ export function Appointments() {
                                 onValueChange={(val) => handleStatusChange(appointment.id, val as Appointment['status'])}
                                 disabled={adminRole !== 'admin'}
                               >
-                                <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] focus:ring-red-600/20 shadow-sm">
+                                <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] focus:ring-primary/20 shadow-sm">
                                   <SelectValue placeholder="Update Status" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white border-slate-200 text-slate-900">
-                                  <SelectItem value="pending" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Pending</SelectItem>
-                                  <SelectItem value="confirmed" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Confirmed</SelectItem>
-                                  <SelectItem value="completed" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Completed</SelectItem>
-                                  <SelectItem value="cancelled" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Cancelled</SelectItem>
+                                  <SelectItem value="pending" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Pending</SelectItem>
+                                  <SelectItem value="confirmed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Confirmed</SelectItem>
+                                  <SelectItem value="completed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Completed</SelectItem>
+                                  <SelectItem value="cancelled" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Cancelled</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-red-600/30 transition-all group/stat">
-                              <Calendar className="h-5 w-5 text-red-600 group-hover/stat:scale-110 transition-transform" />
+                            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-primary/30 transition-all group/stat">
+                              <Calendar className="h-5 w-5 text-primary group-hover/stat:scale-110 transition-transform" />
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</span>
                                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-red-600/30 transition-all group/stat">
-                              <Clock className="h-5 w-5 text-red-600 group-hover/stat:scale-110 transition-transform" />
+                            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-primary/30 transition-all group/stat">
+                              <Clock className="h-5 w-5 text-primary group-hover/stat:scale-110 transition-transform" />
                               <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Time</span>
                                 <span className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{appointment.time}</span>
                               </div>
                             </div>
                             {appointment.paymentMethod && (
-                              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-red-600/30 transition-all group/stat">
-                                <CreditCard className="h-5 w-5 text-red-600 group-hover/stat:scale-110 transition-transform" />
+                              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-primary/30 transition-all group/stat">
+                                <CreditCard className="h-5 w-5 text-primary group-hover/stat:scale-110 transition-transform" />
                                 <div className="flex flex-col">
                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Payment</span>
                                   <div className="flex items-center gap-2">
@@ -292,7 +292,7 @@ export function Appointments() {
                               </div>
                             )}
                             {appointment.amount && (
-                              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-red-600/30 transition-all group/stat">
+                              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-primary/30 transition-all group/stat">
                                 <IndianRupee className="h-5 w-5 text-emerald-600 group-hover/stat:scale-110 transition-transform" />
                                 <div className="flex flex-col">
                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Amount</span>
@@ -305,10 +305,10 @@ export function Appointments() {
                         
                         <div className="mt-10 flex items-center justify-between relative z-10">
                           <div className="flex items-center gap-2">
-                            <div className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Booking Created: {new Date(appointment.createdAt).toLocaleString()}</span>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-[9px] font-black text-red-600 uppercase tracking-widest hover:bg-red-50 rounded-xl group/btn">
+                          <Button variant="ghost" size="sm" className="text-[9px] font-black text-primary uppercase tracking-widest hover:bg-primary/5 rounded-xl group/btn">
                             View Details <ArrowRight className="ml-2 h-3 w-3 group-hover/btn:translate-x-1 transition-transform" />
                           </Button>
                         </div>

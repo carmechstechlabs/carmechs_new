@@ -127,7 +127,7 @@ export function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden px-4">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-red-500/10 blur-[120px] rounded-full" />
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/10 blur-[120px] rounded-full" />
       <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full" />
 
       <motion.div 
@@ -138,7 +138,7 @@ export function Signup() {
         <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
           <div className="text-center mb-10">
             <Link to="/" className="inline-flex items-center gap-2 font-bold text-3xl text-slate-900 mb-8 group">
-              <div className="h-12 w-12 bg-[#e31e24] rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20 group-hover:rotate-12 transition-transform">
+              <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform">
                 <Wrench className="h-6 w-6 text-white" />
               </div>
               <span className="tracking-tighter">CarMechs</span>
@@ -160,42 +160,42 @@ export function Signup() {
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="space-y-4">
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#e31e24] transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Full Name"
                       />
                     </div>
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#e31e24] transition-colors" />
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Email address"
                       />
                     </div>
                     <div className="relative group">
-                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#e31e24] transition-colors" />
+                      <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                       <input
                         type="password"
                         required
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Create Password"
                       />
                     </div>
                   </div>
 
                   <Button 
-                    className="w-full h-14 rounded-2xl bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold text-lg shadow-lg shadow-red-500/20 group"
+                    className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20 group"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -230,7 +230,7 @@ export function Signup() {
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
                         <div className="flex items-center justify-center gap-3">
-                          <Mail className="h-5 w-5 text-red-500" />
+                          <Mail className="h-5 w-5 text-primary" />
                           Verify with Google
                         </div>
                       )}
@@ -242,7 +242,7 @@ export function Signup() {
                         placeholder="+1 234 567 890"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                       <Button 
                         variant="outline" 
@@ -284,13 +284,13 @@ export function Signup() {
                     type="text"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-6 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e31e24] transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-6 text-center text-3xl font-mono tracking-[0.5em] text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     placeholder="000000"
                     maxLength={6}
                   />
                   
                   <Button 
-                    className="w-full h-14 rounded-2xl bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold text-lg shadow-lg shadow-red-500/20"
+                    className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
                     onClick={handleVerifyOtp}
                     disabled={isPhoneLoading || !otpCode}
                   >
@@ -316,7 +316,7 @@ export function Signup() {
           <div className="mt-12 text-center">
             <p className="text-slate-500 font-medium">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#e31e24] font-bold hover:text-[#c4191f] transition-colors">
+              <Link to="/login" className="text-primary font-bold hover:opacity-80 transition-colors">
                 Sign In
               </Link>
             </p>

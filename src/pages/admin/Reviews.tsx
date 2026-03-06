@@ -100,7 +100,7 @@ export function Reviews() {
         <Card className="rounded-[2rem] border-slate-200 shadow-sm bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
+              <div className="h-12 w-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
@@ -217,7 +217,7 @@ export function Reviews() {
                     <Button 
                       onClick={() => handleDelete(review.id)}
                       variant="ghost"
-                      className="h-12 px-6 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 font-bold uppercase tracking-widest text-[10px]"
+                      className="h-12 px-6 rounded-xl text-slate-400 hover:text-primary hover:bg-primary/5 font-bold uppercase tracking-widest text-[10px]"
                     >
                       <Trash2 className="h-4 w-4 mr-2" /> Delete
                     </Button>

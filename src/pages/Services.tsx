@@ -81,17 +81,17 @@ export function Services() {
       {/* Hero Header */}
       <div className="bg-white pt-40 pb-32 relative overflow-hidden border-b border-slate-100">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-red-600/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
         
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <div className="max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 mb-6"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-6"
             >
-              <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Service Modules</span>
+              <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Service Modules</span>
             </motion.div>
             
             <motion.h1 
@@ -159,7 +159,7 @@ export function Services() {
 
                 <div className="lg:w-3/5 p-10 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4 group-hover:text-red-600 transition-colors">{pkg.title}</h3>
+                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4 group-hover:text-primary transition-colors">{pkg.title}</h3>
                     <p className="text-slate-500 text-sm font-medium mb-8 line-clamp-2">{pkg.description}</p>
                     
                     <div className="space-y-3 mb-8">
@@ -181,7 +181,7 @@ export function Services() {
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Package Price</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-3xl font-black text-red-600 tracking-tighter">₹{pkg.basePrice.toLocaleString()}</span>
+                        <span className="text-3xl font-black text-primary tracking-tighter">₹{pkg.basePrice.toLocaleString()}</span>
                         <span className="text-sm font-bold text-slate-300 line-through">
                           ₹{services.filter(s => pkg.serviceIds.includes(s.id)).reduce((sum, s) => sum + s.basePrice, 0).toLocaleString()}
                         </span>
@@ -190,7 +190,7 @@ export function Services() {
                     
                     <Button 
                       asChild
-                      className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-red-600/10 bg-red-600 hover:bg-red-700 text-white border-none"
+                      className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none"
                     >
                       <Link to="/book" state={{ packageId: pkg.id }}>Book Now</Link>
                     </Button>
@@ -217,7 +217,7 @@ export function Services() {
                 {isVehicleSelected && (
                   <button 
                     onClick={() => { setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}
-                    className="text-[9px] font-black text-red-600 uppercase tracking-widest hover:underline"
+                    className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
                   >
                     Clear
                   </button>
@@ -277,9 +277,9 @@ export function Services() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-8 pt-8 border-t border-slate-100 text-sm text-red-600 font-black uppercase tracking-widest flex items-center gap-3"
+                className="mt-8 pt-8 border-t border-slate-100 text-sm text-primary font-black uppercase tracking-widest flex items-center gap-3"
               >
-                <div className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center">
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 Dynamic pricing active for {selectedMake} {selectedModel}
@@ -297,7 +297,7 @@ export function Services() {
               placeholder="Search services..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-16 pl-14 pr-6 rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl shadow-slate-200/50 focus:outline-none focus:ring-2 focus:ring-red-600/20 font-medium"
+              className="w-full h-16 pl-14 pr-6 rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-xl shadow-slate-200/50 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
             />
           </div>
           
@@ -319,12 +319,12 @@ export function Services() {
               className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col group overflow-hidden"
             >
               <div className="p-10 flex-1">
-                <div className="mb-8 bg-slate-50 w-20 h-20 rounded-[1.5rem] flex items-center justify-center group-hover:bg-red-600 transition-all duration-500 shadow-sm border border-slate-100 group-hover:shadow-red-600/20">
+                <div className="mb-8 bg-slate-50 w-20 h-20 rounded-[1.5rem] flex items-center justify-center group-hover:bg-primary transition-all duration-500 shadow-sm border border-slate-100 group-hover:shadow-primary/20">
                   <div className="group-hover:scale-110 transition-transform duration-500">
                     {getIcon(service)}
                   </div>
                 </div>
-                <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-4 leading-none group-hover:text-red-600 transition-colors">{service.title}</h3>
+                <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-4 leading-none group-hover:text-primary transition-colors">{service.title}</h3>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8 line-clamp-2">{service.description}</p>
                 
                 <div className="space-y-3">
@@ -340,13 +340,13 @@ export function Services() {
               </div>
               
               <div className="p-10 pt-0">
-                <div className="bg-slate-50 rounded-[2rem] p-6 flex items-center justify-between group-hover:bg-red-50 transition-colors border border-slate-100">
+                <div className="bg-slate-50 rounded-[2rem] p-6 flex items-center justify-between group-hover:bg-primary/5 transition-colors border border-slate-100">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                       {isVehicleSelected ? "Final Quote" : "Base Price"}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-3xl font-black text-red-600 tracking-tighter">
+                      <span className="text-3xl font-black text-primary tracking-tighter">
                         {isVehicleSelected 
                           ? `₹${calculatePrice(service.basePrice)}` 
                           : service.price}
@@ -354,7 +354,7 @@ export function Services() {
                       {isVehicleSelected && (
                         <Popover>
                           <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <div className="h-6 w-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-help hover:border-red-600 transition-colors">
+                            <div className="h-6 w-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-help hover:border-primary transition-colors">
                               <Info className="h-3 w-3 text-slate-400" />
                             </div>
                           </PopoverTrigger>
@@ -377,7 +377,7 @@ export function Services() {
                                 <span className="text-slate-500">Fuel Adjustment</span>
                                 <span>+₹{fuelTypes.find(f => f.name === selectedFuel)?.price || 0}</span>
                               </div>
-                              <div className="flex justify-between border-t border-slate-100 pt-3 text-red-600">
+                              <div className="flex justify-between border-t border-slate-100 pt-3 text-primary">
                                 <span>Total Estimate</span>
                                 <span>₹{calculatePrice(service.basePrice)}</span>
                               </div>
@@ -391,7 +391,7 @@ export function Services() {
                   <div className="flex flex-col gap-2">
                     <Button 
                       size="sm" 
-                      className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-600/10 bg-red-600 hover:bg-red-700 text-white border-none"
+                      className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none"
                       asChild
                     >
                       <Link 
@@ -410,7 +410,7 @@ export function Services() {
                     </Button>
                     <button 
                       onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
-                      className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-red-600 transition-colors text-center"
+                      className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors text-center"
                     >
                       Details
                     </button>

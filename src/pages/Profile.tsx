@@ -38,7 +38,7 @@ export function Profile() {
       case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 'confirmed': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'completed': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'cancelled': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'cancelled': return 'bg-primary/10 text-primary border-primary/20';
       default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };
@@ -63,7 +63,7 @@ export function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 selection:bg-[#e31e24]/10 py-24">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-primary/10 py-24">
       <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
       
       <div className="container mx-auto px-4 max-w-6xl relative z-10">
@@ -75,12 +75,12 @@ export function Profile() {
           {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-[#e31e24] text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
                 <Shield className="h-3 w-3" />
                 Secure Profile
               </div>
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900">
-                Welcome back, <span className="text-[#e31e24]">{user.name}</span>
+                Welcome back, <span className="text-primary">{user.name}</span>
               </h1>
               <p className="text-slate-500 text-lg">Manage your vehicle services, wallet, and rewards.</p>
             </div>
@@ -89,7 +89,7 @@ export function Profile() {
               whileHover={{ scale: 1.02 }}
               className="bg-white border border-slate-200 rounded-3xl p-6 flex items-center gap-6 min-w-[280px] shadow-xl shadow-slate-200/50"
             >
-              <div className="h-14 w-14 bg-[#e31e24] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-500/20">
+              <div className="h-14 w-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
                 <Wallet className="h-7 w-7" />
               </div>
               <div>
@@ -106,7 +106,7 @@ export function Profile() {
               whileHover={{ y: -5 }}
               className="lg:col-span-2 bg-white border border-slate-200 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-xl shadow-slate-200/50"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 blur-[100px] -mr-32 -mt-32 group-hover:bg-red-500/10 transition-colors" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -mr-32 -mt-32 group-hover:bg-primary/10 transition-colors" />
               
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-8">
@@ -126,7 +126,7 @@ export function Profile() {
                       <label className="text-xs text-slate-400 uppercase font-bold tracking-widest">Your Referral Code</label>
                       <div className="flex gap-3">
                         <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-mono text-xl flex items-center justify-between group/code">
-                          <span className="text-[#e31e24] tracking-wider">{user.referralCode}</span>
+                          <span className="text-primary tracking-wider">{user.referralCode}</span>
                           <CheckCircle2 className="h-5 w-5 text-emerald-500 opacity-0 group-hover/code:opacity-100 transition-opacity" />
                         </div>
                         <Button 
@@ -148,7 +148,7 @@ export function Profile() {
                           {String.fromCharCode(64 + i)}
                         </div>
                       ))}
-                      <div className="h-10 w-10 rounded-full border-2 border-white bg-[#e31e24] flex items-center justify-center text-[10px] font-bold text-white">
+                      <div className="h-10 w-10 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[10px] font-bold text-white">
                         +{user.referralsCount || 0}
                       </div>
                     </div>
@@ -163,8 +163,8 @@ export function Profile() {
               className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col shadow-xl shadow-slate-200/50"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-[#e31e24]" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">Redeem Code</h3>
               </div>
@@ -178,10 +178,10 @@ export function Profile() {
                   placeholder="ENTER CODE" 
                   value={referralInput}
                   onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
-                  className="h-14 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-xl tracking-[0.2em] uppercase focus:ring-[#e31e24] text-slate-900"
+                  className="h-14 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-xl tracking-[0.2em] uppercase focus:ring-primary text-slate-900"
                 />
                 <Button 
-                  className="w-full h-14 rounded-2xl bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold text-lg shadow-lg shadow-red-500/20"
+                  className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
                   onClick={handleApplyReferral}
                 >
                   Apply Now
@@ -190,11 +190,11 @@ export function Profile() {
 
               <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
                 <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <CheckCircle2 className="h-4 w-4 text-[#e31e24]" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   Instant Wallet Credit
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <CheckCircle2 className="h-4 w-4 text-[#e31e24]" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   No Expiry Balance
                 </div>
               </div>
@@ -206,7 +206,7 @@ export function Profile() {
             {/* Account Info */}
             <div className="space-y-6">
               <h3 className="text-2xl font-bold flex items-center gap-3 text-slate-900">
-                <User className="h-6 w-6 text-[#e31e24]" />
+                <User className="h-6 w-6 text-primary" />
                 Account Details
               </h3>
               <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-8 shadow-xl shadow-slate-200/50">
@@ -240,7 +240,7 @@ export function Profile() {
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold flex items-center gap-3 text-slate-900">
-                  <Calendar className="h-6 w-6 text-[#e31e24]" />
+                  <Calendar className="h-6 w-6 text-primary" />
                   Service History
                 </h3>
                 <div className="px-4 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500">
@@ -260,19 +260,19 @@ export function Profile() {
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                           <div className="flex items-start gap-6">
-                            <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                              <Wrench className="h-8 w-8 text-[#e31e24]" />
+                            <div className="h-16 w-16 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <Wrench className="h-8 w-8 text-primary" />
                             </div>
                             <div className="space-y-2">
                               <h4 className="text-xl font-bold text-slate-900">{getServiceTitle(app.service)}</h4>
-                              <p className="text-slate-500 font-medium">{app.make} {app.model} • <span className="text-[#e31e24]/80 uppercase text-sm tracking-widest">{app.fuel}</span></p>
+                              <p className="text-slate-500 font-medium">{app.make} {app.model} • <span className="text-primary/80 uppercase text-sm tracking-widest">{app.fuel}</span></p>
                               <div className="flex flex-wrap items-center gap-4 mt-4">
                                 <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                  <Calendar className="h-3.5 w-3.5 text-[#e31e24]" />
+                                  <Calendar className="h-3.5 w-3.5 text-primary" />
                                   {app.date}
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                                  <Clock className="h-3.5 w-3.5 text-[#e31e24]" />
+                                  <Clock className="h-3.5 w-3.5 text-primary" />
                                   {app.time}
                                 </div>
                                 {app.paymentMethod && (
@@ -296,7 +296,7 @@ export function Profile() {
                             )}>
                               {app.status}
                             </span>
-                            <Button variant="ghost" size="sm" className="text-[#e31e24] hover:bg-red-50 hover:text-[#e31e24] rounded-xl group-hover:translate-x-2 transition-all">
+                            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/5 hover:text-primary rounded-xl group-hover:translate-x-2 transition-all">
                               View Details <ChevronRight className="h-4 w-4 ml-1" />
                             </Button>
                           </div>
@@ -313,7 +313,7 @@ export function Profile() {
                     <p className="text-slate-500 mb-10 max-w-sm mx-auto">You haven't booked any car services yet. Start your journey with CarMechs today.</p>
                     <Button 
                       asChild
-                      className="h-14 px-10 rounded-2xl bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold shadow-lg shadow-red-500/20"
+                      className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
                     >
                       <a href="/book">Book Your First Service</a>
                     </Button>

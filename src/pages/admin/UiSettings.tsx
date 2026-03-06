@@ -126,7 +126,7 @@ export function UiSettingsPage() {
               Exit Editor
             </Button>
           )}
-          <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl shadow-xl shadow-red-500/10">
+          <Button size="lg" onClick={handleSave} disabled={isSaving || adminRole !== 'admin'} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-xl shadow-primary/10">
             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Deploy Changes
           </Button>
@@ -143,19 +143,19 @@ export function UiSettingsPage() {
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="bg-white border border-slate-200 p-1 rounded-2xl h-14">
-                <TabsTrigger value="global" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                <TabsTrigger value="global" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Palette className="h-4 w-4 mr-2" /> Global Theme
                 </TabsTrigger>
-                <TabsTrigger value="pages" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                <TabsTrigger value="pages" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Layout className="h-4 w-4 mr-2" /> Page Builder
                 </TabsTrigger>
-                <TabsTrigger value="admin" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                <TabsTrigger value="admin" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Lock className="h-4 w-4 mr-2" /> Admin Security UI
                 </TabsTrigger>
-                <TabsTrigger value="user-login" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                <TabsTrigger value="user-login" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Smartphone className="h-4 w-4 mr-2" /> User Login UI
                 </TabsTrigger>
-                <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-[#e31e24] data-[state=active]:text-white">
+                <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <MapPin className="h-4 w-4 mr-2" /> Locations
                 </TabsTrigger>
               </TabsList>
@@ -258,7 +258,7 @@ export function UiSettingsPage() {
               <TabsContent value="pages" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Active Pages</h2>
-                  <Button onClick={addPage} className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl">
+                  <Button onClick={addPage} className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl">
                     <Plus className="h-4 w-4 mr-2" /> Create New Page
                   </Button>
                 </div>
@@ -286,7 +286,7 @@ export function UiSettingsPage() {
                           <Button 
                             variant="outline" 
                             onClick={() => setEditingPageId(page.id)}
-                            className="rounded-xl border-slate-200 font-bold text-xs uppercase tracking-widest hover:bg-[#e31e24] hover:text-white transition-all"
+                            className="rounded-xl border-slate-200 font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
                           >
                             Launch Editor <ChevronRight className="h-3 w-3 ml-2" />
                           </Button>
@@ -294,7 +294,7 @@ export function UiSettingsPage() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => deletePage(page.id)}
-                            className="text-slate-300 hover:text-red-500 rounded-xl"
+                            className="text-slate-300 hover:text-primary rounded-xl"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -601,7 +601,7 @@ export function UiSettingsPage() {
                       const newLoc = { id: `loc_${Date.now()}`, name: "New City", isPopular: false };
                       setLocalLocations([...localLocations, newLoc]);
                     }} 
-                    className="bg-[#e31e24] hover:bg-[#c4191f] text-white font-bold rounded-xl"
+                    className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add City
                   </Button>
@@ -612,14 +612,14 @@ export function UiSettingsPage() {
                     <Card key={loc.id} className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden group">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-6">
-                          <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-red-50 group-hover:border-red-100 transition-colors">
-                            <MapPin className="h-6 w-6 text-slate-400 group-hover:text-red-600 transition-colors" />
+                          <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-primary/5 group-hover:border-primary/10 transition-colors">
+                            <MapPin className="h-6 w-6 text-slate-400 group-hover:text-primary transition-colors" />
                           </div>
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => setLocalLocations(localLocations.filter(l => l.id !== loc.id))}
-                            className="text-slate-300 hover:text-red-500 rounded-xl"
+                            className="text-slate-300 hover:text-primary rounded-xl"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -649,7 +649,7 @@ export function UiSettingsPage() {
                                 newLocs[idx].isPopular = e.target.checked;
                                 setLocalLocations(newLocs);
                               }}
-                              className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-600"
+                              className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
                             />
                             <label htmlFor={`popular-${loc.id}`} className="text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer">Mark as Popular City</label>
                           </div>
@@ -722,7 +722,7 @@ export function UiSettingsPage() {
                     <Card key={section.id} className="rounded-2xl border-slate-200 overflow-hidden group">
                       <div className="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-100">
                         <div className="flex items-center gap-3">
-                          <div className="h-6 w-6 bg-[#e31e24] rounded-lg flex items-center justify-center text-[10px] font-bold text-white">
+                          <div className="h-6 w-6 bg-primary rounded-lg flex items-center justify-center text-[10px] font-bold text-white">
                             {idx + 1}
                           </div>
                           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">{section.type}</span>
@@ -734,7 +734,7 @@ export function UiSettingsPage() {
                           <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md" onClick={() => moveSection(editingPageId, section.id, 'down')} disabled={idx === editingPage.sections.length - 1}>
                             <MoveDown className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => removeSection(editingPageId, section.id)}>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md text-primary hover:text-primary/90 hover:bg-primary/5" onClick={() => removeSection(editingPageId, section.id)}>
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
@@ -814,7 +814,7 @@ export function UiSettingsPage() {
             <div className="flex-1 bg-slate-100 rounded-[2.5rem] border border-slate-200 overflow-hidden flex flex-col shadow-inner relative">
               <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
                 <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-400" />
+                  <div className="h-3 w-3 rounded-full bg-primary/40" />
                   <div className="h-3 w-3 rounded-full bg-yellow-400" />
                   <div className="h-3 w-3 rounded-full bg-emerald-400" />
                   <span className="ml-4 text-[10px] font-mono text-slate-400 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
@@ -870,7 +870,7 @@ export function UiSettingsPage() {
                             <div className="grid grid-cols-2 gap-6">
                               {[1,2,3,4].map(i => (
                                 <div key={i} className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-                                  <div className="h-10 w-10 bg-red-50 rounded-xl mb-4" />
+                                  <div className="h-10 w-10 bg-primary/5 rounded-xl mb-4" />
                                   <div className="h-4 w-24 bg-slate-200 rounded mb-2" />
                                   <div className="h-3 w-full bg-slate-100 rounded" />
                                 </div>

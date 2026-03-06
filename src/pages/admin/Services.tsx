@@ -92,7 +92,7 @@ export function Services() {
         <Button 
           onClick={() => { setIsAdding(true); setEditingId(null); setFormData({}); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           disabled={adminRole !== 'admin'}
-          className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl px-8 shadow-xl shadow-red-500/20 group border-none"
+          className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl px-8 shadow-xl shadow-primary/20 group border-none"
         >
           <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform" /> Add New Service
         </Button>
@@ -107,11 +107,11 @@ export function Services() {
             className="relative"
           >
             <Card className="bg-white border-slate-200 shadow-2xl overflow-hidden rounded-[2rem]">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#e31e24] opacity-50" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-50" />
               <CardHeader className="border-b border-slate-100 p-8">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                    <Zap className="h-5 w-5 text-[#e31e24]" />
+                  <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <Zap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tighter">
@@ -132,7 +132,7 @@ export function Services() {
                         placeholder="e.g. Premium Ceramic Coating" 
                         value={formData.title || ""} 
                         onChange={e => setFormData({...formData, title: e.target.value})}
-                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -142,7 +142,7 @@ export function Services() {
                           placeholder="e.g. ₹14,999" 
                           value={formData.price || ""} 
                           onChange={e => setFormData({...formData, price: e.target.value})}
-                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                         />
                       </div>
                       <div className="space-y-2">
@@ -152,7 +152,7 @@ export function Services() {
                           type="number"
                           value={formData.basePrice || ""} 
                           onChange={e => setFormData({...formData, basePrice: Number(e.target.value)})}
-                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                         />
                       </div>
                     </div>
@@ -162,7 +162,7 @@ export function Services() {
                         placeholder="e.g. 4-6 Hours" 
                         value={formData.duration || ""} 
                         onChange={e => setFormData({...formData, duration: e.target.value})}
-                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                   </div>
@@ -170,39 +170,39 @@ export function Services() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Service Icon</label>
-                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-red-600/30 transition-all group/upload">
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-primary/30 transition-all group/upload">
                         <ImageUpload 
                           value={formData.iconUrl || ""}
                           onChange={(url) => setFormData({ ...formData, iconUrl: url })}
                         />
                         <div className="mt-4 flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                          <Shield className="h-3 w-3 text-[#e31e24]" /> Recommended size: 512x512px.
+                          <Shield className="h-3 w-3 text-primary" /> Recommended size: 512x512px.
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Description</label>
-                    <Textarea 
-                      placeholder="Describe the service in detail..." 
-                      value={formData.description || ""} 
-                      onChange={e => setFormData({...formData, description: e.target.value})}
-                      className="min-h-[120px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-medium text-sm"
-                    />
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Description</label>
+                      <Textarea 
+                        placeholder="Describe the service in detail..." 
+                        value={formData.description || ""} 
+                        onChange={e => setFormData({...formData, description: e.target.value})}
+                        className="min-h-[120px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-medium text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Features (Comma Separated)</label>
+                      <Textarea 
+                        placeholder="Feature 1, Feature 2, Feature 3..." 
+                        value={Array.isArray(formData.features) ? formData.features.join(", ") : (formData.features || "")} 
+                        onChange={e => setFormData({...formData, features: e.target.value as any})}
+                        className="min-h-[80px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Features (Comma Separated)</label>
-                    <Textarea 
-                      placeholder="Feature 1, Feature 2, Feature 3..." 
-                      value={Array.isArray(formData.features) ? formData.features.join(", ") : (formData.features || "")} 
-                      onChange={e => setFormData({...formData, features: e.target.value as any})}
-                      className="min-h-[80px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
-                    />
-                  </div>
-                </div>
 
                 <div className="flex justify-end gap-4 pt-8 border-t border-slate-100">
                   <Button 
@@ -214,7 +214,7 @@ export function Services() {
                   </Button>
                   <Button 
                     onClick={handleSave}
-                    className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl px-12 shadow-xl shadow-red-500/20"
+                    className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl px-12 shadow-xl shadow-primary/20"
                   >
                     Save Service
                   </Button>
@@ -235,12 +235,12 @@ export function Services() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-[2rem]">
+              <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50 hover:border-primary/30 transition-all duration-500 group overflow-hidden rounded-[2rem]">
                 <CardContent className="flex flex-col lg:flex-row items-center justify-between p-8 gap-8">
                   <div className="flex flex-col lg:flex-row items-center gap-8 w-full">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-red-50 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="h-24 w-24 bg-slate-50 rounded-[2rem] flex items-center justify-center border border-slate-100 overflow-hidden flex-shrink-0 relative z-10 group-hover:border-red-600/30 transition-all">
+                      <div className="absolute inset-0 bg-primary/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="h-24 w-24 bg-slate-50 rounded-[2rem] flex items-center justify-center border border-slate-100 overflow-hidden flex-shrink-0 relative z-10 group-hover:border-primary/30 transition-all">
                         {service.iconUrl ? (
                           <img src={service.iconUrl} alt={service.title} className="max-h-[60%] max-w-[60%] object-contain group-hover:scale-110 transition-transform duration-500" />
                         ) : (
@@ -251,7 +251,7 @@ export function Services() {
                     
                     <div className="flex-1 text-center lg:text-left space-y-2">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{service.title}</h3>
+                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">{service.title}</h3>
                         <div className="flex items-center justify-center lg:justify-start gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
@@ -261,15 +261,15 @@ export function Services() {
                       
                       <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-6">
                         <div className="flex items-center gap-2">
-                          <IndianRupee className="h-4 w-4 text-red-600" />
+                          <IndianRupee className="h-4 w-4 text-primary" />
                           <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.price}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-red-600" />
+                          <Clock className="h-4 w-4 text-primary" />
                           <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.duration}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-red-600" />
+                          <Shield className="h-4 w-4 text-primary" />
                           <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.features.length} Features</span>
                         </div>
                       </div>
@@ -281,7 +281,7 @@ export function Services() {
                       variant="ghost" 
                       size="icon" 
                       onClick={() => handleEdit(service)}
-                      className="h-12 w-12 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl transition-all"
+                      className="h-12 w-12 bg-slate-50 border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-xl transition-all"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -289,7 +289,7 @@ export function Services() {
                       variant="ghost" 
                       size="icon" 
                       onClick={() => handleDelete(service.id)}
-                      className="h-12 w-12 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl transition-all"
+                      className="h-12 w-12 bg-slate-50 border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-xl transition-all"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

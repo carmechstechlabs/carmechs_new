@@ -147,7 +147,7 @@ export function Cars() {
               onClick={() => { setActiveTab(tab.id as any); setEditingItem(null); setSearchTerm(""); }}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest ${
                 activeTab === tab.id 
-                  ? "bg-[#e31e24] text-white shadow-lg shadow-red-500/20" 
+                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
                   : "bg-transparent text-slate-400 hover:text-slate-900 hover:bg-slate-50"
               }`}
             >
@@ -161,12 +161,12 @@ export function Cars() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form Section */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className={`bg-white border-slate-200 shadow-sm rounded-[2rem] overflow-hidden sticky top-8 transition-all duration-500 ${editingItem ? "ring-2 ring-red-600/20 border-red-600/30" : ""}`}>
-            <div className={`absolute top-0 left-0 w-full h-1 ${editingItem ? "bg-[#e31e24]" : "bg-slate-100"}`} />
+          <Card className={`bg-white border-slate-200 shadow-sm rounded-[2rem] overflow-hidden sticky top-8 transition-all duration-500 ${editingItem ? "ring-2 ring-primary/20 border-primary/30" : ""}`}>
+            <div className={`absolute top-0 left-0 w-full h-1 ${editingItem ? "bg-primary" : "bg-slate-100"}`} />
             <CardHeader className="p-8 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-colors ${editingItem ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}>
-                  {editingItem ? <Edit2 className="h-5 w-5 text-[#e31e24]" /> : <Plus className="h-5 w-5 text-slate-400" />}
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center border transition-colors ${editingItem ? "bg-primary/5 border-primary/10" : "bg-slate-50 border-slate-100"}`}>
+                  {editingItem ? <Edit2 className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-slate-400" />}
                 </div>
                 <div>
                   <CardTitle className="text-xl font-black text-slate-900 uppercase tracking-tighter">
@@ -186,7 +186,7 @@ export function Cars() {
                     placeholder="Enter name..."
                     value={editingItem ? editingItem.name : newItem}
                     onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem(e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
                 </div>
 
@@ -198,12 +198,12 @@ export function Cars() {
                         value={editingItem ? editingItem.make : selectedMake} 
                         onValueChange={(val) => editingItem ? setEditingItem({...editingItem, make: val}) : setSelectedMake(val)}
                       >
-                        <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest">
+                        <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest">
                           <SelectValue placeholder="Select Make" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-slate-200 rounded-xl shadow-xl">
                           {carMakes.map((make) => (
-                            <SelectItem key={make.name} value={make.name} className="font-bold text-xs uppercase tracking-widest focus:bg-red-50 focus:text-red-600 transition-colors py-3">
+                            <SelectItem key={make.name} value={make.name} className="font-bold text-xs uppercase tracking-widest focus:bg-primary/5 focus:text-primary transition-colors py-3">
                               {make.name}
                             </SelectItem>
                           ))}
@@ -216,7 +216,7 @@ export function Cars() {
                         placeholder="e.g. 2024"
                         value={editingItem ? (editingItem.year || "") : newYear}
                         onChange={(e) => editingItem ? setEditingItem({...editingItem, year: e.target.value}) : setNewYear(e.target.value)}
-                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                        className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
                   </>
@@ -225,14 +225,14 @@ export function Cars() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between">
                     Additional Price
-                    <span className="text-[#e31e24] font-black">₹{editingItem ? editingItem.price : newPrice}</span>
+                    <span className="text-primary font-black">₹{editingItem ? editingItem.price : newPrice}</span>
                   </label>
                   <Input 
                     type="number"
                     placeholder="0"
                     value={editingItem ? editingItem.price : newPrice}
                     onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewPrice(e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-lg"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-black text-lg"
                   />
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest px-1">
                     Added to base service pricing. 0 = standard rate.
@@ -245,7 +245,7 @@ export function Cars() {
                   <>
                     <Button 
                       onClick={handleUpdate}
-                      className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20"
+                      className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20"
                     >
                       Update Entry
                     </Button>
@@ -260,7 +260,7 @@ export function Cars() {
                 ) : (
                   <Button 
                     onClick={handleAdd}
-                    className="h-12 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-red-500/20 group"
+                    className="h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 group"
                   >
                     <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform" /> Add Entry
                   </Button>
@@ -298,18 +298,18 @@ export function Cars() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.03 }}
                 >
-                  <Card className="bg-white border-slate-200 shadow-sm hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-2xl">
+                  <Card className="bg-white border-slate-200 shadow-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden rounded-2xl">
                     <CardContent className="p-6 flex items-center justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors">{item.name}</span>
+                          <span className="text-sm font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors">{item.name}</span>
                           <span className="px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                             +₹{item.price}
                           </span>
                         </div>
                         {activeTab === 'models' && (
                           <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <span className="text-red-600/70">{(item as any).make}</span>
+                            <span className="text-primary/70">{(item as any).make}</span>
                             {(item as any).year && (
                               <>
                                 <span className="h-1 w-1 rounded-full bg-slate-200" />
@@ -324,7 +324,7 @@ export function Cars() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => startEditing(item)}
-                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-lg transition-all"
+                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-lg transition-all"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -332,7 +332,7 @@ export function Cars() {
                           variant="ghost" 
                           size="icon" 
                           onClick={() => handleDelete(item.name)}
-                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-lg transition-all"
+                          className="h-9 w-9 bg-slate-50 border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-lg transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

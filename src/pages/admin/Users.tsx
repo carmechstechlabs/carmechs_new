@@ -142,12 +142,12 @@ export function Users() {
         
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Search Name, Email, or Phone..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 h-12 bg-white border-slate-200 text-slate-900 rounded-2xl focus:ring-red-600/20 focus:border-red-600/50 transition-all placeholder:text-slate-300 font-bold text-xs uppercase tracking-widest shadow-sm"
+              className="pl-12 h-12 bg-white border-slate-200 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 transition-all placeholder:text-slate-300 font-bold text-xs uppercase tracking-widest shadow-sm"
             />
           </div>
           
@@ -165,18 +165,18 @@ export function Users() {
                   setEditingId(null);
                   setUserFormData({ name: "", email: "", phone: "", password: "", role: "user", verified: false, blocked: false, walletBalance: 0 });
                 }}
-                className="h-12 px-8 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 group"
+                className="h-12 px-8 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 group"
               >
                 <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform" />
                 Add New User
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[550px] bg-white border-slate-200 rounded-[2.5rem] shadow-2xl p-0 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-red-600 opacity-50" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-50" />
               <DialogHeader className="p-8 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-red-50 flex items-center justify-center border border-red-100">
-                    <Zap className="h-5 w-5 text-red-600" />
+                  <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <Zap className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <DialogTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
@@ -196,7 +196,7 @@ export function Users() {
                       value={userFormData.name} 
                       onChange={e => setUserFormData({...userFormData, name: e.target.value})}
                       placeholder="e.g. John Doe"
-                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                     />
                   </div>
                   <div className="space-y-2">
@@ -205,13 +205,13 @@ export function Users() {
                       value={userFormData.role} 
                       onValueChange={(val) => setUserFormData({...userFormData, role: val as User['role']})}
                     >
-                      <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] focus:ring-red-600/20">
+                      <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] focus:ring-primary/20">
                         <SelectValue placeholder="Select Role" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-slate-200 text-slate-900">
-                        <SelectItem value="admin" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Administrator</SelectItem>
-                        <SelectItem value="viewer" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Viewer</SelectItem>
-                        <SelectItem value="user" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Standard User</SelectItem>
+                        <SelectItem value="admin" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Administrator</SelectItem>
+                        <SelectItem value="viewer" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Viewer</SelectItem>
+                        <SelectItem value="user" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Standard User</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -224,20 +224,20 @@ export function Users() {
                     value={userFormData.email} 
                     onChange={e => setUserFormData({...userFormData, email: e.target.value})}
                     placeholder="user@example.com"
-                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Password</label>
                   <div className="relative">
-                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-600" />
+                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                     <Input 
                       type="text"
                       value={userFormData.password} 
                       onChange={e => setUserFormData({...userFormData, password: e.target.value})}
                       placeholder="Set secure password"
-                      className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      className="h-12 pl-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                     />
                   </div>
                   <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">Required for Admin/Viewer login.</p>
@@ -250,7 +250,7 @@ export function Users() {
                       value={userFormData.phone} 
                       onChange={e => setUserFormData({...userFormData, phone: e.target.value})}
                       placeholder="+91 0000000000"
-                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-bold text-xs uppercase tracking-widest"
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                     />
                   </div>
                   <div className="space-y-2">
@@ -260,7 +260,7 @@ export function Users() {
                       value={userFormData.walletBalance} 
                       onChange={e => setUserFormData({...userFormData, walletBalance: Number(e.target.value)})}
                       placeholder="0"
-                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-red-600/20 focus:border-red-600/50 font-black text-xs uppercase tracking-widest"
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-black text-xs uppercase tracking-widest"
                     />
                   </div>
                 </div>
@@ -272,9 +272,9 @@ export function Users() {
                       id="verified"
                       checked={userFormData.verified}
                       onChange={e => setUserFormData({...userFormData, verified: e.target.checked})}
-                      className="h-5 w-5 rounded-lg border-slate-300 bg-white text-red-600 focus:ring-red-600/20 transition-all cursor-pointer"
+                      className="h-5 w-5 rounded-lg border-slate-300 bg-white text-primary focus:ring-primary/20 transition-all cursor-pointer"
                     />
-                    <label htmlFor="verified" className="text-[10px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover/check:text-red-600 transition-colors">Verified User</label>
+                    <label htmlFor="verified" className="text-[10px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover/check:text-primary transition-colors">Verified User</label>
                   </div>
                   <div className="flex items-center gap-3 group/check cursor-pointer">
                     <input 
@@ -282,13 +282,13 @@ export function Users() {
                       id="blocked"
                       checked={userFormData.blocked}
                       onChange={e => setUserFormData({...userFormData, blocked: e.target.checked})}
-                      className="h-5 w-5 rounded-lg border-slate-300 bg-white text-red-500 focus:ring-red-500/20 transition-all cursor-pointer"
+                      className="h-5 w-5 rounded-lg border-slate-300 bg-white text-primary focus:ring-primary/20 transition-all cursor-pointer"
                     />
-                    <label htmlFor="blocked" className="text-[10px] font-black text-red-500/60 uppercase tracking-widest cursor-pointer group-hover/check:text-red-500 transition-colors">Block Access</label>
+                    <label htmlFor="blocked" className="text-[10px] font-black text-primary/60 uppercase tracking-widest cursor-pointer group-hover/check:text-primary transition-colors">Block Access</label>
                   </div>
                 </div>
 
-                <Button className="w-full h-14 mt-4 bg-[#e31e24] hover:bg-[#c4191f] text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-500/20 group" onClick={handleSaveUser}>
+                <Button className="w-full h-14 mt-4 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary/20 group" onClick={handleSaveUser}>
                   {editingId ? "Save Changes" : "Create User"}
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -327,16 +327,16 @@ export function Users() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="bg-white border-slate-200 shadow-sm hover:border-red-600/30 transition-all duration-500 group overflow-hidden rounded-[2rem]">
+                <Card className="bg-white border-slate-200 shadow-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden rounded-[2rem]">
                   <CardContent className="p-0">
                     <div className="flex flex-col lg:flex-row items-center justify-between p-8 gap-8">
                       <div className="flex items-center gap-6 flex-1 w-full">
                         <div className="relative">
-                          <div className="absolute inset-0 bg-red-600/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner relative z-10 group-hover:border-red-600/30 transition-all">
-                            <UserIcon className="h-8 w-8 text-red-600" />
+                          <div className="absolute inset-0 bg-primary/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="h-16 w-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 shadow-inner relative z-10 group-hover:border-primary/30 transition-all">
+                            <UserIcon className="h-8 w-8 text-primary" />
                             {user.blocked && (
-                              <div className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 rounded-full border-4 border-white flex items-center justify-center">
+                              <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full border-4 border-white flex items-center justify-center">
                                 <Ban className="h-3 w-3 text-white" />
                               </div>
                             )}
@@ -345,13 +345,13 @@ export function Users() {
                         
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-3 mb-2">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-red-600 transition-colors truncate max-w-[200px]">
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-primary transition-colors truncate max-w-[200px]">
                               {user.name}
                             </h3>
                             {user.verified && <CheckCircle className="h-4 w-4 text-emerald-500" />}
                             <span className={cn(
                               "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border",
-                              user.role === 'admin' ? "bg-red-50 text-red-600 border-red-100" : 
+                              user.role === 'admin' ? "bg-primary/5 text-primary border-primary/10" : 
                               user.role === 'viewer' ? "bg-blue-50 text-blue-600 border-blue-100" : 
                               "bg-slate-50 text-slate-500 border-slate-100"
                             )}>
@@ -361,10 +361,10 @@ export function Users() {
                           
                           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                              <Mail className="h-3 w-3 text-red-600" /> {user.email}
+                              <Mail className="h-3 w-3 text-primary" /> {user.email}
                             </div>
                             <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                              <Phone className="h-3 w-3 text-red-600" /> {user.phone}
+                              <Phone className="h-3 w-3 text-primary" /> {user.phone}
                             </div>
                             <div className="flex items-center gap-2 text-[11px] font-black text-emerald-500 uppercase tracking-widest">
                               <Wallet className="h-3 w-3" /> ₹{user.walletBalance || 0}
@@ -381,13 +381,13 @@ export function Users() {
                             onValueChange={(val) => handleRoleChange(user.id, val as User['role'])}
                             disabled={adminRole !== 'admin'}
                           >
-                            <SelectTrigger className="w-full sm:w-36 h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] focus:ring-red-600/20">
+                            <SelectTrigger className="w-full sm:w-36 h-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black uppercase tracking-widest text-[10px] focus:ring-primary/20">
                               <SelectValue placeholder="Role" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-slate-200 text-slate-900">
-                              <SelectItem value="admin" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Admin</SelectItem>
-                              <SelectItem value="viewer" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">Viewer</SelectItem>
-                              <SelectItem value="user" className="text-[10px] font-black uppercase tracking-widest focus:bg-red-50 focus:text-red-600">User</SelectItem>
+                              <SelectItem value="admin" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Admin</SelectItem>
+                              <SelectItem value="viewer" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Viewer</SelectItem>
+                              <SelectItem value="user" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">User</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -398,7 +398,7 @@ export function Users() {
                             size="icon" 
                             onClick={() => handleEditClick(user)}
                             disabled={adminRole !== 'admin'}
-                            className="h-12 w-12 bg-white border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl transition-all"
+                            className="h-12 w-12 bg-white border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-xl transition-all"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -407,7 +407,7 @@ export function Users() {
                             size="icon" 
                             onClick={() => handleDeleteUser(user.id)}
                             disabled={adminRole !== 'admin'}
-                            className="h-12 w-12 bg-white border border-slate-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 rounded-xl transition-all"
+                            className="h-12 w-12 bg-white border border-slate-100 text-slate-400 hover:text-primary hover:bg-primary/5 hover:border-primary/10 rounded-xl transition-all"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -30,6 +30,7 @@ import { Categories as AdminCategories } from "@/pages/admin/Categories";
 import { Coupons as AdminCoupons } from "@/pages/admin/Coupons";
 import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
 import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
+import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
@@ -58,6 +59,7 @@ function AppRoutes() {
         />
         <Route element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="workshop" element={<AdminWorkshop />} />
           <Route path="appointments" element={<AdminAppointments />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="services" element={<AdminServices />} />

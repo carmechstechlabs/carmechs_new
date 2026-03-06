@@ -246,7 +246,7 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="inline-block px-3 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest mb-4"
+                className="inline-block px-3 py-1 rounded-full bg-primary/5 text-primary text-[10px] font-black uppercase tracking-widest mb-4"
               >
                 Why CarMechs?
               </motion.div>
@@ -423,7 +423,7 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
                   >
                     <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary hover:no-underline py-6 text-slate-900">
                       <div className="flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center shrink-0">
+                        <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
                           <HelpCircle className="h-4 w-4 text-primary" />
                         </div>
                         {faq.q}

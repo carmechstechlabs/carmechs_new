@@ -134,6 +134,7 @@ export interface Appointment {
   paymentMethod?: 'razorpay' | 'paytm' | 'pay_after_service';
   paymentStatus?: 'pending' | 'paid' | 'failed';
   amount?: number;
+  technicianId?: string;
   createdAt: string;
 }
 
