@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wrench, Menu, X, User, LogOut, Shield, Zap, MapPin, Search, Check, ChevronDown } from "lucide-react";
+import { Wrench, Menu, X, User, LogOut, Shield, Zap, MapPin, Search, Check, ChevronDown, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useData } from "@/context/DataContext";
@@ -50,6 +50,38 @@ export function Header() {
         scrolled ? "bg-white py-2 border-b border-slate-100 shadow-sm" : "bg-white py-4 border-b border-slate-50"
       )}
     >
+      {/* Top Bar for Contact Info */}
+      {!scrolled && (
+        <div className="hidden lg:block bg-slate-900 py-2 text-white border-b border-white/5">
+          <div className="container mx-auto px-8 flex justify-between items-center">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-2">
+                <Phone className="h-3 w-3 text-primary" />
+                <span className="text-[9px] font-black uppercase tracking-widest">{settings.phone || "+91 98765 43210"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-3 w-3 text-primary" />
+                <span className="text-[9px] font-black uppercase tracking-widest lowercase">{settings.email || "support@carmechs.com"}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3 w-3 text-primary" />
+                <span className="text-[9px] font-black uppercase tracking-widest">{settings.address || "New Delhi, India"}</span>
+              </div>
+              <div className="h-3 w-px bg-white/10" />
+              <div className="flex items-center gap-3">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/40">Follow Us</span>
+                <div className="flex gap-2">
+                  <div className="h-4 w-4 rounded bg-white/5 flex items-center justify-center hover:bg-primary transition-colors cursor-pointer">
+                    <Zap className="h-2 w-2" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="container mx-auto flex items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2 group">
@@ -81,6 +113,7 @@ export function Header() {
               </Link>
             ))}
             <Link to="/about" className="hover:text-primary transition-colors">About</Link>
+            <Link to="/contact" className="hover:text-primary transition-colors">Contact</Link>
           </nav>
         </div>
 

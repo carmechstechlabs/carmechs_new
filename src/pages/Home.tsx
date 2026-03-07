@@ -15,7 +15,10 @@ import {
   ArrowRight,
   Zap,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  Mail,
+  Phone,
+  MapPin
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useData } from "@/context/DataContext";
@@ -449,6 +452,102 @@ export function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-40 bg-slate-900 text-white overflow-hidden relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.3em] mb-8 border border-primary/20"
+              >
+                Get In Touch
+              </motion.div>
+              <h2 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-[0.85] mb-12">
+                Visit Our <br /><span className="text-primary">Workshop.</span>
+              </h2>
+              <p className="text-white/60 max-w-md font-medium text-xl leading-relaxed mb-16">
+                Have a technical query or need immediate assistance? Our master mechanics are standing by to help you with your automotive needs.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
+                <div className="space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <MapPin className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Location</h4>
+                    <p className="text-sm font-bold text-white leading-relaxed">{uiSettings.adminLogin.loginTerminalId || "Main Service Hub, New Delhi"}</p>
+                    <p className="text-xs text-white/60 mt-1">123, Automotive Zone, Sector 45</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Phone className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Direct Line</h4>
+                    <p className="text-sm font-bold text-white leading-relaxed">+91 98765 43210</p>
+                    <p className="text-xs text-white/60 mt-1">Mon - Sat: 9AM - 8PM</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</h4>
+                    <p className="text-sm font-bold text-white leading-relaxed">support@carmechs.com</p>
+                    <p className="text-xs text-white/60 mt-1">24/7 Response Time</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <Zap className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">WhatsApp</h4>
+                    <p className="text-sm font-bold text-white leading-relaxed">+91 98765 43211</p>
+                    <p className="text-xs text-white/60 mt-1">Instant Support</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="rounded-[4rem] overflow-hidden aspect-square shadow-2xl border border-white/10 relative group">
+                <img 
+                  src="https://images.unsplash.com/photo-1517524008410-b44336d29a0c?q=80&w=1000&auto=format&fit=crop" 
+                  alt="Workshop" 
+                  className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                
+                <div className="absolute bottom-12 left-12 right-12 p-8 bg-white/10 backdrop-blur-xl rounded-[2.5rem] border border-white/20">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                      <CheckCircle2 className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-widest">Authorized Center</h4>
+                      <p className="text-[10px] text-white/60 uppercase font-black tracking-tighter">ISO 9001:2015 Certified</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-white/80 leading-relaxed font-medium">Our facility is equipped with state-of-the-art diagnostic tools and a team of master mechanics dedicated to your vehicle's health.</p>
+                </div>
+              </div>
+              
+              {/* Decorative Rings */}
+              <div className="absolute -inset-10 border border-white/5 rounded-[5rem] -z-10" />
+              <div className="absolute -inset-20 border border-white/5 rounded-[6rem] -z-20" />
             </div>
           </div>
         </div>
