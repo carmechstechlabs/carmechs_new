@@ -186,7 +186,7 @@ export async function updateTable(table: string, data: any[]) {
 
     // Use upsert which handles both insert and update
     const { error } = await supabase.from(table).upsert(mappedData, { onConflict: primaryKey });
-    if (error) console.error(`Error updating ${table}:`, error);
+    if (error) console.error(`Error updating ${table}:`, error.message || error);
 
     // Handle deletions: Remove items from DB that are not in the new data list
     const currentIds = data.map(item => item[primaryKey]).filter(Boolean);
@@ -195,10 +195,10 @@ export async function updateTable(table: string, data: any[]) {
         .from(table)
         .delete()
         .not(primaryKey, 'in', `(${currentIds.map(id => typeof id === 'string' ? `"${id}"` : id).join(',')})`);
-      if (delError) console.error(`Error cleaning up ${table}:`, delError);
+      if (delError) console.error(`Error cleaning up ${table}:`, delError.message || delError);
     }
-  } catch (error) {
-    console.error(`Unexpected error updating ${table}:`, error);
+  } catch (error: any) {
+    console.error(`Unexpected error updating ${table}:`, error.message || error);
   }
 }
 
@@ -206,9 +206,9 @@ export async function deleteFromTable(table: string, id: string) {
   if (!supabase) return;
   try {
     const { error } = await supabase.from(table).delete().eq('id', id);
-    if (error) console.error(`Error deleting from ${table}:`, error);
-  } catch (error) {
-    console.error(`Unexpected error deleting from ${table}:`, error);
+    if (error) console.error(`Error deleting from ${table}:`, error.message || error);
+  } catch (error: any) {
+    console.error(`Unexpected error deleting from ${table}:`, error.message || error);
   }
 }
 
@@ -216,9 +216,9 @@ export async function updateConfig(key: string, value: any) {
   if (!supabase) return;
   try {
     const { error } = await supabase.from('site_config').upsert({ key, value, updated_at: new Date() });
-    if (error) console.error(`Error updating config ${key}:`, error);
-  } catch (error) {
-    console.error(`Unexpected error updating config ${key}:`, error);
+    if (error) console.error(`Error updating config ${key}:`, error.message || error);
+  } catch (error: any) {
+    console.error(`Unexpected error updating config ${key}:`, error.message || error);
   }
 }
 
@@ -233,8 +233,10 @@ export async function addAppointment(appointment: any) {
     };
     
     const { error } = await supabase.from('appointments').insert(dbAppointment);
-    if (error) console.error('Error adding appointment:', error);
-  } catch (error) {
-    console.error('Unexpected error adding appointment:', error);
+    if (error) {
+      console.error('Error adding appointment:', error.message || error);
+    }
+  } catch (error: any) {
+    console.error('Unexpected error adding appointment:', error.message || error);
   }
 }
