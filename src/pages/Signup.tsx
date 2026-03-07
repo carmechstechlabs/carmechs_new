@@ -4,15 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { Wrench, Loader2, Mail, Phone, ArrowRight, ShieldCheck, User, KeyRound, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
-import { getFirebaseAuth, googleProvider, getFirebaseErrorMessage } from "@/lib/firebase";
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup } from "firebase/auth";
+import { getFirebaseAuth, googleProvider, facebookProvider, getFirebaseErrorMessage } from "@/lib/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup, FacebookAuthProvider } from "firebase/auth";
 import { motion, AnimatePresence } from "motion/react";
+import { Facebook } from "lucide-react";
 
 export function Signup() {
   const navigate = useNavigate();
-  const { apiKeys } = useData();
+  const { apiKeys, uiSettings } = useData();
+  const { userLogin } = uiSettings;
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [isPhoneLoading, setIsPhoneLoading] = useState(false);
   const [showPhoneOtp, setShowPhoneOtp] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -77,6 +80,25 @@ export function Signup() {
       toast.error(getFirebaseErrorMessage(error));
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    if (!apiKeys.firebaseApiKey || !apiKeys.firebaseProjectId) {
+      toast.error("Firebase is not configured in Admin Panel.");
+      return;
+    }
+    setIsFacebookLoading(true);
+    try {
+      const auth = getFirebaseAuth(apiKeys);
+      await signInWithPopup(auth, facebookProvider);
+      toast.success("Successfully signed up with Facebook!");
+      navigate("/");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(getFirebaseErrorMessage(error));
+    } finally {
+      setIsFacebookLoading(false);
     }
   };
 
@@ -220,43 +242,65 @@ export function Signup() {
                   </div>
 
                   <div className="mt-8 space-y-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleGoogleSignup}
-                      disabled={isGoogleLoading}
-                      className="w-full h-14 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900 font-bold"
-                    >
-                      {isGoogleLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <div className="flex items-center justify-center gap-3">
-                          <Mail className="h-5 w-5 text-primary" />
-                          Verify with Google
-                        </div>
-                      )}
-                    </Button>
-                    
-                    <div className="flex gap-3">
-                      <input
-                        type="tel"
-                        placeholder="+1 234 567 890"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      />
+                    {userLogin.showGoogleLogin && (
                       <Button 
                         variant="outline" 
-                        onClick={handlePhoneSignup}
-                        disabled={isPhoneLoading || !phoneNumber}
-                        className="h-14 px-6 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900"
+                        onClick={handleGoogleSignup}
+                        disabled={isGoogleLoading}
+                        className="w-full h-14 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900 font-bold"
                       >
-                        {isPhoneLoading ? (
+                        {isGoogleLoading ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                          <Phone className="h-5 w-5 text-emerald-500" />
+                          <div className="flex items-center justify-center gap-3">
+                            <Mail className="h-5 w-5 text-primary" />
+                            Verify with Google
+                          </div>
                         )}
                       </Button>
-                    </div>
+                    )}
+
+                    {userLogin.showFacebookLogin && (
+                      <Button 
+                        variant="outline" 
+                        onClick={handleFacebookLogin}
+                        disabled={isFacebookLoading}
+                        className="w-full h-14 rounded-2xl bg-[#1877F2] border-[#1877F2] hover:opacity-90 text-white font-bold"
+                      >
+                        {isFacebookLoading ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <div className="flex items-center justify-center gap-3">
+                            <Facebook className="h-5 w-5 fill-white" />
+                            Verify with Facebook
+                          </div>
+                        )}
+                      </Button>
+                    )}
+                    
+                    {userLogin.showPhoneLogin && (
+                      <div className="flex gap-3">
+                        <input
+                          type="tel"
+                          placeholder="+1 234 567 890"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={handlePhoneSignup}
+                          disabled={isPhoneLoading || !phoneNumber}
+                          className="h-14 px-6 rounded-2xl bg-white border-slate-200 hover:bg-slate-50 text-slate-900"
+                        >
+                          {isPhoneLoading ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Phone className="h-5 w-5 text-emerald-500" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
                     <div id="recaptcha-container"></div>
                   </div>
                 </div>

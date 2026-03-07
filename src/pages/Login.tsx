@@ -4,9 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Wrench, Loader2, Mail, Phone, ArrowRight, ShieldCheck, Sparkles, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
-import { getFirebaseAuth, googleProvider, getFirebaseErrorMessage } from "@/lib/firebase";
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup } from "firebase/auth";
+import { getFirebaseAuth, googleProvider, facebookProvider, getFirebaseErrorMessage } from "@/lib/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup, FacebookAuthProvider } from "firebase/auth";
 import { motion, AnimatePresence } from "motion/react";
+import { Facebook } from "lucide-react";
 
 export function Login() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export function Login() {
   const { userLogin } = uiSettings;
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [isPhoneLoading, setIsPhoneLoading] = useState(false);
   const [showPhoneOtp, setShowPhoneOtp] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -77,6 +79,25 @@ export function Login() {
       toast.error(getFirebaseErrorMessage(error));
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    if (!apiKeys.firebaseApiKey || !apiKeys.firebaseProjectId) {
+      toast.error("Firebase is not configured in Admin Panel.");
+      return;
+    }
+    setIsFacebookLoading(true);
+    try {
+      const auth = getFirebaseAuth(apiKeys);
+      await signInWithPopup(auth, facebookProvider);
+      toast.success("Successfully signed in with Facebook!");
+      navigate("/");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(getFirebaseErrorMessage(error));
+    } finally {
+      setIsFacebookLoading(false);
     }
   };
 
@@ -236,6 +257,24 @@ export function Login() {
                           <div className="flex items-center justify-center gap-3">
                             <Mail className="h-5 w-5 text-primary" />
                             Continue with Google
+                          </div>
+                        )}
+                      </Button>
+                    )}
+
+                    {userLogin.showFacebookLogin && (
+                      <Button 
+                        variant="outline" 
+                        onClick={handleFacebookLogin}
+                        disabled={isFacebookLoading}
+                        className="w-full h-14 rounded-2xl bg-[#1877F2] border-[#1877F2] hover:opacity-90 text-white font-bold"
+                      >
+                        {isFacebookLoading ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <div className="flex items-center justify-center gap-3">
+                            <Facebook className="h-5 w-5 fill-white" />
+                            Continue with Facebook
                           </div>
                         )}
                       </Button>

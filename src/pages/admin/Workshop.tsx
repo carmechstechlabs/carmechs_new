@@ -141,7 +141,17 @@ export function Workshop() {
                             <Wrench className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Service</p>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Service</p>
+                              <span className={cn(
+                                "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border",
+                                appointment.priority === 'high' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                appointment.priority === 'medium' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              )}>
+                                {appointment.priority}
+                              </span>
+                            </div>
                             <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{service?.title || appointment.service}</h4>
                             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{appointment.make} {appointment.model}</p>
                           </div>
@@ -255,7 +265,17 @@ export function Workshop() {
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div className="space-y-1">
-                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{apt.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{apt.name}</h4>
+                            <span className={cn(
+                              "text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border",
+                              apt.priority === 'high' ? "bg-rose-50 text-rose-600 border-rose-100" :
+                              apt.priority === 'medium' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                              "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            )}>
+                              {apt.priority}
+                            </span>
+                          </div>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{apt.make} {apt.model}</p>
                         </div>
                         <div className="h-8 w-8 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100">
@@ -301,8 +321,20 @@ export function Workshop() {
                             <Button 
                               size="sm" 
                               onClick={() => handleStatusChange(apt.id, 'completed')}
-                              className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[8px] font-black uppercase tracking-widest"
+                              className="h-8 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[8px] font-black uppercase tracking-widest relative overflow-hidden"
                             >
+                              <AnimatePresence>
+                                {apt.status === 'completed' && (
+                                  <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1.5, opacity: 1 }}
+                                    exit={{ scale: 2, opacity: 0 }}
+                                    className="absolute inset-0 flex items-center justify-center bg-emerald-500 z-10"
+                                  >
+                                    <CheckCircle2 className="h-4 w-4 text-white" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                               Finish <CheckCircle2 className="ml-1 h-2 w-2" />
                             </Button>
                           )}

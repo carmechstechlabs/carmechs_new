@@ -1,17 +1,35 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useData } from "@/context/DataContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wallet, Users, Copy, CheckCircle2, Gift, ArrowRight, Calendar, Clock, ChevronRight, Wrench, User, Shield, Zap, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { 
+  User, Mail, Phone, Shield, Wallet, Gift, 
+  Calendar, Clock, CheckCircle2, XCircle, 
+  Copy, ArrowRight, Car, Plus, Trash2,
+  Wrench, Fuel, Hash, Info, ChevronRight, Zap
+} from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export function Profile() {
-  const { users, settings, processReferral, appointments, services, currentUser } = useData();
-  
-  // Find the user data in our database that matches the logged-in Firebase user
+  const { 
+    currentUser, users, appointments, vehicles, addVehicle, removeVehicle, settings, processReferral, services,
+    carMakes, carModels, fuelTypes
+  } = useData();
+  const [referralInput, setReferralInput] = useState("");
+  const [isAddingVehicle, setIsAddingVehicle] = useState(false);
+  const [newVehicle, setNewVehicle] = useState({
+    make: "",
+    model: "",
+    year: new Date().getFullYear().toString(),
+    fuelType: "Petrol",
+    licensePlate: "",
+  });
+
+  const filteredModels = carModels.filter(m => m.make === newVehicle.make);
+
   const user = users.find(u => u.email === currentUser?.email) || {
     id: currentUser?.uid || "demo",
     name: currentUser?.displayName || currentUser?.email?.split('@')[0] || "User",
@@ -23,11 +41,10 @@ export function Profile() {
     verified: !!currentUser?.emailVerified
   };
 
-  const [referralInput, setReferralInput] = useState("");
-
-  const userAppointments = appointments.filter(app => 
-    app.email === user.email || app.phone === user.phone
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const userAppointments = appointments.filter(a => a.email === currentUser?.email || a.phone === user.phone)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  const userVehicles = vehicles.filter(v => v.userId === user?.id);
 
   const getServiceTitle = (serviceId: string) => {
     return services.find(s => s.id === serviceId)?.title || serviceId;
@@ -43,24 +60,67 @@ export function Profile() {
     }
   };
 
-  const copyReferralCode = () => {
-    navigator.clipboard.writeText(user.referralCode);
-    toast.success("Referral code copied!");
+  const handleCopyReferral = () => {
+    if (user?.referralCode) {
+      navigator.clipboard.writeText(user.referralCode);
+      toast.success("Referral code copied!");
+    }
   };
 
   const handleApplyReferral = () => {
-    if (!referralInput) {
-      toast.error("Please enter a referral code");
-      return;
+    if (!referralInput.trim()) return;
+    if (user) {
+      processReferral(referralInput, user.id);
+      setReferralInput("");
+      toast.success("Referral code applied!");
     }
-    if (referralInput === user.referralCode) {
-      toast.error("You cannot use your own referral code");
-      return;
-    }
-    processReferral(referralInput, user.id);
-    setReferralInput("");
-    toast.success("Referral code applied successfully!");
   };
+
+  const handleAddVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    try {
+      addVehicle({
+        userId: user.id,
+        ...newVehicle
+      });
+      setIsAddingVehicle(false);
+      setNewVehicle({
+        make: "",
+        model: "",
+        year: "",
+        fuelType: "Petrol",
+        licensePlate: "",
+      });
+      toast.success("Vehicle added successfully!");
+    } catch (error) {
+      toast.error("Failed to add vehicle");
+    }
+  };
+
+  const handleRemoveVehicle = async (id: string) => {
+    try {
+      removeVehicle(id);
+      toast.success("Vehicle removed");
+    } catch (error) {
+      toast.error("Failed to remove vehicle");
+    }
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+        <div className="p-4 bg-slate-50 rounded-full">
+          <User className="h-12 w-12 text-slate-300" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Please login to view your profile</h2>
+        <Button asChild className="bg-primary rounded-xl px-8">
+          <a href="/login">Login Now</a>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-primary/10 py-24">
@@ -101,7 +161,7 @@ export function Profile() {
 
           {/* Bento Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Refer & Earn Card */}
+            {/* My Vehicles Card */}
             <motion.div 
               whileHover={{ y: -5 }}
               className="lg:col-span-2 bg-white border border-slate-200 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-xl shadow-slate-200/50"
@@ -109,93 +169,209 @@ export function Profile() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -mr-32 -mt-32 group-hover:bg-primary/10 transition-colors" />
               
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <Gift className="h-5 w-5 text-emerald-600" />
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Car className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900">My Vehicles</h3>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900">Refer & Earn Rewards</h3>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                    onClick={() => setIsAddingVehicle(!isAddingVehicle)}
+                  >
+                    {isAddingVehicle ? <XCircle className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                    {isAddingVehicle ? "Cancel" : "Add Vehicle"}
+                  </Button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-12">
-                  <div className="space-y-6">
-                    <p className="text-slate-600 leading-relaxed">
-                      Share your unique code with friends. When they join, you both get <span className="text-emerald-600 font-bold">₹{settings.referralRewardAmount}</span> in your wallets!
-                    </p>
-                    
-                    <div className="space-y-3">
-                      <label className="text-xs text-slate-400 uppercase font-bold tracking-widest">Your Referral Code</label>
-                      <div className="flex gap-3">
-                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 font-mono text-xl flex items-center justify-between group/code">
-                          <span className="text-primary tracking-wider">{user.referralCode}</span>
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500 opacity-0 group-hover/code:opacity-100 transition-opacity" />
+                <AnimatePresence>
+                  {isAddingVehicle && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100"
+                    >
+                      <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Make</label>
+                          <select 
+                            className="w-full h-12 bg-white border border-slate-200 rounded-2xl text-sm font-bold uppercase px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                            value={newVehicle.make}
+                            onChange={e => setNewVehicle({...newVehicle, make: e.target.value, model: ""})}
+                            required
+                          >
+                            <option value="">Select Make</option>
+                            {carMakes.map(make => (
+                              <option key={make.name} value={make.name}>{make.name}</option>
+                            ))}
+                          </select>
                         </div>
-                        <Button 
-                          className="h-auto px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-900"
-                          onClick={copyReferralCode}
-                        >
-                          <Copy className="h-5 w-5" />
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Model</label>
+                          <select 
+                            className="w-full h-12 bg-white border border-slate-200 rounded-2xl text-sm font-bold uppercase px-4 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50"
+                            value={newVehicle.model}
+                            onChange={e => setNewVehicle({...newVehicle, model: e.target.value})}
+                            required
+                            disabled={!newVehicle.make}
+                          >
+                            <option value="">Select Model</option>
+                            {filteredModels.map(model => (
+                              <option key={model.name} value={model.name}>{model.name}</option>
+                            ))}
+                            {!filteredModels.length && newVehicle.make && (
+                              <option value="Other">Other</option>
+                            )}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Year</label>
+                          <Input 
+                            placeholder="2023" 
+                            type="number"
+                            min="1990"
+                            max={new Date().getFullYear()}
+                            value={newVehicle.year}
+                            onChange={e => setNewVehicle({...newVehicle, year: e.target.value})}
+                            className="h-12 bg-white border-slate-200 rounded-2xl text-sm font-bold uppercase"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Fuel Type</label>
+                          <select 
+                            className="w-full h-12 bg-white border border-slate-200 rounded-2xl text-sm font-bold uppercase px-4 focus:ring-2 focus:ring-primary/20 outline-none"
+                            value={newVehicle.fuelType}
+                            onChange={e => setNewVehicle({...newVehicle, fuelType: e.target.value})}
+                          >
+                            {fuelTypes.map(fuel => (
+                              <option key={fuel.name} value={fuel.name}>{fuel.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">License Plate</label>
+                          <Input 
+                            placeholder="DL 01 AB 1234" 
+                            value={newVehicle.licensePlate}
+                            onChange={e => setNewVehicle({...newVehicle, licensePlate: e.target.value.toUpperCase()})}
+                            className="h-12 bg-white border-slate-200 rounded-2xl text-sm font-bold uppercase"
+                          />
+                        </div>
+                        <Button type="submit" className="md:col-span-2 h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold text-lg shadow-lg shadow-primary/20">
+                          Register Vehicle
                         </Button>
-                      </div>
-                    </div>
-                  </div>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                  <div className="flex flex-col justify-center items-center p-8 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div className="text-5xl font-bold text-slate-900 mb-2">{user.referralsCount || 0}</div>
-                    <div className="text-slate-400 font-bold uppercase tracking-widest text-xs">Total Referrals</div>
-                    <div className="mt-6 flex -space-x-3">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="h-10 w-10 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                          {String.fromCharCode(64 + i)}
-                        </div>
-                      ))}
-                      <div className="h-10 w-10 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[10px] font-bold text-white">
-                        +{user.referralsCount || 0}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userVehicles.map((vehicle) => (
+                    <motion.div 
+                      key={vehicle.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-4 group hover:border-primary/30 transition-all"
+                    >
+                      <div className="h-14 w-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors shadow-sm">
+                        <Car className="h-7 w-7" />
                       </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-lg font-bold text-slate-900">{vehicle.make} {vehicle.model}</h4>
+                          <button 
+                            onClick={() => handleRemoveVehicle(vehicle.id)}
+                            className="text-slate-300 hover:text-primary transition-colors p-1"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 px-2 py-0.5 rounded-lg">
+                            {vehicle.fuelType}
+                          </span>
+                          {vehicle.licensePlate && (
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 px-2 py-0.5 rounded-lg">
+                              {vehicle.licensePlate}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {userVehicles.length === 0 && !isAddingVehicle && (
+                    <div className="md:col-span-2 py-12 text-center space-y-4">
+                      <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto">
+                        <Car className="h-10 w-10 text-slate-200" />
+                      </div>
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No vehicles registered yet</p>
+                      <Button 
+                        variant="link" 
+                        className="text-primary font-bold uppercase tracking-widest"
+                        onClick={() => setIsAddingVehicle(true)}
+                      >
+                        Add your first car
+                      </Button>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </motion.div>
 
-            {/* Apply Referral Card */}
+            {/* Refer & Earn Card */}
             <motion.div 
               whileHover={{ y: -5 }}
               className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex flex-col shadow-xl shadow-slate-200/50"
             >
               <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <Gift className="h-5 w-5 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Redeem Code</h3>
+                <h3 className="text-xl font-bold text-slate-900">Refer & Earn</h3>
               </div>
               
               <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                Enter a friend's referral code to link accounts and unlock exclusive benefits.
+                Invite friends to join CarMechs. You'll both get <span className="text-emerald-600 font-bold">₹{settings.referralRewardAmount}</span> when they sign up!
               </p>
 
-              <div className="space-y-4 mt-auto">
-                <Input 
-                  placeholder="ENTER CODE" 
-                  value={referralInput}
-                  onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
-                  className="h-14 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-xl tracking-[0.2em] uppercase focus:ring-primary text-slate-900"
-                />
-                <Button 
-                  className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
-                  onClick={handleApplyReferral}
-                >
-                  Apply Now
-                </Button>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  Instant Wallet Credit
+              <div className="space-y-6 mt-auto">
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Your Code</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 font-mono text-lg flex items-center justify-center text-primary font-bold">
+                      {user.referralCode}
+                    </div>
+                    <Button 
+                      variant="outline"
+                      className="h-auto px-4 rounded-2xl border-slate-200"
+                      onClick={handleCopyReferral}
+                    >
+                      <Copy className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  No Expiry Balance
+
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Apply Code</label>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="CODE" 
+                      value={referralInput}
+                      onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+                      className="h-12 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-sm tracking-widest"
+                    />
+                    <Button 
+                      className="h-12 bg-slate-900 rounded-2xl px-6 font-bold text-white"
+                      onClick={handleApplyReferral}
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -315,7 +491,7 @@ export function Profile() {
                       asChild
                       className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20"
                     >
-                      <a href="/book">Book Your First Service</a>
+                      <a href="/#services">Book Your First Service</a>
                     </Button>
                   </div>
                 )}

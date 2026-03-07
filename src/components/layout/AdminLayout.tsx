@@ -75,6 +75,7 @@ export function AdminLayout() {
         { path: "/admin/categories", label: "Categories", icon: LayoutGrid },
         { path: "/admin/brands", label: "Brands", icon: Shield },
         { path: "/admin/cars", label: "Car DB", icon: Car },
+        { path: "/admin/vehicle-config", label: "Vehicle Config", icon: Settings },
       ]
     },
     {

@@ -31,6 +31,7 @@ import { Coupons as AdminCoupons } from "@/pages/admin/Coupons";
 import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
 import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
 import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
+import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
@@ -71,6 +72,7 @@ function AppRoutes() {
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="cars" element={<AdminCars />} />
+          <Route path="vehicle-config" element={<AdminVehicleConfig />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="ui-settings" element={<AdminUiSettings />} />
           <Route path="api-keys" element={<AdminApiKeys />} />

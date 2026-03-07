@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { ApiKeys } from "@/context/DataContext";
 
 export const getFirebaseAuth = (apiKeys: ApiKeys) => {
@@ -21,6 +21,7 @@ export const getFirebaseAuth = (apiKeys: ApiKeys) => {
 };
 
 export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
 
 export function getFirebaseErrorMessage(error: any): string {
   const code = error?.code;

@@ -42,6 +42,142 @@ const IconMap: Record<string, any> = {
   Star
 };
 
+function FaqSection({ section }: { section: PageSection }) {
+  const [search, setSearch] = useState("");
+  
+  const faqs = [
+    { 
+      q: "How do I book a service?", 
+      a: "You can book a service by clicking on the 'Book Now' button on our homepage or services page. Select your car make, model, and the desired service, then choose a convenient date and time slot.",
+      category: "Booking"
+    },
+    { 
+      q: "What areas do you serve?", 
+      a: "We currently serve the greater metropolitan area. You can check if we service your specific location by entering your pincode during the booking process.",
+      category: "General"
+    },
+    { 
+      q: "Do you offer pick-up and drop-off services?", 
+      a: "Yes, we offer complimentary pick-up and drop-off services for all our major service packages. Our driver will pick up your car from your specified location and return it after the service is complete.",
+      category: "Service"
+    },
+    { 
+      q: "How long does a typical service take?", 
+      a: "The duration depends on the service package. A standard periodic maintenance service typically takes 4-6 hours. Minor repairs like battery replacement or car wash can be done in under 2 hours.",
+      category: "Service"
+    },
+    {
+      q: "What is the warranty on spare parts?",
+      a: "We provide a 6-month or 10,000 km warranty (whichever comes first) on all genuine spare parts replaced at our workshops.",
+      category: "Warranty"
+    },
+    {
+      q: "Can I cancel or reschedule my booking?",
+      a: "Yes, you can cancel or reschedule your booking up to 4 hours before the scheduled time through your profile page or by calling our support.",
+      category: "Booking"
+    },
+    {
+      q: "How do I pay for the service?",
+      a: "We accept online payments via Razorpay (Credit/Debit cards, UPI, Netbanking) and Paytm. You can also choose 'Pay After Service' to pay at the time of delivery.",
+      category: "Payment"
+    },
+    {
+      q: "Is my car safe during the service?",
+      a: "Absolutely. All our workshops are under 24/7 CCTV surveillance, and your car is fully insured during the transit and service period.",
+      category: "Safety"
+    }
+  ];
+
+  const filteredFaqs = faqs.filter(f => 
+    f.q.toLowerCase().includes(search.toLowerCase()) || 
+    f.a.toLowerCase().includes(search.toLowerCase()) ||
+    f.category.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <section className="pb-32 bg-white">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-slate-900 mb-8">{section.title}</h2>
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input 
+              placeholder="Search questions..." 
+              className="pl-12 h-14 rounded-2xl border-slate-200 bg-slate-50 font-bold"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-12 shadow-2xl shadow-slate-200/50"
+        >
+          {filteredFaqs.length > 0 ? (
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {filteredFaqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`item-${index}`}
+                  className="border-slate-100 px-6 rounded-2xl hover:bg-slate-50 transition-all border group"
+                >
+                  <AccordionTrigger className="text-left text-lg font-bold hover:text-primary hover:no-underline py-6 text-slate-900">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors">
+                        <HelpCircle className="h-5 w-5 text-primary group-hover:text-white transition-colors" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">{faq.category}</span>
+                        {faq.q}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-slate-500 text-base leading-relaxed pb-8 pl-14">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <div className="text-center py-20">
+              <div className="h-20 w-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                <Search className="h-10 w-10 text-slate-200" />
+              </div>
+              <p className="text-slate-400 font-bold uppercase tracking-widest">No matching questions found</p>
+            </div>
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-20 p-12 bg-slate-900 rounded-[3rem] text-white relative overflow-hidden shadow-2xl shadow-slate-900/20"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+            <div className="max-w-md">
+              <h3 className="text-3xl font-black uppercase tracking-tight mb-4">Still have questions?</h3>
+              <p className="text-white/60 font-medium">Our support team is available 24/7 to assist you with any queries regarding your vehicle service.</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <Button className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs border-none shadow-xl shadow-primary/20">
+                Contact Support
+              </Button>
+              <Button variant="outline" className="h-16 px-10 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-xs">
+                WhatsApp Chat
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 export function DynamicPage({ slugOverride }: { slugOverride?: string }) {
   const { slug } = useParams();
   const { uiSettings, services, brands } = useData();
@@ -397,48 +533,7 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
       );
 
     case 'faq-list':
-      return (
-        <section className="pb-32 bg-white">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-slate-900">{section.title}</h2>
-            </div>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-3xl border border-slate-200 p-6 md:p-12 shadow-xl shadow-slate-200/50"
-            >
-              <Accordion type="single" collapsible className="w-full space-y-4">
-                {[
-                  { q: "How do I book a service?", a: "You can book a service by clicking on the 'Book Now' button on our homepage or services page. Select your car make, model, and the desired service, then choose a convenient date and time slot." },
-                  { q: "What areas do you serve?", a: "We currently serve the greater metropolitan area. You can check if we service your specific location by entering your pincode during the booking process." },
-                  { q: "Do you offer pick-up and drop-off services?", a: "Yes, we offer complimentary pick-up and drop-off services for all our major service packages. Our driver will pick up your car from your specified location and return it after the service is complete." },
-                  { q: "How long does a typical service take?", a: "The duration depends on the service package. A standard periodic maintenance service typically takes 4-6 hours. Minor repairs like battery replacement or car wash can be done in under 2 hours." }
-                ].map((faq, index) => (
-                  <AccordionItem 
-                    key={index} 
-                    value={`item-${index}`}
-                    className="border-slate-100 px-4 rounded-2xl hover:bg-slate-50 transition-colors"
-                  >
-                    <AccordionTrigger className="text-left text-lg font-semibold hover:text-primary hover:no-underline py-6 text-slate-900">
-                      <div className="flex items-center gap-4">
-                        <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                          <HelpCircle className="h-4 w-4 text-primary" />
-                        </div>
-                        {faq.q}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="text-slate-500 text-base leading-relaxed pb-6 pl-12">
-                      {faq.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </motion.div>
-          </div>
-        </section>
-      );
+      return <FaqSection section={section} />;
 
     case 'contact-form':
       return (

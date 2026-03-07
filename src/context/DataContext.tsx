@@ -16,6 +16,7 @@ export interface Service {
   basePrice: number; // Added for booking calculation
   iconUrl?: string;
   iconName?: string;
+  categoryId?: string;
 }
 
 export interface ServicePackage {
@@ -132,11 +133,19 @@ export interface Appointment {
   date: string;
   time: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high';
   paymentMethod?: 'razorpay' | 'paytm' | 'pay_after_service';
   paymentStatus?: 'pending' | 'paid' | 'failed';
   amount?: number;
   technicianId?: string;
   createdAt: string;
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+  specialty: string;
+  status: 'available' | 'busy' | 'off';
 }
 
 export interface User {
@@ -152,6 +161,21 @@ export interface User {
   referralCode: string;
   referredBy?: string;
   referralsCount: number;
+  source?: 'google' | 'social' | 'referral' | 'direct' | 'other';
+  createdAt: string;
+}
+
+export interface Vehicle {
+  id: string;
+  userId: string;
+  make: string;
+  model: string;
+  year: string;
+  fuelType: string;
+  licensePlate: string;
+  vin?: string;
+  lastServiceDate?: string;
+  createdAt: string;
 }
 
 export interface Feature {
@@ -196,6 +220,7 @@ export interface UserLoginUiSettings {
   loginAccentColor: string;
   loginLogoUrl?: string;
   showGoogleLogin: boolean;
+  showFacebookLogin: boolean;
   showPhoneLogin: boolean;
 }
 
@@ -239,6 +264,7 @@ interface DataContextType {
   settings: Settings;
   appointments: Appointment[];
   users: User[];
+  vehicles: Vehicle[];
   uiSettings: UiSettings;
   apiKeys: ApiKeys;
   brands: Brand[];
@@ -249,6 +275,7 @@ interface DataContextType {
   reviews: Review[];
   notifications: Notification[];
   servicePackages: ServicePackage[];
+  technicians: Technician[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -268,6 +295,8 @@ interface DataContextType {
   updateNotifications: (notifications: Notification[]) => void;
   updateServicePackages: (packages: ServicePackage[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
+  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt'>) => void;
+  removeVehicle: (id: string) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
   processReferral: (referralCode: string, newUserId: string) => void;
   isAdminLoggedIn: boolean;
@@ -285,9 +314,51 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 // Initial Data
 const initialServices: Service[] = [];
 const initialServicePackages: ServicePackage[] = [];
-const initialCarMakes: PricingItem[] = [];
-const initialCarModels: CarModel[] = [];
-const initialFuelTypes: PricingItem[] = [];
+const initialCarMakes: PricingItem[] = [
+  { name: "Toyota", price: 500 },
+  { name: "Honda", price: 500 },
+  { name: "BMW", price: 2000 },
+  { name: "Mercedes", price: 2500 },
+  { name: "Audi", price: 2000 },
+  { name: "Hyundai", price: 300 },
+  { name: "Tata", price: 200 },
+  { name: "Mahindra", price: 300 },
+  { name: "Volkswagen", price: 600 },
+  { name: "Skoda", price: 600 },
+  { name: "Kia", price: 400 },
+  { name: "MG", price: 500 },
+];
+const initialCarModels: CarModel[] = [
+  { name: "Corolla", make: "Toyota", price: 0 },
+  { name: "Camry", make: "Toyota", price: 500 },
+  { name: "Fortuner", make: "Toyota", price: 1000 },
+  { name: "Civic", make: "Honda", price: 0 },
+  { name: "City", make: "Honda", price: 0 },
+  { name: "Accord", make: "Honda", price: 500 },
+  { name: "3 Series", make: "BMW", price: 0 },
+  { name: "5 Series", make: "BMW", price: 1000 },
+  { name: "7 Series", make: "BMW", price: 2000 },
+  { name: "C-Class", make: "Mercedes", price: 0 },
+  { name: "E-Class", make: "Mercedes", price: 1000 },
+  { name: "S-Class", make: "Mercedes", price: 2000 },
+  { name: "A4", make: "Audi", price: 0 },
+  { name: "A6", make: "Audi", price: 1000 },
+  { name: "Q7", make: "Audi", price: 2000 },
+  { name: "Creta", make: "Hyundai", price: 0 },
+  { name: "Verna", make: "Hyundai", price: 0 },
+  { name: "Nexon", make: "Tata", price: 0 },
+  { name: "Harrier", make: "Tata", price: 500 },
+  { name: "Safari", make: "Tata", price: 700 },
+  { name: "Thar", make: "Mahindra", price: 0 },
+  { name: "XUV700", make: "Mahindra", price: 500 },
+];
+const initialFuelTypes: PricingItem[] = [
+  { name: "Petrol", price: 0 },
+  { name: "Diesel", price: 300 },
+  { name: "Electric", price: 800 },
+  { name: "CNG", price: 200 },
+  { name: "Hybrid", price: 600 },
+];
 const initialSettings: Settings = {
   logoText: "",
   logoUrl: "",
@@ -331,6 +402,7 @@ const initialUiSettings: UiSettings = {
     loginBgColor: "#050505",
     loginAccentColor: "#3b82f6",
     showGoogleLogin: true,
+    showFacebookLogin: true,
     showPhoneLogin: true
   },
   pages: [
@@ -401,6 +473,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [users, setUsers] = useState<User[]>(initialUsers);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
   const [apiKeys, setApiKeys] = useState<ApiKeys>(initialApiKeys);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -411,6 +484,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [servicePackages, setServicePackages] = useState<ServicePackage[]>(initialServicePackages);
+  const [technicians, setTechnicians] = useState<Technician[]>([
+    { id: 'tech1', name: 'Rajesh Kumar', specialty: 'Engine Specialist', status: 'available' },
+    { id: 'tech2', name: 'Amit Singh', specialty: 'Electrical Expert', status: 'busy' },
+    { id: 'tech3', name: 'Suresh Raina', specialty: 'Body & Paint', status: 'available' },
+    { id: 'tech4', name: 'Vijay Verma', specialty: 'AC Specialist', status: 'off' },
+  ]);
   const [isLoading, setIsLoading] = useState(true);
   const [missingTables, setMissingTables] = useState<string[]>([]);
 
@@ -463,6 +542,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setSettings(state.settings);
           setAppointments(state.appointments);
           setUsers(state.users);
+          setVehicles(state.vehicles || []);
           setUiSettings(prev => ({
             ...prev,
             ...state.uiSettings,
@@ -510,6 +590,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'service_packages' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => fetchInitialData())
         .subscribe();
 
       return () => {
@@ -532,6 +613,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setSettings(state.settings);
       setAppointments(state.appointments);
       setUsers(state.users);
+      setVehicles(state.vehicles || []);
       setUiSettings({
         ...initialUiSettings,
         ...state.uiSettings,
@@ -563,6 +645,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('settings_updated', (newSettings) => setSettings(newSettings));
     newSocket.on('appointments_updated', (newAppointments) => setAppointments(newAppointments));
     newSocket.on('users_updated', (newUsers) => setUsers(newUsers));
+    newSocket.on('vehicles_updated', (newVehicles) => setVehicles(newVehicles));
     newSocket.on('ui_settings_updated', (newUiSettings) => setUiSettings(newUiSettings));
     newSocket.on('api_keys_updated', (newApiKeys) => setApiKeys(newApiKeys));
     newSocket.on('brands_updated', (newBrands) => setBrands(newBrands));
@@ -692,6 +775,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addVehicle = async (vehicle: Omit<Vehicle, "id" | "createdAt">) => {
+    try {
+      const id = `veh_${Date.now()}`;
+      const newVehicle = {
+        id,
+        user_id: vehicle.userId,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        fuel_type: vehicle.fuelType,
+        license_plate: vehicle.licensePlate,
+        vin: vehicle.vin,
+        last_service_date: vehicle.lastServiceDate,
+        created_at: new Date().toISOString()
+      };
+      const { error } = await supabase.from('vehicles').insert([newVehicle]);
+      if (error) throw error;
+      setVehicles(prev => [...prev, { ...vehicle, id, createdAt: newVehicle.created_at }]);
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      throw error;
+    }
+  };
+
+  const removeVehicle = async (id: string) => {
+    try {
+      const { error } = await supabase.from('vehicles').delete().eq('id', id);
+      if (error) throw error;
+      setVehicles(prev => prev.filter(v => v.id !== id));
+    } catch (error) {
+      console.error("Error removing vehicle:", error);
+      throw error;
+    }
+  };
+
   const updateLocations = (newLocations: Location[]) => {
     setLocations(newLocations);
     if (socket?.connected) {
@@ -793,11 +911,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
+  const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => {
     const newAppointment: Appointment = {
       ...appointment,
       id: Math.random().toString(36).substring(2, 9),
       status: 'pending',
+      priority: 'medium',
       paymentStatus: appointment.paymentMethod === 'pay_after_service' ? 'pending' : 'paid',
       createdAt: new Date().toISOString()
     };
@@ -839,6 +958,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       reviews,
       notifications,
       servicePackages,
+      technicians,
+      vehicles,
       updateServices,
       updateCarMakes,
       updateCarModels,
@@ -858,6 +979,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateNotifications,
       updateServicePackages,
       addAppointment,
+      addVehicle,
+      removeVehicle,
       updateWalletBalance,
       processReferral,
       isAdminLoggedIn,

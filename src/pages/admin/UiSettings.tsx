@@ -532,6 +532,18 @@ export function UiSettingsPage() {
                               />
                             </div>
                             <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Enable Facebook Login</label>
+                              <input 
+                                type="checkbox" 
+                                checked={formData.userLogin.showFacebookLogin}
+                                onChange={(e) => setFormData({
+                                  ...formData, 
+                                  userLogin: { ...formData.userLogin, showFacebookLogin: e.target.checked }
+                                })}
+                                className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
+                              />
+                            </div>
+                            <div className="flex items-center justify-between">
                               <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Enable Phone Login</label>
                               <input 
                                 type="checkbox" 
@@ -576,9 +588,10 @@ export function UiSettingsPage() {
                           <div className="h-8 bg-white/10 rounded-lg border border-white/10" />
                           <div className="h-10 rounded-lg" style={{ backgroundColor: formData.userLogin.loginAccentColor }} />
                           
-                          {(formData.userLogin.showGoogleLogin || formData.userLogin.showPhoneLogin) && (
+                          {(formData.userLogin.showGoogleLogin || formData.userLogin.showFacebookLogin || formData.userLogin.showPhoneLogin) && (
                             <div className="pt-4 space-y-2">
                               {formData.userLogin.showGoogleLogin && <div className="h-8 bg-white/5 rounded-lg border border-white/5" />}
+                              {formData.userLogin.showFacebookLogin && <div className="h-8 bg-white/5 rounded-lg border border-white/5" />}
                               {formData.userLogin.showPhoneLogin && <div className="h-8 bg-white/5 rounded-lg border border-white/5" />}
                             </div>
                           )}

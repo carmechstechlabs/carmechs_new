@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, IndianRupee, Info, ChevronRight } from "lucide-react";
+import { CheckCircle2, Clock, IndianRupee, Info, ChevronRight, Car } from "lucide-react";
 import { ReactNode } from "react";
 import { useData } from "@/context/DataContext";
 
@@ -118,24 +118,47 @@ export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehi
             </div>
           )}
 
-          <div>
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              Included Checks & Services
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {isVehicleSelected && (
-                <div className="flex items-start gap-2 text-sm text-primary font-bold">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span>{vehicleDetails?.make} {vehicleDetails?.model} Specific Inspection</span>
-                </div>
-              )}
-              {service.checks.map((check, index) => (
-                <div key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span>{check}</span>
-                </div>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center gap-2 text-slate-900">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                Key Features
+              </h4>
+              <div className="space-y-3">
+                {service.features.map((feature, index) => (
+                  <div key={index} className="flex items-start gap-3 text-sm text-slate-600">
+                    <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                    </div>
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center gap-2 text-slate-900">
+                <Info className="h-5 w-5 text-primary" />
+                Included Checks
+              </h4>
+              <div className="space-y-3">
+                {isVehicleSelected && (
+                  <div className="flex items-start gap-3 text-sm text-primary font-bold bg-primary/5 p-2 rounded-lg border border-primary/10">
+                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Car className="h-3 w-3 text-primary" />
+                    </div>
+                    <span>{vehicleDetails?.make} {vehicleDetails?.model} Specific Inspection</span>
+                  </div>
+                )}
+                {service.checks.map((check, index) => (
+                  <div key={index} className="flex items-start gap-3 text-sm text-slate-600">
+                    <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    </div>
+                    <span>{check}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

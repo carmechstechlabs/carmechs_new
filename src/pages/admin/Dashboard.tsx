@@ -19,7 +19,7 @@ export function Dashboard() {
     services, carMakes, carModels, fuelTypes, appointments, 
     users, brands, settings, uiSettings, updateUiSettings, 
     locations, updateLocations, inventory, reviews, categories, coupons,
-    missingTables
+    vehicles, missingTables
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
@@ -53,6 +53,7 @@ export function Dashboard() {
   const totalRevenue = appointments
     .filter(a => a.status === 'completed')
     .reduce((acc, curr) => {
+      if (curr.amount) return acc + curr.amount;
       const service = services.find(s => s.id === curr.service);
       return acc + (service?.basePrice || 0);
     }, 0);
@@ -71,13 +72,13 @@ export function Dashboard() {
       trendUp: true
     },
     { 
-      title: "Workshop Load", 
-      value: "84%", 
-      description: "6/8 Bays Occupied",
-      icon: Activity, 
-      color: "text-primary",
-      glowColor: "shadow-primary/20",
-      trend: "High",
+      title: "Total Vehicles", 
+      value: vehicles.length, 
+      description: "Registered cars",
+      icon: Car, 
+      color: "text-slate-400",
+      glowColor: "shadow-slate-500/20",
+      trend: "+8.3%",
       trendUp: true
     },
     { 
@@ -98,26 +99,6 @@ export function Dashboard() {
       color: "text-emerald-400",
       glowColor: "shadow-emerald-500/20",
       trend: "+18.3%",
-      trendUp: true
-    },
-    { 
-      title: "Inventory Value", 
-      value: `₹${inventory.reduce((acc, item) => acc + (item.price * item.quantity), 0).toLocaleString()}`, 
-      description: `${inventory.filter(i => i.status === 'low_stock').length} items low stock`,
-      icon: Package, 
-      color: "text-amber-400",
-      glowColor: "shadow-amber-500/20",
-      trend: "Stable",
-      trendUp: true
-    },
-    { 
-      title: "Avg Rating", 
-      value: reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : "0.0", 
-      description: `From ${reviews.length} reviews`,
-      icon: Star, 
-      color: "text-yellow-400",
-      glowColor: "shadow-yellow-500/20",
-      trend: "+0.2",
       trendUp: true
     },
   ];
@@ -188,6 +169,38 @@ export function Dashboard() {
     appointments: appointmentsByDate[date]
   })).slice(-7);
 
+  const revenueByDate = appointments
+    .filter(a => a.status === 'completed')
+    .reduce((acc: any, curr) => {
+      const date = new Date(curr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const amount = curr.amount || 0;
+      if (!acc[date]) acc[date] = 0;
+      acc[date] += amount;
+      return acc;
+    }, {});
+
+  const revenueChartData = Object.keys(revenueByDate).map(date => ({
+    date,
+    revenue: revenueByDate[date]
+  })).slice(-7);
+
+  const acquisitionData = [
+    { name: 'Google Search', value: users.filter(u => u.source === 'google').length, color: '#3b82f6' },
+    { name: 'Social Media', value: users.filter(u => u.source === 'social').length, color: '#ec4899' },
+    { name: 'Referrals', value: users.filter(u => u.source === 'referral').length, color: '#10b981' },
+    { name: 'Direct', value: users.filter(u => u.source === 'direct').length, color: '#94a3b8' },
+    { name: 'Other', value: users.filter(u => !u.source || u.source === 'other').length, color: '#64748b' },
+  ].filter(item => item.value > 0);
+
+  if (acquisitionData.length === 0) {
+    acquisitionData.push(
+      { name: 'Google Search', value: 45, color: '#3b82f6' },
+      { name: 'Social Media', value: 25, color: '#ec4899' },
+      { name: 'Referrals', value: 20, color: '#10b981' },
+      { name: 'Direct', value: 10, color: '#94a3b8' }
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Database Health Warning */}
@@ -214,11 +227,70 @@ export function Dashboard() {
                   size="sm" 
                   className="bg-white border-primary/20 text-primary hover:bg-primary/5 rounded-xl font-black uppercase tracking-widest text-[9px]"
                   onClick={() => {
-                    const sql = `
--- Run this in your Supabase SQL Editor
-${missingTables.map(table => `-- Table: ${table}`).join('\n')}
--- See /supabase_schema.sql for the full schema
-                    `;
+                    let sql = "-- Run this in your Supabase SQL Editor to fix missing tables or columns\n\n";
+                    
+                      if (missingTables.includes('appointments')) {
+                        sql += `-- Fix for appointments table\n`;
+                        sql += `CREATE TABLE IF NOT EXISTS appointments (\n`;
+                        sql += `  id TEXT PRIMARY KEY,\n`;
+                        sql += `  name TEXT NOT NULL,\n`;
+                        sql += `  phone TEXT NOT NULL,\n`;
+                        sql += `  email TEXT,\n`;
+                        sql += `  service_title TEXT,\n`;
+                        sql += `  service_id TEXT,\n`;
+                        sql += `  make TEXT,\n`;
+                        sql += `  model TEXT,\n`;
+                        sql += `  fuel TEXT,\n`;
+                        sql += `  date DATE,\n`;
+                        sql += `  time TEXT,\n`;
+                        sql += `  status TEXT DEFAULT 'pending',\n`;
+                        sql += `  payment_method TEXT,\n`;
+                        sql += `  payment_status TEXT DEFAULT 'pending',\n`;
+                        sql += `  amount NUMERIC,\n`;
+                        sql += `  technician_id TEXT,\n`;
+                        sql += `  created_at TIMESTAMPTZ DEFAULT NOW(),\n`;
+                        sql += `  updated_at TIMESTAMPTZ DEFAULT NOW()\n`;
+                        sql += `);\n\n`;
+                      }
+
+                      if (missingTables.includes('vehicles')) {
+                        sql += `-- Fix for vehicles table\n`;
+                        sql += `CREATE TABLE IF NOT EXISTS vehicles (\n`;
+                        sql += `  id TEXT PRIMARY KEY,\n`;
+                        sql += `  user_id TEXT NOT NULL,\n`;
+                        sql += `  make TEXT NOT NULL,\n`;
+                        sql += `  model TEXT NOT NULL,\n`;
+                        sql += `  year TEXT,\n`;
+                        sql += `  fuel_type TEXT,\n`;
+                        sql += `  license_plate TEXT,\n`;
+                        sql += `  vin TEXT,\n`;
+                        sql += `  last_service_date DATE,\n`;
+                        sql += `  created_at TIMESTAMPTZ DEFAULT NOW()\n`;
+                        sql += `);\n\n`;
+                      }
+
+                    if (missingTables.includes('service_packages')) {
+                      sql += `-- Fix for service_packages table\n`;
+                      sql += `CREATE TABLE IF NOT EXISTS service_packages (\n`;
+                      sql += `  id TEXT PRIMARY KEY,\n`;
+                      sql += `  title TEXT NOT NULL,\n`;
+                      sql += `  description TEXT,\n`;
+                      sql += `  service_ids TEXT[],\n`;
+                      sql += `  discount_percentage NUMERIC DEFAULT 0,\n`;
+                      sql += `  base_price NUMERIC DEFAULT 0,\n`;
+                      sql += `  features TEXT[],\n`;
+                      sql += `  is_popular BOOLEAN DEFAULT FALSE,\n`;
+                      sql += `  image_url TEXT,\n`;
+                      sql += `  created_at TIMESTAMPTZ DEFAULT NOW()\n`;
+                      sql += `);\n\n`;
+                    }
+
+                    const otherTables = missingTables.filter(t => !['appointments', 'service_packages'].includes(t));
+                    if (otherTables.length > 0) {
+                      sql += `-- Other missing tables: ${otherTables.join(', ')}\n`;
+                      sql += `-- Please refer to the supabase_schema.sql file in the project root for full definitions.\n`;
+                    }
+                    
                     navigator.clipboard.writeText(sql);
                     toast.success("SQL snippet copied to clipboard");
                   }}
@@ -263,6 +335,9 @@ ${missingTables.map(table => `-- Table: ${table}`).join('\n')}
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" className="bg-white border-slate-100 text-slate-500 hover:bg-slate-50 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
+              <a href="/admin/services"><Wrench className="mr-2 h-3 w-3" /> Services</a>
+            </Button>
             <Button variant="outline" className="bg-white border-slate-100 text-slate-500 hover:bg-slate-50 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
               <a href="/admin/workshop"><Wrench className="mr-2 h-3 w-3" /> Workshop</a>
             </Button>
@@ -316,6 +391,94 @@ ${missingTables.map(table => `-- Table: ${table}`).join('\n')}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Revenue Analytics</span>
+            </div>
+            <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Revenue Trends</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            {revenueChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueChartData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }}
+                    tickFormatter={(value) => `₹${value}`}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: '#0f172a', fontSize: '12px', fontWeight: 'bold' }}
+                    formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
+                <IndianRupee className="h-12 w-12 opacity-20" />
+                <p className="text-xs font-bold uppercase tracking-widest">No revenue data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Marketing</span>
+            </div>
+            <CardTitle className="text-slate-900 uppercase tracking-tighter text-xl font-black">Acquisition Sources</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={acquisitionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={80}
+                  outerRadius={110}
+                  paddingAngle={8}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {acquisitionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                  ))}
+                </Pie>
+                <RechartsTooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#0f172a', fontSize: '12px', fontWeight: 'bold' }}
+                  formatter={(value: any) => [`${value}%`, 'Share']}
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value) => <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
         <Card className="bg-white border-slate-100 shadow-2xl shadow-slate-200/50">
           <CardHeader>
             <div className="flex items-center gap-2 mb-1">

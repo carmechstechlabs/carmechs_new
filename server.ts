@@ -284,6 +284,7 @@ const initialAppointments = [
     date: new Date().toISOString(),
     time: "10:00 AM",
     status: "confirmed",
+    priority: "high",
     amount: 1999,
     technicianId: "1",
     createdAt: new Date().toISOString()
@@ -300,6 +301,7 @@ const initialAppointments = [
     date: new Date().toISOString(),
     time: "02:00 PM",
     status: "pending",
+    priority: "medium",
     amount: 1200,
     createdAt: new Date().toISOString()
   }
@@ -378,6 +380,31 @@ async function startServer() {
   try {
     if (supabase) {
       console.log("Supabase client initialized, fetching initial state...");
+      
+      // Ensure 'uploads' bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      if (bucketsError) {
+        console.error("Error listing buckets:", bucketsError);
+      } else {
+        const bucket = buckets.find(b => b.name === 'uploads');
+        if (!bucket) {
+          console.log("Creating 'uploads' bucket in Supabase storage...");
+          const { error: createError } = await supabase.storage.createBucket('uploads', {
+            public: true,
+            allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+            fileSizeLimit: 5242880 // 5MB
+          });
+          if (createError) {
+            console.error("Error creating 'uploads' bucket:", createError);
+          } else {
+            console.log("'uploads' bucket created successfully");
+          }
+        } else if (!bucket.public) {
+          console.log("Updating 'uploads' bucket to be public...");
+          await supabase.storage.updateBucket('uploads', { public: true });
+        }
+      }
+
       const dbState = await getInitialState();
       if (dbState) {
         // Merge with current state, prioritizing DB data if it exists
@@ -620,6 +647,25 @@ async function startServer() {
           });
 
         if (error) {
+          if (error.message.includes('Bucket not found')) {
+            console.log("Bucket 'uploads' not found during upload, attempting to create it...");
+            await supabase.storage.createBucket('uploads', { public: true });
+            // Retry upload
+            const { data: retryData, error: retryError } = await supabase.storage
+              .from('uploads')
+              .upload(fileName, fileContent, {
+                contentType: req.file.mimetype,
+                upsert: true
+              });
+            
+            if (!retryError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('uploads')
+                .getPublicUrl(fileName);
+              fs.unlinkSync(req.file.path);
+              return res.json({ url: publicUrl });
+            }
+          }
           console.error("Supabase storage upload error:", error);
           // Fallback to local URL if Supabase fails but file is saved locally
           const localUrl = `/uploads/${req.file.filename}`;

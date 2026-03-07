@@ -111,7 +111,9 @@ export function Users() {
         blocked: userFormData.blocked || false,
         walletBalance: userFormData.walletBalance || 0,
         referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        referralsCount: 0
+        referralsCount: 0,
+        source: 'direct',
+        createdAt: new Date().toISOString()
       };
       updateUsers([userToCreate, ...users]);
       toast.success("User created successfully");

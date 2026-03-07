@@ -423,13 +423,21 @@ export function Booking() {
                           key={model.name}
                           onClick={() => setFormData({ ...formData, model: model.name })}
                           className={cn(
-                            "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
+                            "h-14 rounded-xl border text-xs font-black uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-1",
                             formData.model === model.name 
                               ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
                               : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                           )}
                         >
-                          {model.name}
+                          <span>{model.name}</span>
+                          {model.price > 0 && (
+                            <span className={cn(
+                              "text-[8px] font-bold",
+                              formData.model === model.name ? "text-white/70" : "text-primary/60"
+                            )}>
+                              +₹{model.price}
+                            </span>
+                          )}
                         </button>
                       ))}
                       {!formData.make && (
@@ -450,13 +458,21 @@ export function Booking() {
                           key={fuel.name}
                           onClick={() => setFormData({ ...formData, fuel: fuel.name })}
                           className={cn(
-                            "px-6 h-12 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all",
+                            "px-6 h-12 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2",
                             formData.fuel === fuel.name 
                               ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
                               : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
                           )}
                         >
                           {fuel.name}
+                          {fuel.price > 0 && (
+                            <span className={cn(
+                              "text-[8px] font-bold",
+                              formData.fuel === fuel.name ? "text-white/70" : "text-primary/60"
+                            )}>
+                              +₹{fuel.price}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -748,66 +764,144 @@ export function Booking() {
               >
                 <div>
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Finalization</h2>
-                  <p className="text-slate-500 font-medium">Select your preferred transaction gateway.</p>
+                  <p className="text-slate-500 font-medium">Review your service details and select a transaction gateway.</p>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-4">
-                  {[
-                    { id: 'razorpay', title: 'Razorpay', desc: 'Cards, Netbanking, UPI', icon: CreditCard, color: 'blue' },
-                    { id: 'paytm', title: 'Paytm', desc: 'Wallet, UPI, Bank', icon: CreditCard, color: 'sky' },
-                    { id: 'pay_after_service', title: 'Pay After Service', desc: 'Doorstep Settlement', icon: Clock, color: 'slate' }
-                  ].map((method) => (
-                    <button
-                      key={method.id}
-                      onClick={() => setFormData({ ...formData, paymentMethod: method.id as any })}
-                      className={cn(
-                        "p-8 rounded-3xl border text-left transition-all flex items-center gap-6 group",
-                        formData.paymentMethod === method.id 
-                          ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
-                          : "border-slate-100 bg-slate-50 hover:border-primary/30"
-                      )}
-                    >
-                      <div className={cn(
-                        "h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
-                        formData.paymentMethod === method.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
-                      )}>
-                        <method.icon className="h-8 w-8" />
-                      </div>
-                      <div>
-                        <p className={cn(
-                          "text-2xl font-black uppercase tracking-tight",
-                          formData.paymentMethod === method.id ? "text-primary" : "text-slate-900"
-                        )}>{method.title}</p>
-                        <p className="text-sm font-medium text-slate-500">{method.desc}</p>
-                      </div>
-                      {formData.paymentMethod === method.id && (
-                        <div className="ml-auto h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white">
-                          <Check className="h-5 w-5 stroke-[3]" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-8 flex items-center gap-2">
+                        <Sparkles className="h-3 w-3" /> Booking Summary
+                      </h3>
+                      
+                      <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                            <Car className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Vehicle</p>
+                            <p className="text-lg font-black uppercase tracking-tight">{formData.make} {formData.model}</p>
+                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{formData.fuel}</p>
+                          </div>
                         </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
 
-                {user && user.walletBalance > 0 && (
-                  <div className="p-8 bg-emerald-50 rounded-[2.5rem] border border-emerald-100 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div className="h-14 w-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-900/5">
-                        <Wallet className="h-7 w-7" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-black uppercase tracking-tight text-slate-900">Apply Wallet Credit</p>
-                        <p className="text-sm font-medium text-emerald-700">Available Balance: ₹{user.walletBalance}</p>
+                        <div className="flex items-start gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                            <Wrench className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Service</p>
+                            <p className="text-lg font-black uppercase tracking-tight">
+                              {formData.packageId 
+                                ? servicePackages.find(p => p.id === formData.packageId)?.title 
+                                : services.find(s => s.id === formData.service)?.title}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                            <CalendarIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Schedule</p>
+                            <p className="text-lg font-black uppercase tracking-tight">{formData.date}</p>
+                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{formData.time}</p>
+                          </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-white/10 mt-6">
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Total Amount</p>
+                              <p className="text-4xl font-black text-primary tracking-tighter">
+                                ₹{(() => {
+                                  if (formData.packageId) {
+                                    return servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0;
+                                  }
+                                  const service = services.find(s => s.id === formData.service);
+                                  return service ? calculatePrice(service.basePrice) : 0;
+                                })()}
+                              </p>
+                            </div>
+                            {useWallet && (
+                              <div className="text-right">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Wallet Applied</p>
+                                <p className="text-sm font-bold text-emerald-500">-₹{(() => {
+                                  const total = formData.packageId 
+                                    ? (servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0)
+                                    : (services.find(s => s.id === formData.service) ? calculatePrice(services.find(s => s.id === formData.service)!.basePrice) : 0);
+                                  return Math.min(total, user?.walletBalance || 0);
+                                })()}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <input 
-                      type="checkbox" 
-                      checked={useWallet}
-                      onChange={(e) => setUseWallet(e.target.checked)}
-                      className="h-8 w-8 rounded-xl border-emerald-200 bg-white text-emerald-600 focus:ring-emerald-500"
-                    />
                   </div>
-                )}
+
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Select Payment Method</p>
+                    {[
+                      { id: 'razorpay', title: 'Razorpay', desc: 'Cards, Netbanking, UPI', icon: CreditCard, color: 'blue' },
+                      { id: 'paytm', title: 'Paytm', desc: 'Wallet, UPI, Bank', icon: CreditCard, color: 'sky' },
+                      { id: 'pay_after_service', title: 'Pay After Service', desc: 'Doorstep Settlement', icon: Clock, color: 'slate' }
+                    ].map((method) => (
+                      <button
+                        key={method.id}
+                        onClick={() => setFormData({ ...formData, paymentMethod: method.id as any })}
+                        className={cn(
+                          "p-6 rounded-3xl border text-left transition-all flex items-center gap-6 group w-full",
+                          formData.paymentMethod === method.id 
+                            ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" 
+                            : "border-slate-100 bg-slate-50 hover:border-primary/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "h-12 w-12 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
+                          formData.paymentMethod === method.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary"
+                        )}>
+                          <method.icon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className={cn(
+                            "text-lg font-black uppercase tracking-tight",
+                            formData.paymentMethod === method.id ? "text-primary" : "text-slate-900"
+                          )}>{method.title}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{method.desc}</p>
+                        </div>
+                        {formData.paymentMethod === method.id && (
+                          <div className="ml-auto h-6 w-6 bg-primary rounded-full flex items-center justify-center text-white">
+                            <Check className="h-4 w-4 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+
+                    {user && user.walletBalance > 0 && (
+                      <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                            <Wallet className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black uppercase tracking-tight text-slate-900">Apply Wallet Credit</p>
+                            <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Balance: ₹{user.walletBalance}</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="h-6 w-6 rounded-lg border-emerald-200 bg-white text-emerald-600 focus:ring-emerald-500"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <div className="p-10 bg-slate-900 rounded-[3rem] text-white shadow-2xl shadow-black/20 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />

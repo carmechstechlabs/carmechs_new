@@ -56,6 +56,7 @@ export async function getInitialState() {
       supabase.from('reviews').select('*'),
       supabase.from('notifications').select('*'),
       supabase.from('service_packages').select('*'),
+      supabase.from('vehicles').select('*'),
       supabase.from('users').select('*'),
       supabase.from('appointments').select('*').order('created_at', { ascending: false }),
       supabase.from('site_config').select('*')
@@ -64,7 +65,7 @@ export async function getInitialState() {
     const tableNames = [
       'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
       'inventory', 'categories', 'coupons', 'reviews', 'notifications',
-      'service_packages', 'users', 'appointments', 'site_config'
+      'service_packages', 'vehicles', 'users', 'appointments', 'site_config'
     ];
 
     const missingTables: string[] = [];
@@ -98,6 +99,7 @@ export async function getInitialState() {
       { data: reviews },
       { data: notifications },
       { data: servicePackages },
+      { data: vehicles },
       { data: users },
       { data: appointments },
       { data: config }
@@ -129,6 +131,7 @@ export async function getInitialState() {
       reviews: (reviews || []).map(toCamelCase),
       notifications: (notifications || []).map(toCamelCase),
       servicePackages: (servicePackages || []).map(toCamelCase),
+      vehicles: (vehicles || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
@@ -151,6 +154,7 @@ export async function getInitialState() {
       reviews: [],
       notifications: [],
       servicePackages: [],
+      vehicles: [],
     };
   }
 }

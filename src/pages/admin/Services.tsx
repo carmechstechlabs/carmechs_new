@@ -1,5 +1,5 @@
 import { useState, ChangeEvent } from "react";
-import { useData, Service } from "@/context/DataContext";
+import { useData, Service, ServiceCategory } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,13 @@ import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const COMMON_ICONS = [
   { name: "Zap", icon: Zap },
@@ -27,7 +34,7 @@ const COMMON_ICONS = [
 ];
 
 export function Services() {
-  const { services, updateServices, adminRole } = useData();
+  const { services, updateServices, adminRole, categories } = useData();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Service>>({});
@@ -78,6 +85,7 @@ export function Services() {
       duration: formData.duration || "",
       iconUrl: formData.iconUrl || "",
       iconName: formData.iconName || "Zap",
+      categoryId: formData.categoryId,
       features: Array.isArray(formData.features) 
         ? formData.features 
         : (formData.features as string || "").split(',').map(s => s.trim()).filter(Boolean),
@@ -187,6 +195,26 @@ export function Services() {
                         className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Category</label>
+                      <Select 
+                        value={formData.categoryId || "none"} 
+                        onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? undefined : val })}
+                      >
+                        <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-bold text-xs uppercase tracking-widest">
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200">
+                          <SelectItem value="none" className="text-xs font-bold uppercase tracking-widest">No Category</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold uppercase tracking-widest">
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -218,6 +246,14 @@ export function Services() {
                           </button>
                         ))}
                       </div>
+                      <div className="mt-2">
+                        <Input 
+                          placeholder="Custom Lucide Icon Name (e.g. Wrench, Car, Zap)" 
+                          value={formData.iconName || ""} 
+                          onChange={e => setFormData({...formData, iconName: e.target.value})}
+                          className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -238,6 +274,15 @@ export function Services() {
                         placeholder="Feature 1, Feature 2, Feature 3..." 
                         value={Array.isArray(formData.features) ? formData.features.join(", ") : (formData.features || "")} 
                         onChange={e => setFormData({...formData, features: e.target.value as any})}
+                        className="min-h-[80px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Checks (Comma Separated)</label>
+                      <Textarea 
+                        placeholder="Check 1, Check 2, Check 3..." 
+                        value={Array.isArray(formData.checks) ? formData.checks.join(", ") : (formData.checks || "")} 
+                        onChange={e => setFormData({...formData, checks: e.target.value as any})}
                         className="min-h-[80px] bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                       />
                     </div>
