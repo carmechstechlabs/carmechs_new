@@ -8,13 +8,63 @@ import {
   Save, Loader2, Palette, Image as ImageIcon, Sliders, CheckCircle2, 
   Star, Plus, Trash2, Wrench, ShieldCheck, Clock, IndianRupee, 
   Layout, Monitor, Smartphone, Eye, Settings2, FileText, 
-  ChevronRight, MoveUp, MoveDown, Globe, Lock, Terminal, Upload, MapPin
+  ChevronRight, MoveUp, MoveDown, Globe, Lock, Terminal, Upload, MapPin, Search
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "motion/react";
 import { ImageUpload } from "@/components/ImageUpload";
+
+function SeoPreview({ title, description, url, ogImage }: { title: string, description: string, url: string, ogImage?: string }) {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Google Search Preview</h4>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm max-w-2xl">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-[14px] text-[#202124]">
+              <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
+                <Globe className="h-3 w-3 text-slate-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[12px] leading-tight">CarMechs</span>
+                <span className="text-[10px] text-[#5f6368] leading-tight">{url}</span>
+              </div>
+            </div>
+            <h3 className="text-[20px] text-[#1a0dab] hover:underline cursor-pointer font-medium mt-1 leading-tight">
+              {title || "Page Title"}
+            </h3>
+            <p className="text-[14px] text-[#4d5156] mt-1 leading-normal line-clamp-2">
+              {description || "Enter a meta description to see how your page will appear in search results. This is usually between 150-160 characters."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Social Media Preview (Facebook)</h4>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm max-w-[500px] overflow-hidden">
+          <div className="aspect-[1200/630] bg-slate-100 relative overflow-hidden">
+            {ogImage ? (
+              <img src={ogImage} alt="Social Preview" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+                <ImageIcon className="h-10 w-10" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">No Image Selected</span>
+              </div>
+            )}
+          </div>
+          <div className="p-4 bg-[#f0f2f5] border-t border-slate-200">
+            <div className="text-[12px] text-[#65676b] uppercase font-medium tracking-tight mb-1">CARMECHS.RUN.APP</div>
+            <div className="text-[16px] font-bold text-[#050505] leading-tight mb-1">{title || "Page Title"}</div>
+            <div className="text-[14px] text-[#65676b] line-clamp-1">{description || "Enter a meta description..."}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function UiSettingsPage() {
   const { uiSettings, updateUiSettings, adminRole, locations, updateLocations } = useData();
@@ -155,6 +205,15 @@ export function UiSettingsPage() {
                 <TabsTrigger value="user-login" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Smartphone className="h-4 w-4 mr-2" /> User Login UI
                 </TabsTrigger>
+                <TabsTrigger value="testimonials" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Star className="h-4 w-4 mr-2" /> Testimonials
+                </TabsTrigger>
+                <TabsTrigger value="social" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Globe className="h-4 w-4 mr-2" /> Social Links
+                </TabsTrigger>
+                <TabsTrigger value="seo-defaults" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Search className="h-4 w-4 mr-2" /> SEO Defaults
+                </TabsTrigger>
                 <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <MapPin className="h-4 w-4 mr-2" /> Locations
                 </TabsTrigger>
@@ -169,6 +228,28 @@ export function UiSettingsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Display Title</label>
+                          <Input 
+                            value={formData.heroTitle} 
+                            onChange={(e) => setFormData({...formData, heroTitle: e.target.value})}
+                            className="h-12 rounded-xl font-bold"
+                            placeholder="e.g. Precision \nCar Care"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Use \n for line breaks.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Subtitle</label>
+                          <Textarea 
+                            value={formData.heroSubtitle} 
+                            onChange={(e) => setFormData({...formData, heroSubtitle: e.target.value})}
+                            className="rounded-2xl min-h-[80px]"
+                            placeholder="Enter hero description..."
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Brand Color</label>
                         <div className="flex items-center gap-4">
@@ -603,6 +684,240 @@ export function UiSettingsPage() {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="testimonials" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Customer Testimonials</h2>
+                    <p className="text-sm text-slate-500 font-medium">Manage what your customers are saying about your services.</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      const newTestimonial = { id: `test_${Date.now()}`, name: "New Customer", quote: "Excellent service!", rating: 5 };
+                      setFormData({...formData, testimonials: [...(formData.testimonials || []), newTestimonial]});
+                    }} 
+                    className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add Testimonial
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(formData.testimonials || []).map((test, idx) => (
+                    <Card key={test.id} className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden group">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-6">
+                          <ImageUpload 
+                            value={test.avatar || ""}
+                            onChange={(url) => {
+                              const newTests = [...formData.testimonials];
+                              newTests[idx].avatar = url;
+                              setFormData({...formData, testimonials: newTests});
+                            }}
+                            className="h-16 w-16 rounded-2xl"
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setFormData({...formData, testimonials: formData.testimonials.filter(t => t.id !== test.id)})}
+                            className="text-slate-300 hover:text-primary rounded-xl"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Customer Name</label>
+                            <Input 
+                              value={test.name} 
+                              onChange={(e) => {
+                                const newTests = [...formData.testimonials];
+                                newTests[idx].name = e.target.value;
+                                setFormData({...formData, testimonials: newTests});
+                              }}
+                              className="h-12 rounded-xl font-bold"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quote</label>
+                            <Textarea 
+                              value={test.quote} 
+                              onChange={(e) => {
+                                const newTests = [...formData.testimonials];
+                                newTests[idx].quote = e.target.value;
+                                setFormData({...formData, testimonials: newTests});
+                              }}
+                              className="rounded-xl min-h-[80px]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rating</label>
+                            <Input 
+                              type="number" min="1" max="5"
+                              value={test.rating} 
+                              onChange={(e) => {
+                                const newTests = [...formData.testimonials];
+                                newTests[idx].rating = parseInt(e.target.value);
+                                setFormData({...formData, testimonials: newTests});
+                              }}
+                              className="h-12 rounded-xl font-bold"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="social" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Social Media Links</h2>
+                    <p className="text-sm text-slate-500 font-medium">Connect your profiles to the footer section.</p>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      const newLink = { platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" };
+                      setFormData({...formData, socialLinks: [...(formData.socialLinks || []), newLink]});
+                    }} 
+                    className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add Social Link
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {(formData.socialLinks || []).map((link, idx) => (
+                    <Card key={idx} className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden group">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
+                            <Globe className="h-6 w-6 text-primary" />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setFormData({...formData, socialLinks: formData.socialLinks.filter((_, i) => i !== idx)})}
+                            className="text-slate-300 hover:text-primary rounded-xl"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform</label>
+                              <Input 
+                                value={link.platform} 
+                                onChange={(e) => {
+                                  const newLinks = [...formData.socialLinks];
+                                  newLinks[idx].platform = e.target.value;
+                                  setFormData({...formData, socialLinks: newLinks});
+                                }}
+                                className="h-12 rounded-xl font-bold"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Name (Lucide)</label>
+                              <Input 
+                                value={link.iconName} 
+                                onChange={(e) => {
+                                  const newLinks = [...formData.socialLinks];
+                                  newLinks[idx].iconName = e.target.value;
+                                  setFormData({...formData, socialLinks: newLinks});
+                                }}
+                                className="h-12 rounded-xl font-mono text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profile URL</label>
+                            <Input 
+                              value={link.url} 
+                              onChange={(e) => {
+                                const newLinks = [...formData.socialLinks];
+                                newLinks[idx].url = e.target.value;
+                                setFormData({...formData, socialLinks: newLinks});
+                              }}
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="seo-defaults" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-[2rem] border-slate-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <Search className="h-5 w-5 text-primary" /> Global SEO Defaults
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Default Meta Title</label>
+                          <Input 
+                            value={formData.seo.metaTitle} 
+                            onChange={(e) => setFormData({...formData, seo: {...formData.seo, metaTitle: e.target.value}})}
+                            className="h-12 rounded-xl font-bold"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Default Meta Description</label>
+                          <Textarea 
+                            value={formData.seo.metaDescription} 
+                            onChange={(e) => setFormData({...formData, seo: {...formData.seo, metaDescription: e.target.value}})}
+                            className="rounded-2xl min-h-[100px]"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Default Keywords</label>
+                          <Input 
+                            value={formData.seo.keywords} 
+                            onChange={(e) => setFormData({...formData, seo: {...formData.seo, keywords: e.target.value}})}
+                            className="h-12 rounded-xl"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Default Social Share Image</label>
+                          <ImageUpload 
+                            value={formData.seo.ogImage || ""}
+                            onChange={(url) => setFormData({...formData, seo: {...formData.seo, ogImage: url}})}
+                          />
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <input 
+                            type="checkbox" 
+                            id="global-index"
+                            checked={formData.seo.enableIndexing}
+                            onChange={(e) => setFormData({...formData, seo: {...formData.seo, enableIndexing: e.target.checked}})}
+                            className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
+                          />
+                          <label htmlFor="global-index" className="text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer">Allow Search Engines to Index Site by Default</label>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-black uppercase tracking-tight ml-2">Global Preview</h3>
+                    <SeoPreview 
+                      title={formData.seo.metaTitle}
+                      description={formData.seo.metaDescription}
+                      url="carmechs.run.app"
+                      ogImage={formData.seo.ogImage}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
               <TabsContent value="locations" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
@@ -718,6 +1033,55 @@ export function UiSettingsPage() {
                       className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
                     />
                     <label htmlFor="published" className="text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer">Published & Publicly Accessible</label>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">SEO Configuration</h4>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Meta Title</label>
+                      <Input 
+                        value={editingPage?.seo?.metaTitle || ""} 
+                        onChange={(e) => updatePage(editingPageId, { seo: { ...(editingPage?.seo || { metaDescription: "", keywords: "", enableIndexing: true }), metaTitle: e.target.value } })}
+                        className="h-10 rounded-xl text-xs"
+                        placeholder={formData.seo.metaTitle}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Meta Description</label>
+                      <Textarea 
+                        value={editingPage?.seo?.metaDescription || ""} 
+                        onChange={(e) => updatePage(editingPageId, { seo: { ...(editingPage?.seo || { metaTitle: "", keywords: "", enableIndexing: true }), metaDescription: e.target.value } })}
+                        className="rounded-xl min-h-[60px] text-xs"
+                        placeholder={formData.seo.metaDescription}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Keywords</label>
+                      <Input 
+                        value={editingPage?.seo?.keywords || ""} 
+                        onChange={(e) => updatePage(editingPageId, { seo: { ...(editingPage?.seo || { metaTitle: "", metaDescription: "", enableIndexing: true }), keywords: e.target.value } })}
+                        className="h-10 rounded-xl text-xs"
+                        placeholder={formData.seo.keywords}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Social Share Image</label>
+                      <ImageUpload 
+                        value={editingPage?.seo?.ogImage || ""}
+                        onChange={(url) => updatePage(editingPageId, { seo: { ...(editingPage?.seo || { metaTitle: "", metaDescription: "", keywords: "", enableIndexing: true }), ogImage: url } })}
+                        className="h-24"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-100">
+                      <input 
+                        type="checkbox" 
+                        id="page-index"
+                        checked={editingPage?.seo?.enableIndexing ?? true}
+                        onChange={(e) => updatePage(editingPageId, { seo: { ...(editingPage?.seo || { metaTitle: "", metaDescription: "", keywords: "" }), enableIndexing: e.target.checked } })}
+                        className="h-3 w-3 rounded border-slate-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor="page-index" className="text-[8px] font-black text-slate-600 uppercase tracking-widest cursor-pointer">Index this page</label>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -849,14 +1213,31 @@ export function UiSettingsPage() {
                   >
                     <Smartphone className="h-4 w-4" />
                   </Button>
+                  <Button 
+                    variant={previewMode === 'seo' ? 'secondary' : 'ghost'} 
+                    size="icon" className="h-8 w-8 rounded-lg"
+                    onClick={() => setPreviewMode('seo')}
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 flex justify-center bg-[#fdfcfb]">
-                <div className={cn(
-                  "bg-white shadow-2xl transition-all duration-500 overflow-y-auto scrollbar-none",
-                  previewMode === 'desktop' ? "w-full" : "w-[375px] rounded-[3rem] border-[8px] border-slate-900 h-[667px]"
-                )}>
+                {previewMode === 'seo' ? (
+                  <div className="w-full max-w-4xl">
+                    <SeoPreview 
+                      title={editingPage?.seo?.metaTitle || editingPage?.title || formData.seo.metaTitle}
+                      description={editingPage?.seo?.metaDescription || formData.seo.metaDescription}
+                      url={`carmechs.run.app/${editingPage?.slug}`}
+                      ogImage={editingPage?.seo?.ogImage || formData.seo.ogImage}
+                    />
+                  </div>
+                ) : (
+                  <div className={cn(
+                    "bg-white shadow-2xl transition-all duration-500 overflow-y-auto scrollbar-none",
+                    previewMode === 'desktop' ? "w-full" : "w-[375px] rounded-[3rem] border-[8px] border-slate-900 h-[667px]"
+                  )}>
                   {/* Mock Page Content for Preview */}
                   <div className="font-sans">
                     {editingPage?.sections.map((section) => (
@@ -916,6 +1297,7 @@ export function UiSettingsPage() {
                     ))}
                   </div>
                 </div>
+              )}
               </div>
             </div>
           </motion.div>

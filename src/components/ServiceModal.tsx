@@ -21,6 +21,8 @@ interface Service {
   duration: string;
   checks: string[];
   basePrice: number;
+  estimatedPrice?: number;
+  estimatedDuration?: string;
 }
 
 interface ServiceModalProps {
@@ -88,7 +90,7 @@ export function ServiceModal({ service, isOpen, onClose, calculatedPrice, isVehi
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-slate-500" />
               <span className="font-medium text-slate-700">Estimated Duration:</span>
-              <span className="text-slate-900">{service.duration}</span>
+              <span className="text-slate-900">{service.estimatedDuration || service.duration}</span>
             </div>
             <div className="flex items-center gap-2">
               <IndianRupee className="h-5 w-5 text-slate-500" />

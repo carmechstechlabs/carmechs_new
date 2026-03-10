@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import { 
   Wrench, 
   Car, 
@@ -16,14 +16,231 @@ import {
   Zap,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   Mail,
   Phone,
-  MapPin
+  MapPin,
+  Send,
+  Loader2,
+  Sparkles,
+  X,
+  Calendar,
+  Globe,
+  Terminal,
+  Facebook,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Youtube
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ServiceModal } from "@/components/ServiceModal";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
+import { SEO } from "@/components/SEO";
+
+const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: () => void, service: any }) => {
+  const { carMakes, carModels, fuelTypes, addAppointment, currentUser, vehicles } = useData();
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    make: "",
+    model: "",
+    fuel: "",
+    year: "",
+    licensePlate: "",
+    date: new Date().toISOString().split('T')[0],
+    time: "09:00 AM",
+    name: currentUser?.name || "",
+    phone: currentUser?.phone || "",
+    email: currentUser?.email || ""
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        name: currentUser.name || prev.name,
+        phone: currentUser.phone || prev.phone,
+        email: currentUser.email || prev.email
+      }));
+    }
+  }, [currentUser]);
+
+  if (!service) return null;
+
+  const handleBooking = async () => {
+    setIsSubmitting(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      addAppointment({
+        ...formData,
+        service: service.title,
+        serviceId: service.id,
+        amount: service.basePrice || 1499,
+      });
+      toast.success("Booking successful! Redirecting...");
+      setTimeout(() => {
+        onClose();
+        navigate("/dashboard");
+      }, 1500);
+    } catch (error) {
+      toast.error("Booking failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
+        <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+          <DialogHeader className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 mb-4 w-fit">
+              <Zap className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Quick Booking Terminal</span>
+            </div>
+            <DialogTitle className="text-4xl font-black uppercase tracking-tighter leading-none mb-2">
+              {service.title}
+            </DialogTitle>
+            <p className="text-white/60 font-medium">Configure your maintenance parameters.</p>
+          </DialogHeader>
+        </div>
+
+        <div className="p-10 bg-white space-y-8">
+          <AnimatePresence mode="wait">
+            {step === 1 ? (
+              <motion.div 
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Manufacturer</label>
+                    <select 
+                      value={formData.make}
+                      onChange={(e) => setFormData({...formData, make: e.target.value})}
+                      className="w-full h-12 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"
+                    >
+                      <option value="">Select Make</option>
+                      {carMakes.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Model</label>
+                    <select 
+                      value={formData.model}
+                      onChange={(e) => setFormData({...formData, model: e.target.value})}
+                      className="w-full h-12 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"
+                      disabled={!formData.make}
+                    >
+                      <option value="">Select Model</option>
+                      {carModels.filter(m => m.make === formData.make).map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Fuel Type</label>
+                    <select 
+                      value={formData.fuel}
+                      onChange={(e) => setFormData({...formData, fuel: e.target.value})}
+                      className="w-full h-12 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"
+                    >
+                      <option value="">Select Fuel</option>
+                      {fuelTypes.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">License Plate</label>
+                    <Input 
+                      value={formData.licensePlate}
+                      onChange={(e) => setFormData({...formData, licensePlate: e.target.value.toUpperCase()})}
+                      placeholder="KA 01 AB 1234"
+                      className="h-12 rounded-xl font-bold uppercase"
+                    />
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => setStep(2)}
+                  disabled={!formData.make || !formData.model || !formData.fuel}
+                  className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-sm bg-primary hover:bg-primary/90 text-white"
+                >
+                  Next: Schedule <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Select Date</label>
+                    <Input 
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value})}
+                      className="h-12 rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Select Time</label>
+                    <select 
+                      value={formData.time}
+                      onChange={(e) => setFormData({...formData, time: e.target.value})}
+                      className="w-full h-12 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"
+                    >
+                      {["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Your Name</label>
+                  <Input 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="John Doe"
+                    className="h-12 rounded-xl font-bold"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={() => setStep(1)} className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-xs">
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleBooking}
+                    disabled={isSubmitting || !formData.name || !formData.date}
+                    className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-sm bg-primary hover:bg-primary/90 text-white"
+                  >
+                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm Booking"}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+;
 
 const services = [
   {
@@ -82,8 +299,68 @@ const features = [
 ];
 
 export function Home() {
-  const { uiSettings, services: dynamicServices, brands } = useData();
+  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading } = useData();
   const [selectedService, setSelectedService] = useState<any>(null);
+  const [bookingService, setBookingService] = useState<any>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const navigate = useNavigate();
+  const [quickVehicle, setQuickVehicle] = useState({
+    make: "",
+    model: "",
+    fuel: "",
+    year: "",
+    licensePlate: ""
+  });
+  const [contactForm, setContactForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "General Inquiry",
+    message: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.firstName || !contactForm.lastName || !contactForm.email || !contactForm.message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await addContactSubmission(contactForm);
+      toast.success("Message sent! We'll get back to you soon.");
+      setContactForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        subject: "General Inquiry",
+        message: ""
+      });
+    } catch (error) {
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const publishedReviews = reviews.filter(r => r.isPublished).slice(0, 3);
+
+  const filteredServices = dynamicServices.filter(s => 
+    activeCategory === "all" || s.categoryId === activeCategory
+  );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <p className="text-xs font-black uppercase tracking-widest text-slate-400 animate-pulse">Initializing Systems...</p>
+        </div>
+      </div>
+    );
+  }
+
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -113,10 +390,32 @@ export function Home() {
 
   return (
     <div className="flex flex-col bg-white selection:bg-primary/10" ref={containerRef}>
+      <SEO 
+        title={uiSettings.pages?.find(p => p.id === 'home')?.seo?.metaTitle}
+        description={uiSettings.pages?.find(p => p.id === 'home')?.seo?.metaDescription}
+        keywords={uiSettings.pages?.find(p => p.id === 'home')?.seo?.keywords}
+        ogImage={uiSettings.pages?.find(p => p.id === 'home')?.seo?.ogImage}
+        noIndex={uiSettings.pages?.find(p => p.id === 'home')?.seo?.enableIndexing === false}
+        slug="home"
+      />
       {/* Hero Section */}
       <section 
         className="relative min-h-screen flex items-center text-slate-900 pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden"
       >
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-30 grayscale"
+          >
+            <source src="https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px]" />
+        </div>
+
         {/* Animated Background Elements */}
         <motion.div style={{ y, opacity }} className="absolute inset-0 z-0">
           {uiSettings.heroBgImage ? (
@@ -195,9 +494,14 @@ export function Home() {
               
               <div className="flex flex-wrap gap-6">
                 <Link to="/book">
-                  <Button size="lg" className="h-20 px-12 rounded-[2rem] text-lg font-bold uppercase tracking-widest shadow-xl shadow-primary/10 hover:scale-105 transition-all bg-primary hover:bg-primary/90 text-white">
-                    Book Now <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button size="lg" className="h-20 px-12 rounded-[2rem] text-lg font-bold uppercase tracking-widest shadow-xl shadow-primary/10 transition-all bg-primary hover:bg-primary/90 text-white">
+                      Book Now <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </motion.div>
                 </Link>
                 <Link to="/services">
                   <Button variant="outline" size="lg" className="h-20 px-12 rounded-[2rem] text-lg font-bold uppercase tracking-widest bg-white text-slate-900 border-slate-200 hover:bg-slate-50 transition-all">
@@ -275,6 +579,100 @@ export function Home() {
         </div>
       </section>
 
+      {/* Quick Vehicle Check Section */}
+      <section className="relative z-30 -mt-24 mb-20 container mx-auto px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 p-8 lg:p-12"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-4 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
+                <Car className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Quick Config</span>
+              </div>
+              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">Pre-fill Your <br />Booking</h3>
+              <p className="text-slate-500 text-sm font-medium">Enter your vehicle details to jumpstart the booking process.</p>
+            </div>
+            
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Make & Model</label>
+                  <div className="flex gap-2">
+                    <select 
+                      className="flex-1 h-14 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const [make, model] = val.split('|');
+                        setQuickVehicle(prev => ({ ...prev, make: make || "", model: model || "" }));
+                      }}
+                    >
+                      <option value="">Select Vehicle</option>
+                      <option value="Toyota|Corolla">Toyota Corolla</option>
+                      <option value="Honda|Civic">Honda Civic</option>
+                      <option value="BMW|3 Series">BMW 3 Series</option>
+                      <option value="Mercedes|C-Class">Mercedes C-Class</option>
+                      <option value="Audi|A4">Audi A4</option>
+                      <option value="Hyundai|Creta">Hyundai Creta</option>
+                      <option value="Tata|Nexon">Tata Nexon</option>
+                      <option value="Mahindra|Thar">Mahindra Thar</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Fuel Type</label>
+                  <select 
+                    className="w-full h-14 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none"
+                    onChange={(e) => setQuickVehicle(prev => ({ ...prev, fuel: e.target.value }))}
+                  >
+                    <option value="">Select Fuel</option>
+                    <option value="Petrol">Petrol</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="CNG">CNG</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Year & Plate</label>
+                  <div className="flex gap-2">
+                    <input 
+                      placeholder="Year" 
+                      className="w-20 h-14 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-xs focus:ring-2 focus:ring-primary/20 outline-none"
+                      onChange={(e) => setQuickVehicle(prev => ({ ...prev, year: e.target.value }))}
+                    />
+                    <input 
+                      placeholder="Plate No." 
+                      className="flex-1 h-14 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-xs uppercase focus:ring-2 focus:ring-primary/20 outline-none"
+                      onChange={(e) => setQuickVehicle(prev => ({ ...prev, licensePlate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <Button 
+                  onClick={() => {
+                    if (!quickVehicle.make || !quickVehicle.model || !quickVehicle.fuel) {
+                      toast.error("Please fill in the basic vehicle details");
+                      return;
+                    }
+                    navigate("/book", { state: { vehicleDetails: quickVehicle } });
+                  }}
+                  className="h-14 px-10 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 group"
+                >
+                  Start Booking <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
       {/* Brands Section (Marquee Style) */}
       {brands.length > 0 && (
         <section className="py-16 bg-white border-b border-slate-100 overflow-hidden">
@@ -315,43 +713,120 @@ export function Home() {
                 Specialized <br /><span className="text-primary">Engineering</span>
               </h2>
             </div>
-            <p className="text-slate-500 max-w-sm font-medium text-lg leading-relaxed">
-              Engineered for reliability. Select from our curated service packages designed for every vehicle stage.
-            </p>
+            
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={() => setActiveCategory("all")}
+                className={cn(
+                  "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  activeCategory === "all" ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-slate-400 hover:bg-slate-100"
+                )}
+              >
+                All Modules
+              </button>
+              {categories.map(cat => (
+                <button 
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                    activeCategory === cat.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-slate-400 hover:bg-slate-100"
+                  )}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {(dynamicServices.length > 0 ? dynamicServices : services).map((service, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -15 }}
-                className="group relative bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-primary/30 transition-all cursor-pointer overflow-hidden shadow-xl"
-                onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
+          <div className="relative group/carousel">
+            <div className="flex overflow-x-auto gap-8 pb-12 scrollbar-none snap-x snap-mandatory scroll-smooth" id="service-carousel">
+              {filteredServices.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20
+                  }}
+                  className="min-w-[320px] md:min-w-[400px] snap-center"
+                >
+                  <div
+                    className="group relative bg-white p-10 rounded-[3rem] border border-slate-100 hover:border-primary/30 transition-all cursor-pointer overflow-hidden shadow-xl h-full flex flex-col"
+                    onClick={() => navigate(`/services/${service.id}`)}
+                  >
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-bl-[6rem] -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
+                    
+                    <div className="relative z-10 flex-1">
+                      <motion.div 
+                        whileHover={{ rotate: 15, scale: 1.1 }}
+                        className="mb-10 bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden group-hover:bg-primary transition-colors shadow-sm"
+                      >
+                        <div className="group-hover:scale-110 group-hover:brightness-0 group-hover:invert transition-all">
+                          {getIcon(service)}
+                        </div>
+                      </motion.div>
+                      <h3 className="text-3xl font-bold mb-4 uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors">{service.title}</h3>
+                      <p className="text-slate-500 mb-10 text-base font-medium leading-relaxed line-clamp-2">{service.description}</p>
+                    </div>
+                    
+                    <div className="relative z-10 flex flex-col gap-6 mt-auto">
+                      <motion.div 
+                        whileHover={{ scale: 1.05, y: -2 }} 
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBookingService(service);
+                          }}
+                          className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none transition-all"
+                        >
+                          Book Now <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </motion.div>
+
+                      <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Technical Specs</span>
+                        <div className="h-12 w-12 rounded-2xl border border-slate-200 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
+                          <Plus className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Carousel Navigation */}
+            <div className="flex justify-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-14 w-14 rounded-2xl border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all shadow-sm"
+                onClick={() => {
+                  const el = document.getElementById('service-carousel');
+                  if (el) el.scrollLeft -= 400;
+                }}
               >
-                <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-bl-[6rem] -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
-                
-                <div className="relative z-10">
-                  <div className="mb-10 bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden group-hover:bg-primary transition-colors shadow-sm">
-                    <div className="group-hover:scale-110 group-hover:brightness-0 group-hover:invert transition-all">
-                      {getIcon(service)}
-                    </div>
-                  </div>
-                  <h3 className="text-3xl font-bold mb-4 uppercase tracking-tight text-slate-900">{service.title}</h3>
-                  <p className="text-slate-500 mb-10 text-base font-medium leading-relaxed line-clamp-2">{service.description}</p>
-                  
-                  <div className="flex items-center justify-between pt-8 border-t border-slate-100">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Configure Module</span>
-                    <div className="h-12 w-12 rounded-2xl border border-slate-200 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
-                      <Plus className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-14 w-14 rounded-2xl border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all shadow-sm"
+                onClick={() => {
+                  const el = document.getElementById('service-carousel');
+                  if (el) el.scrollLeft += 400;
+                }}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -457,101 +932,194 @@ export function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="py-40 bg-slate-900 text-white overflow-hidden relative">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+      {/* Testimonials Section */}
+      <section className="py-40 bg-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,68,68,0.03),transparent_70%)]" />
+        
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-            <div>
+          <div className="max-w-3xl mx-auto text-center mb-24">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Transmission Logs</span>
+            </div>
+            <h2 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none mb-6">
+              Verified <br /> Feedback
+            </h2>
+            <p className="text-lg text-white/40 font-medium">Real experiences from our global network of machine operators.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(uiSettings.testimonials && uiSettings.testimonials.length > 0 ? uiSettings.testimonials : publishedReviews).map((item: any, idx) => (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
                 viewport={{ once: true }}
-                className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.3em] mb-8 border border-primary/20"
+                className="bg-white/5 backdrop-blur-sm p-10 rounded-[3rem] border border-white/10 relative group hover:bg-white/10 transition-all"
               >
-                Get In Touch
+                <div className="flex items-center gap-1 mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star 
+                      key={star} 
+                      className={cn(
+                        "h-4 w-4",
+                        star <= (item.rating || 5) ? "text-yellow-400 fill-yellow-400" : "text-white/10"
+                      )} 
+                    />
+                  ))}
+                </div>
+                <p className="text-xl text-white/80 font-medium leading-relaxed mb-10 italic">
+                  "{item.quote || item.comment}"
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden">
+                    {item.avatar ? (
+                      <img src={item.avatar} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white/40 font-black uppercase">{(item.name || item.userName).charAt(0)}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-white uppercase tracking-widest">{item.name || item.userName}</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Verified Operator</p>
+                  </div>
+                </div>
               </motion.div>
-              <h2 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-[0.85] mb-12">
-                Visit Our <br /><span className="text-primary">Workshop.</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-40 bg-white relative">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-6">
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Direct Uplink</span>
+              </div>
+              <h2 className="text-5xl md:text-8xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-8">
+                Connect <br /> With Us
               </h2>
-              <p className="text-white/60 max-w-md font-medium text-xl leading-relaxed mb-16">
-                Have a technical query or need immediate assistance? Our master mechanics are standing by to help you with your automotive needs.
+              <p className="text-xl text-slate-500 font-medium mb-12 leading-relaxed">
+                Have a technical query or need immediate assistance? Our support engineers are standing by to help you navigate your vehicle's needs.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
-                <div className="space-y-4">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <MapPin className="h-6 w-6 text-primary" />
+              <div className="space-y-8">
+                <div className="flex items-start gap-6 group">
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <MapPin className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Location</h4>
-                    <p className="text-sm font-bold text-white leading-relaxed">{uiSettings.adminLogin.loginTerminalId || "Main Service Hub, New Delhi"}</p>
-                    <p className="text-xs text-white/60 mt-1">123, Automotive Zone, Sector 45</p>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Base Operations</h3>
+                    <p className="text-lg font-bold text-slate-900">{uiSettings.adminLogin.loginTerminalId || "Main Service Hub, New Delhi"}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Phone className="h-6 w-6 text-primary" />
+
+                <div className="flex items-start gap-6 group">
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <Phone className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Direct Line</h4>
-                    <p className="text-sm font-bold text-white leading-relaxed">+91 98765 43210</p>
-                    <p className="text-xs text-white/60 mt-1">Mon - Sat: 9AM - 8PM</p>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Voice Uplink</h3>
+                    <p className="text-lg font-bold text-slate-900">+91 98765 43210</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Mail className="h-6 w-6 text-primary" />
+
+                <div className="flex items-start gap-6 group">
+                  <div className="bg-slate-50 h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary transition-colors shadow-sm border border-slate-100">
+                    <Mail className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email Support</h4>
-                    <p className="text-sm font-bold text-white leading-relaxed">support@carmechs.com</p>
-                    <p className="text-xs text-white/60 mt-1">24/7 Response Time</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                    <Zap className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">WhatsApp</h4>
-                    <p className="text-sm font-bold text-white leading-relaxed">+91 98765 43211</p>
-                    <p className="text-xs text-white/60 mt-1">Instant Support</p>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Data Transmission</h3>
+                    <p className="text-lg font-bold text-slate-900">support@carmechs.com</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="relative">
-              <div className="rounded-[4rem] overflow-hidden aspect-square shadow-2xl border border-white/10 relative group">
-                <img 
-                  src="https://images.unsplash.com/photo-1517524008410-b44336d29a0c?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Workshop" 
-                  className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-1000"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+            <div className="lg:col-span-7">
+              <motion.div 
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="bg-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 -z-10" />
                 
-                <div className="absolute bottom-12 left-12 right-12 p-8 bg-white/10 backdrop-blur-xl rounded-[2.5rem] border border-white/20">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-                      <CheckCircle2 className="h-6 w-6 text-white" />
+                <form className="space-y-8" onSubmit={handleContactSubmit}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">First Name</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={contactForm.firstName}
+                        onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
+                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
+                        placeholder="John"
+                      />
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white uppercase tracking-widest">Authorized Center</h4>
-                      <p className="text-[10px] text-white/60 uppercase font-black tracking-tighter">ISO 9001:2015 Certified</p>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Last Name</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={contactForm.lastName}
+                        onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
+                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
+                        placeholder="Doe"
+                      />
                     </div>
                   </div>
-                  <p className="text-xs text-white/80 leading-relaxed font-medium">Our facility is equipped with state-of-the-art diagnostic tools and a team of master mechanics dedicated to your vehicle's health.</p>
-                </div>
-              </div>
-              
-              {/* Decorative Rings */}
-              <div className="absolute -inset-10 border border-white/5 rounded-[5rem] -z-10" />
-              <div className="absolute -inset-20 border border-white/5 rounded-[6rem] -z-20" />
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
+                    <input 
+                      type="email" 
+                      required
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Message</label>
+                    <textarea 
+                      rows={4}
+                      required
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                      className="w-full p-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold resize-none"
+                      placeholder="Describe your inquiry..."
+                    ></textarea>
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    size="lg" 
+                    className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group bg-primary hover:bg-primary/90 text-white border-none"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <>
+                        Send Transmission <Send className="ml-3 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </motion.div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* CTA Section */}
       <section className="py-48 relative overflow-hidden">
@@ -604,6 +1172,98 @@ export function Home() {
         isOpen={!!selectedService} 
         onClose={() => setSelectedService(null)}
       />
+
+      <BookingModal 
+        service={bookingService}
+        isOpen={!!bookingService}
+        onClose={() => setBookingService(null)}
+      />
+      {/* Footer Section */}
+      <footer className="bg-slate-950 pt-32 pb-12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-20" />
+        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                  <Wrench className="h-6 w-6" />
+                </div>
+                <span className="text-2xl font-black tracking-tighter uppercase text-white">CarMechs</span>
+              </div>
+              <p className="text-slate-400 font-medium leading-relaxed">
+                Redefining automotive maintenance through precision engineering and digital transparency. Your vehicle's future starts here.
+              </p>
+              <div className="flex gap-4">
+                {(uiSettings.socialLinks || []).map((link, idx) => (
+                  <a 
+                    key={idx} 
+                    href={link.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-primary hover:border-primary transition-all group"
+                  >
+                    {link.platform.toLowerCase() === 'facebook' && <Facebook className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                    {link.platform.toLowerCase() === 'instagram' && <Instagram className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                    {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                    {link.platform.toLowerCase() === 'linkedin' && <Linkedin className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                    {link.platform.toLowerCase() === 'youtube' && <Youtube className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                    {!['facebook', 'instagram', 'twitter', 'linkedin', 'youtube'].includes(link.platform.toLowerCase()) && <Globe className="h-5 w-5 group-hover:scale-110 transition-transform" />}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Quick Navigation</h4>
+              <ul className="space-y-4">
+                {["Services", "Packages", "About Us", "Contact"].map(item => (
+                  <li key={item}>
+                    <Link to="/" className="text-slate-400 hover:text-primary font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2 group">
+                      <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                      {item}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Service Hubs</h4>
+              <ul className="space-y-4">
+                {["Mumbai", "Pune", "Bangalore", "Delhi"].map(item => (
+                  <li key={item}>
+                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
+                      <MapPin className="h-3 w-3 text-primary" />
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Newsletter Uplink</h4>
+              <p className="text-slate-400 text-xs font-medium mb-6">Receive precision maintenance alerts and exclusive offers.</p>
+              <div className="flex gap-2">
+                <Input className="bg-white/5 border-white/10 text-white rounded-xl h-12" placeholder="Email Address" />
+                <Button className="h-12 w-12 rounded-xl bg-primary text-white shrink-0">
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              © {new Date().getFullYear()} CARMECHS AUTOMOTIVE. ALL SYSTEMS OPERATIONAL.
+            </div>
+            <div className="flex gap-8 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <Link to="/" className="hover:text-white transition-colors">Privacy Protocol</Link>
+              <Link to="/" className="hover:text-white transition-colors">Service Terms</Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

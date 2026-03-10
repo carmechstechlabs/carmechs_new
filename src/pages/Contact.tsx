@@ -1,8 +1,47 @@
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ArrowRight } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
+import { useData } from "@/context/DataContext";
+import { toast } from "sonner";
 
 export function Contact() {
+  const { addContactSubmission } = useData();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addContactSubmission(formData);
+      toast.success("Inquiry sent successfully! We'll get back to you soon.");
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        subject: "",
+        message: ""
+      });
+    } catch (error) {
+      console.error("Error sending inquiry:", error);
+      toast.error("Failed to send inquiry. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen">
       {/* Hero Header */}
@@ -113,12 +152,15 @@ export function Contact() {
             className="lg:col-span-7 bg-white p-10 md:p-16 rounded-[3.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100"
           >
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-12">Submit Inquiry</h2>
-            <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-8" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">First Name</label>
                   <input 
                     type="text" 
+                    required
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                     placeholder="John"
                   />
@@ -127,6 +169,9 @@ export function Contact() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Last Name</label>
                   <input 
                     type="text" 
+                    required
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                     placeholder="Doe"
                   />
@@ -137,6 +182,9 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
                 <input 
                   type="email" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                   placeholder="john@example.com"
                 />
@@ -146,6 +194,8 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Subject</label>
                 <input 
                   type="text" 
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
                   placeholder="Service Inquiry"
                 />
@@ -155,13 +205,27 @@ export function Contact() {
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Message</label>
                 <textarea 
                   rows={5}
+                  required
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   className="w-full p-6 rounded-2xl border border-slate-100 bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold resize-none"
                   placeholder="Describe your vehicle's symptoms or your specific inquiry..."
                 ></textarea>
               </div>
 
-              <Button size="lg" className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group bg-primary hover:bg-primary/90 text-white border-none">
-                Send Transmission <Send className="ml-3 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+                size="lg" 
+                className="w-full h-20 rounded-[2rem] font-black uppercase tracking-widest text-lg shadow-2xl shadow-primary/20 group bg-primary hover:bg-primary/90 text-white border-none"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    Send Transmission <Send className="ml-3 h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  </>
+                )}
               </Button>
             </form>
           </motion.div>

@@ -441,7 +441,12 @@ export function Profile() {
                             </div>
                             <div className="space-y-2">
                               <h4 className="text-xl font-bold text-slate-900">{getServiceTitle(app.service)}</h4>
-                              <p className="text-slate-500 font-medium">{app.make} {app.model} • <span className="text-primary/80 uppercase text-sm tracking-widest">{app.fuel}</span></p>
+                              <p className="text-slate-500 font-medium">
+                                {app.make} {app.model} 
+                                {app.year && ` (${app.year})`} 
+                                {app.licensePlate && ` • ${app.licensePlate}`}
+                                • <span className="text-primary/80 uppercase text-sm tracking-widest">{app.fuel}</span>
+                              </p>
                               <div className="flex flex-wrap items-center gap-4 mt-4">
                                 <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
                                   <Calendar className="h-3.5 w-3.5 text-primary" />

@@ -338,6 +338,7 @@ let state = {
   reviews: initialReviews,
   notifications: [] as any[],
   servicePackages: initialServicePackages,
+  tasks: [] as any[],
   missingTables: [] as string[],
 };
 
@@ -438,6 +439,7 @@ async function startServer() {
           { name: 'brands', data: state.brands, dbData: dbState.brands },
           { name: 'locations', data: state.locations, dbData: dbState.locations },
           { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
+          { name: 'categories', data: state.categories, dbData: dbState.categories },
         ];
 
         for (const table of tablesToSeed) {
@@ -532,11 +534,25 @@ async function startServer() {
       await updateTable('appointments', appointments);
     });
 
+    socket.on("update_tasks", async (tasks) => {
+      currentState.tasks = tasks;
+      saveLocalState(currentState);
+      socket.broadcast.emit("tasks_updated", tasks);
+      await updateTable('tasks', tasks);
+    });
+
     socket.on("add_appointment", async (appointment) => {
       currentState.appointments = [appointment, ...currentState.appointments];
       saveLocalState(currentState);
       io.emit("appointments_updated", currentState.appointments);
       await addAppointment(appointment);
+    });
+
+    socket.on("add_task", async (task) => {
+      currentState.tasks = [task, ...currentState.tasks];
+      saveLocalState(currentState);
+      io.emit("tasks_updated", currentState.tasks);
+      await updateTable('tasks', currentState.tasks);
     });
 
     socket.on("update_users", async (users) => {
@@ -627,6 +643,34 @@ async function startServer() {
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.get("/sitemap.xml", (req, res) => {
+    const pages = currentState.uiSettings.pages || [];
+    const baseUrl = process.env.APP_URL || "https://carmechs.run.app";
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+    // Add static pages or pages from uiSettings
+    pages.forEach((page: any) => {
+      if (page.isPublished && (page.seo?.enableIndexing !== false)) {
+        const url = `${baseUrl}${page.slug === "" || page.slug === "home" ? "" : "/" + page.slug}`;
+        xml += `
+  <url>
+    <loc>${url}</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>${page.slug === "" || page.slug === "home" ? "1.0" : "0.8"}</priority>
+  </url>`;
+      }
+    });
+
+    xml += `
+</urlset>`;
+
+    res.header("Content-Type", "application/xml");
+    res.send(xml);
   });
 
   app.post("/api/upload", upload.single("image"), async (req, res) => {

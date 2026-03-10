@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { Layout } from "@/components/layout/Layout";
 import { Home } from "@/pages/Home";
 import { Services } from "@/pages/Services";
+import { ServiceDetail } from "@/pages/ServiceDetail";
 import { Booking } from "@/pages/Booking";
 import { Login } from "@/pages/Login";
 import { Profile } from "@/pages/Profile";
@@ -22,6 +23,7 @@ import { Appointments as AdminAppointments } from "@/pages/admin/Appointments";
 import { Customers as AdminCustomers } from "@/pages/admin/Customers";
 import { Users as AdminUsers } from "@/pages/admin/Users";
 import { UiSettingsPage as AdminUiSettings } from "@/pages/admin/UiSettings";
+import { SeoSettingsPage as AdminSeoSettings } from "@/pages/admin/SeoSettings";
 import { ApiKeysPage as AdminApiKeys } from "@/pages/admin/ApiKeys";
 import { Brands as AdminBrands } from "@/pages/admin/Brands";
 import { Locations as AdminLocations } from "@/pages/admin/Locations";
@@ -32,6 +34,7 @@ import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
 import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
 import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
 import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig";
+import { TaskManager as AdminTasks } from "@/pages/admin/TaskManager";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
@@ -43,6 +46,7 @@ function AppRoutes() {
         <Route index element={<DynamicPage />} />
         <Route path="p/:slug" element={<DynamicPage />} />
         <Route path="services" element={<Services />} />
+        <Route path="services/:id" element={<ServiceDetail />} />
         <Route path="book" element={<Booking />} />
         <Route path="contact" element={<DynamicPage slugOverride="contact" />} />
         <Route path="about" element={<DynamicPage slugOverride="about" />} />
@@ -61,6 +65,7 @@ function AppRoutes() {
         <Route element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="workshop" element={<AdminWorkshop />} />
+          <Route path="tasks" element={<AdminTasks />} />
           <Route path="appointments" element={<AdminAppointments />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="services" element={<AdminServices />} />
@@ -75,6 +80,7 @@ function AppRoutes() {
           <Route path="vehicle-config" element={<AdminVehicleConfig />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="ui-settings" element={<AdminUiSettings />} />
+          <Route path="seo" element={<AdminSeoSettings />} />
           <Route path="api-keys" element={<AdminApiKeys />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>

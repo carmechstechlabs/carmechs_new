@@ -10,6 +10,7 @@ import {
   Calendar,
   Users,
   Palette,
+  Globe,
   Key,
   UsersRound,
   Shield,
@@ -21,7 +22,8 @@ import {
   LayoutGrid,
   Ticket,
   Star,
-  Bell
+  Bell,
+  CheckCircle2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -31,10 +33,21 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 
 export function AdminLayout() {
-  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings, settings } = useData();
+  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings, settings, notifications, updateNotifications } = useData();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('adminSidebarOpen');
+    if (saved !== null) return saved === 'true';
+    return window.innerWidth > 1024;
+  });
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    localStorage.setItem('adminSidebarOpen', String(isSidebarOpen));
+  }, [isSidebarOpen]);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -63,6 +76,7 @@ export function AdminLayout() {
       items: [
         { path: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
         { path: "/admin/workshop", label: "Workshop", icon: Activity },
+        { path: "/admin/tasks", label: "Tasks", icon: CheckCircle2 },
         { path: "/admin/appointments", label: "Bookings", icon: Calendar },
         { path: "/admin/inventory", label: "Inventory", icon: Package },
       ]
@@ -92,6 +106,7 @@ export function AdminLayout() {
         { path: "/admin/locations", label: "Cities", icon: MapPin },
         { path: "/admin/users", label: "Staff", icon: Users },
         { path: "/admin/ui-settings", label: "Interface", icon: Palette },
+        { path: "/admin/seo", label: "SEO Engine", icon: Globe },
         { path: "/admin/api-keys", label: "Integrations", icon: Key },
         { path: "/admin/settings", label: "System", icon: Settings },
       ]
@@ -242,6 +257,79 @@ export function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-6">
+            {/* Notifications */}
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="p-2.5 bg-white hover:bg-slate-50 rounded-xl transition-all border border-slate-200 group shadow-sm relative"
+              >
+                <Bell className="h-5 w-5 text-slate-400 group-hover:text-primary" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full border-2 border-white" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-4 w-80 bg-white rounded-3xl shadow-2xl border border-slate-200 z-50 overflow-hidden"
+                    >
+                      <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={() => {
+                              const updated = notifications.map(n => ({ ...n, read: true }));
+                              updateNotifications(updated);
+                            }}
+                            className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto scrollbar-none">
+                        {notifications.length === 0 ? (
+                          <div className="p-12 text-center">
+                            <Bell className="h-8 w-8 text-slate-200 mx-auto mb-4" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No notifications</p>
+                          </div>
+                        ) : (
+                          notifications.map((notif, i) => (
+                            <div 
+                              key={notif.id} 
+                              className={cn(
+                                "p-6 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group",
+                                !notif.read && "bg-primary/5 border-l-4 border-l-primary"
+                              )}
+                              onClick={() => {
+                                const updated = notifications.map(n => n.id === notif.id ? { ...n, read: true } : n);
+                                updateNotifications(updated);
+                              }}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <span className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{notif.title}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase">{new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{notif.message}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                        <Link to="/admin/dashboard" className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors">View All Activity</Link>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="hidden md:flex items-center gap-4 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
               <div className="flex flex-col items-end">
                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{adminRole === 'admin' ? 'Administrator' : 'Staff'}</span>

@@ -59,13 +59,15 @@ export async function getInitialState() {
       supabase.from('vehicles').select('*'),
       supabase.from('users').select('*'),
       supabase.from('appointments').select('*').order('created_at', { ascending: false }),
-      supabase.from('site_config').select('*')
+      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+      supabase.from('site_config').select('*'),
+      supabase.from('contact_submissions').select('*').order('created_at', { ascending: false })
     ]);
 
     const tableNames = [
       'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
       'inventory', 'categories', 'coupons', 'reviews', 'notifications',
-      'service_packages', 'vehicles', 'users', 'appointments', 'site_config'
+      'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions'
     ];
 
     const missingTables: string[] = [];
@@ -102,7 +104,9 @@ export async function getInitialState() {
       { data: vehicles },
       { data: users },
       { data: appointments },
-      { data: config }
+      { data: tasks },
+      { data: config },
+      { data: contactSubmissions }
     ] = results;
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
@@ -120,6 +124,7 @@ export async function getInitialState() {
         const camel = toCamelCase(a);
         return { ...camel, service: a.service_title };
       }),
+      tasks: (tasks || []).map(toCamelCase),
       users: (users || []).map(toCamelCase),
       uiSettings,
       apiKeys,
@@ -132,6 +137,7 @@ export async function getInitialState() {
       notifications: (notifications || []).map(toCamelCase),
       servicePackages: (servicePackages || []).map(toCamelCase),
       vehicles: (vehicles || []).map(toCamelCase),
+      contactSubmissions: (contactSubmissions || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
@@ -143,6 +149,7 @@ export async function getInitialState() {
       fuelTypes: [],
       settings: {},
       appointments: [],
+      tasks: [],
       users: [],
       uiSettings: {},
       apiKeys: {},
@@ -155,6 +162,7 @@ export async function getInitialState() {
       notifications: [],
       servicePackages: [],
       vehicles: [],
+      contactSubmissions: [],
     };
   }
 }

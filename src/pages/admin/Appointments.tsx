@@ -26,6 +26,7 @@ export function Appointments() {
   const { appointments, updateAppointments, services, adminRole, technicians } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -72,6 +73,7 @@ export function Appointments() {
     
     const matchesPriority = priorityFilter === "all" || app.priority === priorityFilter;
     const matchesService = serviceFilter === "all" || app.service === serviceFilter;
+    const matchesPayment = paymentFilter === "all" || app.paymentStatus === paymentFilter;
     
     let matchesDate = true;
     if (dateFilter !== "all") {
@@ -88,7 +90,7 @@ export function Appointments() {
       }
     }
 
-    return matchesSearch && matchesStatus && matchesService && matchesDate && matchesPriority;
+    return matchesSearch && matchesStatus && matchesService && matchesDate && matchesPriority && matchesPayment;
   }).sort((a, b) => {
     if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
     if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
@@ -176,6 +178,18 @@ export function Appointments() {
                 <option value="completed" className="bg-white">Completed</option>
                 <option value="cancelled" className="bg-white">Cancelled</option>
                 <option value="overdue" className="bg-white">Overdue</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <select
+                className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 focus:outline-none cursor-pointer pr-4"
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+              >
+                <option value="all" className="bg-white">All Payment</option>
+                <option value="paid" className="bg-white">Paid</option>
+                <option value="pending" className="bg-white">Pending</option>
               </select>
             </div>
             <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">

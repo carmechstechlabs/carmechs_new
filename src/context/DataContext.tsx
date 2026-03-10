@@ -14,6 +14,8 @@ export interface Service {
   features: string[];
   checks: string[];
   basePrice: number; // Added for booking calculation
+  estimatedPrice: number;
+  estimatedDuration: string;
   iconUrl?: string;
   iconName?: string;
   categoryId?: string;
@@ -127,9 +129,12 @@ export interface Appointment {
   phone: string;
   email: string;
   service: string;
+  serviceId?: string;
   make: string;
   model: string;
   fuel: string;
+  year?: string;
+  licensePlate?: string;
   date: string;
   time: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -201,7 +206,7 @@ export interface Page {
   title: string;
   sections: PageSection[];
   isPublished: boolean;
-  metaDescription?: string;
+  seo?: SeoSettings;
 }
 
 export interface AdminUiSettings {
@@ -224,6 +229,29 @@ export interface UserLoginUiSettings {
   showPhoneLogin: boolean;
 }
 
+export interface SeoSettings {
+  metaTitle: string;
+  metaDescription: string;
+  keywords: string;
+  ogImage?: string;
+  enableIndexing: boolean;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  quote: string;
+  avatar?: string;
+  rating: number;
+}
+
+export interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  iconName: string;
+}
+
 export interface UiSettings {
   heroTitle: string;
   heroSubtitle: string;
@@ -234,12 +262,15 @@ export interface UiSettings {
   whyChooseDescription: string;
   whyChooseImage: string;
   features: Feature[];
+  testimonials: Testimonial[];
+  socialLinks: SocialLink[];
   testimonialText: string;
   testimonialAuthor: string;
   testimonialRating: number;
   adminLogin: AdminUiSettings;
   userLogin: UserLoginUiSettings;
   pages: Page[];
+  seo: SeoSettings;
 }
 
 export interface ApiKeys {
@@ -256,6 +287,28 @@ export interface ApiKeys {
   paytmMerchantKey?: string;
 }
 
+export interface ContactSubmission {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  message: string;
+  createdAt: string;
+  status: 'new' | 'read' | 'replied';
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high';
+  completed: boolean;
+  assignedTo?: string;
+  createdAt: string;
+}
+
 interface DataContextType {
   services: Service[];
   carMakes: PricingItem[];
@@ -263,6 +316,7 @@ interface DataContextType {
   fuelTypes: PricingItem[];
   settings: Settings;
   appointments: Appointment[];
+  tasks: Task[];
   users: User[];
   vehicles: Vehicle[];
   uiSettings: UiSettings;
@@ -276,12 +330,14 @@ interface DataContextType {
   notifications: Notification[];
   servicePackages: ServicePackage[];
   technicians: Technician[];
+  contactSubmissions: ContactSubmission[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
   updateFuelTypes: (fuels: PricingItem[]) => void;
   updateSettings: (settings: Settings) => void;
   updateAppointments: (appointments: Appointment[]) => void;
+  updateTasks: (tasks: Task[]) => void;
   updateUsers: (users: User[]) => void;
   updateUser: (userId: string, updates: Partial<User>) => void;
   updateUiSettings: (uiSettings: UiSettings) => void;
@@ -294,7 +350,10 @@ interface DataContextType {
   updateReviews: (reviews: Review[]) => void;
   updateNotifications: (notifications: Notification[]) => void;
   updateServicePackages: (packages: ServicePackage[]) => void;
+  updateContactSubmissions: (submissions: ContactSubmission[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
+  addContactSubmission: (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt'>) => void;
   removeVehicle: (id: string) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
@@ -371,6 +430,14 @@ const initialSettings: Settings = {
   termsOfServiceUrl: "/terms",
 };
 const initialUsers: User[] = [];
+const initialCategories: ServiceCategory[] = [
+  { id: "cat_1", name: "Periodic Maintenance", description: "Regular oil changes, filter replacements, and general health checks.", iconName: "Wrench" },
+  { id: "cat_2", name: "AC & Electrical", description: "Air conditioning service, battery replacement, and wiring diagnostics.", iconName: "Zap" },
+  { id: "cat_3", name: "Body & Paint", description: "Dent removal, scratch repair, and full body repainting services.", iconName: "PaintBucket" },
+  { id: "cat_4", name: "Tires & Wheels", description: "Wheel alignment, balancing, and tire replacement services.", iconName: "Disc" },
+  { id: "cat_5", name: "Deep Cleaning", description: "Interior detailing, exterior polishing, and engine bay cleaning.", iconName: "Sparkles" }
+];
+
 const initialUiSettings: UiSettings = {
   heroTitle: "",
   heroSubtitle: "",
@@ -389,6 +456,15 @@ const initialUiSettings: UiSettings = {
   testimonialText: "Best service I've ever had! My car runs smoother than ever.",
   testimonialAuthor: "Alex Johnson",
   testimonialRating: 4.9,
+  testimonials: [
+    { id: "1", name: "Rahul Sharma", quote: "Best service I've ever had for my car. Very professional!", rating: 5 },
+    { id: "2", name: "Priya Patel", quote: "Transparent pricing and timely delivery. Highly recommended!", rating: 5 }
+  ],
+  socialLinks: [
+    { id: "1", platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" },
+    { id: "2", platform: "Instagram", url: "https://instagram.com", iconName: "Instagram" },
+    { id: "3", platform: "Twitter", url: "https://twitter.com", iconName: "Twitter" }
+  ],
   adminLogin: {
     loginTitle: "Terminal 01",
     loginSubtitle: "Security Clearance Required",
@@ -404,6 +480,13 @@ const initialUiSettings: UiSettings = {
     showGoogleLogin: true,
     showFacebookLogin: true,
     showPhoneLogin: true
+  },
+  seo: {
+    metaTitle: "CarMechs | Premium Automotive Care Terminal",
+    metaDescription: "Experience the next generation of car maintenance with radical transparency and technical excellence.",
+    keywords: "car service, car repair, luxury car maintenance, online car booking",
+    ogImage: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1200",
+    enableIndexing: true
   },
   pages: [
     {
@@ -472,6 +555,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [fuelTypes, setFuelTypes] = useState<PricingItem[]>(initialFuelTypes);
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
@@ -479,7 +563,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [categories, setCategories] = useState<ServiceCategory[]>(initialCategories);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -490,6 +574,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     { id: 'tech3', name: 'Suresh Raina', specialty: 'Body & Paint', status: 'available' },
     { id: 'tech4', name: 'Vijay Verma', specialty: 'AC Specialist', status: 'off' },
   ]);
+  const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [missingTables, setMissingTables] = useState<string[]>([]);
 
@@ -541,6 +626,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setFuelTypes(state.fuelTypes);
           setSettings(state.settings);
           setAppointments(state.appointments);
+          setTasks(state.tasks || []);
           setUsers(state.users);
           setVehicles(state.vehicles || []);
           setUiSettings(prev => ({
@@ -559,6 +645,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setReviews(state.reviews || []);
           setNotifications(state.notifications || []);
           setServicePackages(state.servicePackages || []);
+          setContactSubmissions(state.contactSubmissions || []);
         }
       } catch (error) {
         console.error("Error fetching initial data from Supabase:", error);
@@ -580,6 +667,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'car_models' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'fuel_types' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'site_config' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'brands' }, () => fetchInitialData())
@@ -612,6 +700,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setFuelTypes(state.fuelTypes);
       setSettings(state.settings);
       setAppointments(state.appointments);
+      setTasks(state.tasks || []);
       setUsers(state.users);
       setVehicles(state.vehicles || []);
       setUiSettings({
@@ -636,6 +725,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setReviews(state.reviews || []);
       setNotifications(state.notifications || []);
       setServicePackages(state.servicePackages || []);
+      setContactSubmissions(state.contactSubmissions || []);
     });
 
     newSocket.on('services_updated', (newServices) => setServices(newServices));
@@ -644,6 +734,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('fuel_types_updated', (newFuels) => setFuelTypes(newFuels));
     newSocket.on('settings_updated', (newSettings) => setSettings(newSettings));
     newSocket.on('appointments_updated', (newAppointments) => setAppointments(newAppointments));
+    newSocket.on('tasks_updated', (newTasks) => setTasks(newTasks));
     newSocket.on('users_updated', (newUsers) => setUsers(newUsers));
     newSocket.on('vehicles_updated', (newVehicles) => setVehicles(newVehicles));
     newSocket.on('ui_settings_updated', (newUiSettings) => setUiSettings(newUiSettings));
@@ -656,6 +747,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('reviews_updated', (newReviews) => setReviews(newReviews));
     newSocket.on('notifications_updated', (newNotifications) => setNotifications(newNotifications));
     newSocket.on('service_packages_updated', (newPackages) => setServicePackages(newPackages));
+    newSocket.on('contact_submissions_updated', (newSubmissions) => setContactSubmissions(newSubmissions));
 
     return () => {
       newSocket.disconnect();
@@ -729,6 +821,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
   
+  const updateTasks = (newTasks: Task[]) => {
+    setTasks(newTasks);
+    if (socket?.connected) {
+      socket.emit('update_tasks', newTasks);
+    } else {
+      updateTable('tasks', newTasks);
+    }
+  };
+
+  const addTask = (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => {
+    const newTask: Task = {
+      ...task,
+      id: Math.random().toString(36).substring(2, 9),
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    const updatedTasks = [newTask, ...tasks];
+    setTasks(updatedTasks);
+    if (socket?.connected) {
+      socket.emit('update_tasks', updatedTasks);
+    } else {
+      updateTable('tasks', updatedTasks);
+    }
+  };
+
   const updateUsers = (newUsers: User[]) => {
     setUsers(newUsers);
     if (socket?.connected) {
@@ -873,15 +990,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateWalletBalance = (userId: string, amount: number) => {
+  const updateWalletBalance = async (userId: string, amount: number) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const newBalance = (user.walletBalance || 0) + amount;
     const updatedUsers = users.map(u => 
-      u.id === userId ? { ...u, walletBalance: (u.walletBalance || 0) + amount } : u
+      u.id === userId ? { ...u, walletBalance: newBalance } : u
     );
+    
     setUsers(updatedUsers);
+    
     if (socket?.connected) {
       socket.emit('update_users', updatedUsers);
     } else {
-      updateTable('users', updatedUsers);
+      // Direct Supabase update for reliability
+      try {
+        const { error } = await supabase
+          .from('users')
+          .update({ wallet_balance: newBalance })
+          .eq('id', userId);
+        
+        if (error) {
+          console.error("Error updating wallet in Supabase:", error);
+          // Fallback to updateTable if direct update fails
+          updateTable('users', updatedUsers);
+        }
+      } catch (e) {
+        updateTable('users', updatedUsers);
+      }
     }
   };
 
@@ -911,9 +1048,47 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateContactSubmissions = (newSubmissions: ContactSubmission[]) => {
+    setContactSubmissions(newSubmissions);
+    if (socket?.connected) {
+      socket.emit('update_contact_submissions', newSubmissions);
+    } else {
+      updateTable('contact_submissions', newSubmissions);
+    }
+  };
+
+  const addNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: Math.random().toString(36).substring(2, 9),
+      isRead: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [newNotification, ...prev]);
+    if (socket?.connected) {
+      socket.emit('add_notification', newNotification);
+    } else {
+      updateTable('notifications', [newNotification, ...notifications]);
+    }
+  };
+
   const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => {
+    // Ensure we have a service title if only ID was provided
+    let serviceTitle = appointment.service;
+    let serviceId = appointment.serviceId;
+
+    if (!serviceId && appointment.service.startsWith('cat_')) {
+      serviceId = appointment.service;
+      serviceTitle = services.find(s => s.id === serviceId)?.title || serviceId;
+    } else if (!serviceId && appointment.service.startsWith('pkg_')) {
+      serviceId = appointment.service;
+      serviceTitle = servicePackages.find(p => p.id === serviceId)?.title || serviceId;
+    }
+
     const newAppointment: Appointment = {
       ...appointment,
+      service: serviceTitle,
+      serviceId: serviceId || 'unknown',
       id: Math.random().toString(36).substring(2, 9),
       status: 'pending',
       priority: 'medium',
@@ -922,10 +1097,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
     };
     setAppointments(prev => [newAppointment, ...prev]);
     
+    // Notify Admin
+    addNotification({
+      userId: 'admin', // Special ID for admin notifications
+      title: 'New Booking Received',
+      message: `${appointment.name} booked ${serviceTitle} for ${appointment.date} at ${appointment.time}.`,
+      type: 'info'
+    });
+
     if (socket?.connected) {
       socket.emit('add_appointment', newAppointment);
     } else {
       dbAddAppointment(newAppointment);
+    }
+  };
+
+  const addContactSubmission = (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => {
+    const newSubmission: ContactSubmission = {
+      ...submission,
+      id: Math.random().toString(36).substring(2, 9),
+      status: 'new',
+      createdAt: new Date().toISOString()
+    };
+    setContactSubmissions(prev => [newSubmission, ...prev]);
+    
+    // Notify Admin
+    addNotification({
+      userId: 'admin',
+      title: 'New Inquiry Received',
+      message: `From ${submission.firstName} ${submission.lastName}: ${submission.subject}`,
+      type: 'info'
+    });
+
+    if (socket?.connected) {
+      socket.emit('add_contact_submission', newSubmission);
+    } else {
+      updateTable('contact_submissions', [newSubmission, ...contactSubmissions]);
     }
   };
 
@@ -947,6 +1154,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       fuelTypes,
       settings,
       appointments,
+      tasks,
       users,
       uiSettings,
       apiKeys,
@@ -960,12 +1168,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       servicePackages,
       technicians,
       vehicles,
+      contactSubmissions,
       updateServices,
       updateCarMakes,
       updateCarModels,
       updateFuelTypes,
       updateSettings,
       updateAppointments,
+      updateTasks,
       updateUsers,
       updateUser,
       updateUiSettings,
@@ -978,7 +1188,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateReviews,
       updateNotifications,
       updateServicePackages,
+      updateContactSubmissions,
       addAppointment,
+      addTask,
+      addContactSubmission,
+      addNotification,
       addVehicle,
       removeVehicle,
       updateWalletBalance,

@@ -15,7 +15,11 @@ import {
   Package,
   ArrowLeftRight,
   X,
-  Zap
+  Zap,
+  Clock,
+  CalendarCheck,
+  ClipboardCheck,
+  Settings2
 } from "lucide-react";
 import { useState } from "react";
 import { ServiceModal } from "@/components/ServiceModal";
@@ -101,18 +105,37 @@ export function Services() {
     })
     .sort((a, b) => {
       if (sortBy === "price_asc") {
-        return (a.basePrice || 0) - (b.basePrice || 0);
+        return (a.estimatedPrice || a.basePrice || 0) - (b.estimatedPrice || b.basePrice || 0);
       }
       if (sortBy === "price_desc") {
-        return (b.basePrice || 0) - (a.basePrice || 0);
+        return (b.estimatedPrice || b.basePrice || 0) - (a.estimatedPrice || a.basePrice || 0);
       }
       if (sortBy === "duration") {
-        // Simple duration sort based on string length or first number if available
         const getNum = (s: string) => parseInt(s.match(/\d+/)?.[0] || "0");
-        return getNum(a.duration) - getNum(b.duration);
+        const durA = a.estimatedDuration || a.duration || "";
+        const durB = b.estimatedDuration || b.duration || "";
+        return getNum(durA) - getNum(durB);
       }
       return 0;
     });
+
+  const serviceSteps = [
+    {
+      title: "Booking",
+      description: "Select your service, choose a convenient time slot, and provide your vehicle details through our seamless digital interface.",
+      icon: <CalendarCheck className="h-10 w-10 text-primary" />
+    },
+    {
+      title: "Service Execution",
+      description: "Our certified master mechanics perform the requested services using genuine OEM/OES parts and state-of-the-art diagnostic tools.",
+      icon: <Wrench className="h-10 w-10 text-primary" />
+    },
+    {
+      title: "Quality Check",
+      description: "Every vehicle undergoes a rigorous multi-point inspection and a final test drive to ensure it meets our high performance standards.",
+      icon: <ShieldCheck className="h-10 w-10 text-primary" />
+    }
+  ];
 
   return (
     <div className="bg-slate-50 min-h-screen pb-32">
@@ -240,6 +263,45 @@ export function Services() {
         </div>
       )}
 
+      {/* Service Process Section */}
+      <div className="container mx-auto px-4 lg:px-8 mb-32">
+        <div className="max-w-3xl mx-auto text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-6">
+            <Settings2 className="h-3 w-3 text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Operational Workflow</span>
+          </div>
+          <h2 className="text-5xl md:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-6">
+            The CarMechs <br /> <span className="text-primary">Protocol</span>
+          </h2>
+          <p className="text-lg text-slate-500 font-medium">A systematic approach to automotive excellence, ensuring every vehicle leaves our facility in peak condition.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+          {/* Connecting Line */}
+          <div className="hidden md:block absolute top-1/2 left-0 w-full h-px bg-slate-100 -z-10" />
+          
+          {serviceSteps.map((step, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.2 }}
+              className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center group hover:border-primary/30 transition-all"
+            >
+              <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mb-8 group-hover:bg-primary transition-colors shadow-sm">
+                <div className="group-hover:scale-110 group-hover:brightness-0 group-hover:invert transition-all">
+                  {step.icon}
+                </div>
+              </div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-4">Step 0{idx + 1}</div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">{step.title}</h3>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed">{step.description}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 lg:px-8 -mt-20 relative z-20">
         {/* Vehicle Selector Card */}
         <motion.div 
@@ -362,9 +424,9 @@ export function Services() {
                 onChange={(e) => setSortBy(e.target.value)}
               >
                 <option value="default">Sort By</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="duration">Duration</option>
+                <option value="price_asc">Est. Price: Low to High</option>
+                <option value="price_desc">Est. Price: High to Low</option>
+                <option value="duration">Est. Duration</option>
               </select>
             </div>
 
@@ -393,111 +455,157 @@ export function Services() {
                       {getIcon(service)}
                     </div>
                   </div>
-                  <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none group-hover:text-primary transition-colors">{service.title}</h3>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight leading-none group-hover:text-primary transition-colors">{service.title}</h3>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-lg font-black text-primary tracking-tighter">
+                          ₹{(service.estimatedPrice || service.basePrice || 0).toLocaleString()}
+                        </span>
+                        {service.estimatedDuration && (
+                          <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <Clock className="h-3 w-3" />
+                            {service.estimatedDuration}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8 line-clamp-2">{service.description}</p>
                 
-                <div className="space-y-3">
-                  {service.features.slice(0, 3).map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-400">
-                      <div className="h-5 w-5 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="h-3 w-3 text-white" />
-                      </div>
-                      <span>{feature}</span>
+                <div className="space-y-6">
+                  {service.features && service.features.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Key Features</div>
+                      {service.features.slice(0, 3).map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-400">
+                          <div className="h-5 w-5 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                          </div>
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+
+                  {service.checks && service.checks.length > 0 && (
+                    <div className="space-y-3 pt-4 border-t border-slate-50">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                        <ClipboardCheck className="h-3 w-3 text-primary" />
+                        Quality Checks Performed
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {service.checks.slice(0, 4).map((check, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-[9px] font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                            <span className="h-1 w-1 rounded-full bg-primary" />
+                            <span className="truncate">{check}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
               <div className="p-10 pt-0">
-                <div className="bg-slate-50 rounded-[2rem] p-6 flex items-center justify-between group-hover:bg-primary/5 transition-colors border border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
-                      {isVehicleSelected ? "Final Quote" : "Base Price"}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-black text-primary tracking-tighter">
-                        {isVehicleSelected 
-                          ? `₹${calculatePrice(service.basePrice)}` 
-                          : service.price}
+                <div className="bg-slate-50 rounded-[2rem] p-6 flex flex-col gap-6 group-hover:bg-primary/5 transition-colors border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+                        {isVehicleSelected ? "Final Quote" : "Base Price"}
                       </span>
-                      {isVehicleSelected && (
-                        <Popover>
-                          <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <div className="h-6 w-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-help hover:border-primary transition-colors">
-                              <Info className="h-3 w-3 text-slate-400" />
-                            </div>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64 rounded-2xl p-6 shadow-2xl border-slate-100 bg-white text-slate-900">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Price Breakdown</h4>
-                            <div className="space-y-3 text-xs font-bold">
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Base Service</span>
-                                <span>₹{service.basePrice}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-primary tracking-tighter">
+                          {isVehicleSelected 
+                            ? `₹${calculatePrice(service.basePrice)}` 
+                            : service.price}
+                        </span>
+                        {isVehicleSelected && (
+                          <Popover>
+                            <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <div className="h-6 w-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-help hover:border-primary transition-colors">
+                                <Info className="h-3 w-3 text-slate-400" />
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Make Adjustment</span>
-                                <span>+₹{carMakes.find(m => m.name === selectedMake)?.price || 0}</span>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 rounded-2xl p-6 shadow-2xl border-slate-100 bg-white text-slate-900">
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Price Breakdown</h4>
+                              <div className="space-y-3 text-xs font-bold">
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Base Service</span>
+                                  <span>₹{service.basePrice}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Make Adjustment</span>
+                                  <span>+₹{carMakes.find(m => m.name === selectedMake)?.price || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Model Adjustment</span>
+                                  <span>+₹{carModels.find(m => m.name === selectedModel)?.price || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Fuel Adjustment</span>
+                                  <span>+₹{fuelTypes.find(f => f.name === selectedFuel)?.price || 0}</span>
+                                </div>
+                                <div className="flex justify-between border-t border-slate-100 pt-3 text-primary">
+                                  <span>Total Estimate</span>
+                                  <span>₹{calculatePrice(service.basePrice)}</span>
+                                </div>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Model Adjustment</span>
-                                <span>+₹{carModels.find(m => m.name === selectedModel)?.price || 0}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Fuel Adjustment</span>
-                                <span>+₹{fuelTypes.find(f => f.name === selectedFuel)?.price || 0}</span>
-                              </div>
-                              <div className="flex justify-between border-t border-slate-100 pt-3 text-primary">
-                                <span>Total Estimate</span>
-                                <span>₹{calculatePrice(service.basePrice)}</span>
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Duration</span>
+                      <div className="flex items-center gap-1.5 text-sm font-black text-slate-900 uppercase tracking-tight">
+                        <Clock className="h-3 w-3 text-primary" />
+                        {service.estimatedDuration || service.duration || "2-4 Hours"}
+                      </div>
                     </div>
                   </div>
                   
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          size="sm" 
-                          className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none flex-1"
-                          asChild
-                        >
-                          <Link 
-                            to="/book" 
-                            state={{ 
-                              serviceId: service.id,
-                              vehicleDetails: isVehicleSelected ? {
-                                make: selectedMake,
-                                model: selectedModel,
-                                fuel: selectedFuel
-                              } : undefined
-                            }}
-                          >
-                            Book
-                          </Link>
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => toggleCompare(service.id)}
-                          className={cn(
-                            "h-12 w-12 rounded-xl border-slate-200 transition-all",
-                            compareList.includes(service.id) ? "bg-primary border-primary text-white" : "bg-white text-slate-400 hover:border-primary hover:text-primary"
-                          )}
-                        >
-                          <ArrowLeftRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <button 
-                        onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
-                        className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors text-center"
+                  <div className="flex items-center gap-3">
+                    <Button 
+                      size="lg" 
+                      className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white border-none flex-1 group/btn"
+                      asChild
+                    >
+                      <Link 
+                        to="/book" 
+                        state={{ 
+                          serviceId: service.id,
+                          vehicleDetails: isVehicleSelected ? {
+                            make: selectedMake,
+                            model: selectedModel,
+                            fuel: selectedFuel
+                          } : undefined
+                        }}
                       >
-                        Details
-                      </button>
-                    </div>
+                        Book Now <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => toggleCompare(service.id)}
+                      className={cn(
+                        "h-16 w-16 rounded-2xl border-slate-200 transition-all",
+                        compareList.includes(service.id) ? "bg-primary border-primary text-white" : "bg-white text-slate-400 hover:border-primary hover:text-primary"
+                      )}
+                    >
+                      <ArrowLeftRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+
+                  <button 
+                    onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
+                    className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors text-center py-2"
+                  >
+                    View Full Technical Specs
+                  </button>
                 </div>
               </div>
             </motion.div>

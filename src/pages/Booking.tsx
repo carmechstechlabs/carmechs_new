@@ -10,10 +10,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 
 const steps = [
-  { id: 1, title: "Vehicle", icon: Car },
-  { id: 2, title: "Service", icon: Wrench },
-  { id: 3, title: "Schedule", icon: CalendarIcon },
-  { id: 4, title: "Confirm", icon: CreditCard },
+  { id: 1, title: "Vehicle Selection", icon: Car },
+  { id: 2, title: "Service Details", icon: Wrench },
+  { id: 3, title: "Scheduling", icon: CalendarIcon },
+  { id: 4, title: "Confirmation", icon: CreditCard },
 ];
 
 export function Booking() {
@@ -25,11 +25,13 @@ export function Booking() {
   const [useWallet, setUseWallet] = useState(false);
   
   // Simulate logged in user
-  const user = users[0];
+  const user = users.length > 0 ? users[0] : null;
   const [formData, setFormData] = useState({
     make: "",
     model: "",
     fuel: "",
+    year: "",
+    licensePlate: "",
     service: "",
     packageId: "",
     date: "",
@@ -59,7 +61,9 @@ export function Booking() {
         ...prev,
         make: location.state?.vehicleDetails?.make || qMake || "",
         model: location.state?.vehicleDetails?.model || qModel || "",
-        fuel: location.state?.vehicleDetails?.fuel || qFuel || ""
+        fuel: location.state?.vehicleDetails?.fuel || qFuel || "",
+        year: location.state?.vehicleDetails?.year || "",
+        licensePlate: location.state?.vehicleDetails?.licensePlate || ""
       }));
     }
   }, [location.state, location.search]);
@@ -159,16 +163,18 @@ export function Booking() {
     try {
       const service = services.find(s => s.id === formData.service);
       const pkg = servicePackages.find(p => p.id === formData.packageId);
+      const serviceTitle = pkg ? pkg.title : (service?.title || formData.service || "Car Service");
+      const serviceId = pkg ? pkg.id : (service?.id || formData.service || "unknown");
       const totalPrice = pkg ? pkg.basePrice : (service ? calculatePrice(service.basePrice) : 0);
       
       // If using wallet, we subtract from balance first
       if (useWallet && user) {
-        if (user.walletBalance < totalPrice) {
+        if ((user.walletBalance || 0) < totalPrice) {
           toast.error("Insufficient wallet balance");
           setIsSubmitting(false);
           return;
         }
-        updateWalletBalance(user.id, -totalPrice);
+        await updateWalletBalance(user.id, -totalPrice);
       }
 
       // Simulate Payment Gateway for Razorpay/Paytm
@@ -180,12 +186,12 @@ export function Booking() {
 
       addAppointment({
         ...formData,
+        service: serviceTitle,
+        serviceId: serviceId,
         amount: totalPrice,
       });
       
       if (formData.email) {
-        const serviceTitle = pkg ? pkg.title : (services.find(s => s.id === formData.service)?.title || "Car Service");
-        
         const response = await fetch('/api/send-confirmation', {
           method: 'POST',
           headers: {
@@ -452,7 +458,7 @@ export function Booking() {
                     animate={{ opacity: formData.model ? 1 : 0.5 }}
                   >
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-3 block">3. Propulsion System</label>
-                    <div className="flex gap-3 flex-wrap">
+                    <div className="flex gap-3 flex-wrap mb-8">
                       {fuelTypes.map((fuel) => (
                         <button
                           key={fuel.name}
@@ -476,6 +482,27 @@ export function Booking() {
                         </button>
                       ))}
                     </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Manufacturing Year (Optional)</label>
+                        <Input 
+                          placeholder="e.g. 2022"
+                          value={formData.year}
+                          onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                          className="h-14 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">License Plate (Optional)</label>
+                        <Input 
+                          placeholder="e.g. KA 01 AB 1234"
+                          value={formData.licensePlate}
+                          onChange={(e) => setFormData({ ...formData, licensePlate: e.target.value.toUpperCase() })}
+                          className="h-14 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold uppercase"
+                        />
+                      </div>
+                    </div>
                   </motion.div>
                 </div>
               </motion.div>
@@ -490,7 +517,7 @@ export function Booking() {
                 className="space-y-10"
               >
                 <div>
-                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Selection</h2>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Details</h2>
                   <p className="text-slate-500 font-medium">Choose the maintenance protocol for your vehicle.</p>
                 </div>
                 
@@ -710,7 +737,14 @@ export function Booking() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-white/40 text-xs font-bold uppercase">Machine</span>
-                        <span className="font-black uppercase tracking-tight">{formData.make} {formData.model}</span>
+                        <div className="text-right">
+                          <p className="font-black uppercase tracking-tight">{formData.make} {formData.model}</p>
+                          {(formData.year || formData.licensePlate) && (
+                            <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">
+                              {formData.year} {formData.licensePlate ? `• ${formData.licensePlate}` : ''}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-white/40 text-xs font-bold uppercase">Protocol</span>
