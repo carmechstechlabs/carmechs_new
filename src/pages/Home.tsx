@@ -31,7 +31,13 @@ import {
   Instagram,
   Twitter,
   Linkedin,
-  Youtube
+  Youtube,
+  Camera,
+  Map,
+  ExternalLink,
+  Activity,
+  Info,
+  Scale
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
@@ -42,9 +48,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 
 import { SEO } from "@/components/SEO";
+import { GallerySection } from "@/components/sections/GallerySection";
+import { CoreServicesSection } from "@/components/sections/CoreServicesSection";
+import { LocationSection } from "@/components/sections/LocationSection";
+import { ServiceCatalog } from "@/components/sections/ServiceCatalog";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 
 const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: () => void, service: any }) => {
-  const { carMakes, carModels, fuelTypes, addAppointment, currentUser, vehicles } = useData();
+  const { carMakes, carModels, fuelTypes, locations, addAppointment, currentUser, vehicles } = useData();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,12 +65,26 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
     fuel: "",
     year: "",
     licensePlate: "",
+    locationId: "",
     date: new Date().toISOString().split('T')[0],
     time: "09:00 AM",
     name: currentUser?.name || "",
     phone: currentUser?.phone || "",
     email: currentUser?.email || ""
   });
+
+  const calculateTotal = () => {
+    let total = service.basePrice || 1499;
+    const make = carMakes.find(m => m.name === formData.make);
+    if (make) total += make.price;
+    const model = carModels.find(m => m.name === formData.model);
+    if (model) total += model.price;
+    const fuel = fuelTypes.find(f => f.name === formData.fuel);
+    if (fuel) total += fuel.price;
+    return total;
+  };
+
+  const totalAmount = calculateTotal();
 
   useEffect(() => {
     if (currentUser) {
@@ -78,11 +103,13 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
     setIsSubmitting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
+      const selectedLocation = locations.find(l => l.id === formData.locationId);
       addAppointment({
         ...formData,
+        locationName: selectedLocation?.name || "",
         service: service.title,
         serviceId: service.id,
-        amount: service.basePrice || 1499,
+        amount: totalAmount,
       });
       toast.success("Booking successful! Redirecting...");
       setTimeout(() => {
@@ -172,9 +199,52 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Select Workshop</label>
+                  <select 
+                    value={formData.locationId}
+                    onChange={(e) => setFormData({...formData, locationId: e.target.value})}
+                    className="w-full h-12 px-4 rounded-xl border border-slate-100 bg-slate-50 font-bold text-sm"
+                  >
+                    <option value="">Select Location</option>
+                    {locations.map(l => <option key={l.id} value={l.id}>{l.name} - {l.city}</option>)}
+                  </select>
+                </div>
+
+                {formData.make && (
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                      <span>Base Price</span>
+                      <span>₹{service.basePrice || 1499}</span>
+                    </div>
+                    {carMakes.find(m => m.name === formData.make)?.price !== 0 && (
+                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <span>{formData.make} Adjustment</span>
+                        <span>+₹{carMakes.find(m => m.name === formData.make)?.price}</span>
+                      </div>
+                    )}
+                    {carModels.find(m => m.name === formData.model)?.price !== 0 && formData.model && (
+                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <span>{formData.model} Adjustment</span>
+                        <span>+₹{carModels.find(m => m.name === formData.model)?.price}</span>
+                      </div>
+                    )}
+                    {fuelTypes.find(f => f.name === formData.fuel)?.price !== 0 && formData.fuel && (
+                      <div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <span>{formData.fuel} Adjustment</span>
+                        <span>+₹{fuelTypes.find(f => f.name === formData.fuel)?.price}</span>
+                      </div>
+                    )}
+                    <div className="pt-3 border-t border-slate-200 flex justify-between text-sm font-black uppercase tracking-widest text-primary">
+                      <span>Total Estimate</span>
+                      <span>₹{totalAmount}</span>
+                    </div>
+                  </div>
+                )}
+
                 <Button 
                   onClick={() => setStep(2)}
-                  disabled={!formData.make || !formData.model || !formData.fuel}
+                  disabled={!formData.make || !formData.model || !formData.fuel || !formData.locationId}
                   className="w-full h-16 rounded-2xl font-black uppercase tracking-widest text-sm bg-primary hover:bg-primary/90 text-white"
                 >
                   Next: Schedule <ArrowRight className="ml-2 h-4 w-4" />
@@ -242,39 +312,6 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
 };
 ;
 
-const services = [
-  {
-    icon: <Wrench className="h-8 w-8 text-primary" />,
-    title: "Periodic Services",
-    description: "Oil change, filter replacement, and general checkup.",
-  },
-  {
-    icon: <Disc className="h-8 w-8 text-primary" />,
-    title: "Tyres & Wheels",
-    description: "Alignment, balancing, and tyre replacement.",
-  },
-  {
-    icon: <Battery className="h-8 w-8 text-primary" />,
-    title: "Batteries",
-    description: "Battery check, charging, and replacement.",
-  },
-  {
-    icon: <PaintBucket className="h-8 w-8 text-primary" />,
-    title: "Denting & Painting",
-    description: "Scratch removal, dent repair, and full body painting.",
-  },
-  {
-    icon: <Car className="h-8 w-8 text-primary" />,
-    title: "AC Service",
-    description: "Cooling coil cleaning, gas refill, and compressor check.",
-  },
-  {
-    icon: <ShieldCheck className="h-8 w-8 text-primary" />,
-    title: "Car Spa & Cleaning",
-    description: "Interior detailing, exterior wash, and polishing.",
-  },
-];
-
 const features = [
   {
     icon: <ShieldCheck className="h-6 w-6 text-primary" />,
@@ -298,11 +335,92 @@ const features = [
   },
 ];
 
+const ComparisonModal = ({ isOpen, onClose, services }: { isOpen: boolean, onClose: () => void, services: any[] }) => {
+  if (services.length === 0) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[900px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
+        <div className="bg-slate-900 p-10 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+          <DialogHeader className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 mb-4 w-fit">
+              <Scale className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Service Comparison Engine</span>
+            </div>
+            <DialogTitle className="text-4xl font-black uppercase tracking-tighter leading-none mb-2">
+              Compare Modules
+            </DialogTitle>
+            <p className="text-white/60 font-medium">Side-by-side analysis of selected maintenance protocols.</p>
+          </DialogHeader>
+        </div>
+
+        <div className="p-10 bg-white overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="p-4 text-left border-b border-slate-100 bg-slate-50 rounded-tl-2xl">Feature</th>
+                {services.map(s => (
+                  <th key={s.id} className="p-4 text-center border-b border-slate-100 bg-slate-50 last:rounded-tr-2xl">
+                    <div className="text-sm font-black uppercase tracking-tighter text-slate-900">{s.title}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="p-4 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-50">Starting Price</td>
+                {services.map(s => (
+                  <td key={s.id} className="p-4 text-center border-b border-slate-50">
+                    <div className="text-lg font-black text-primary">{s.price}</div>
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="p-4 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-50">Duration</td>
+                {services.map(s => (
+                  <td key={s.id} className="p-4 text-center border-b border-slate-50">
+                    <div className="text-sm font-bold text-slate-600">{s.duration}</div>
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="p-4 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-50">Checks Included</td>
+                {services.map(s => (
+                  <td key={s.id} className="p-4 text-center border-b border-slate-50">
+                    <div className="text-xs font-bold text-slate-900">{s.checks?.length || 0} Points</div>
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <td className="p-4 text-xs font-bold uppercase tracking-widest text-slate-400">Key Features</td>
+                {services.map(s => (
+                  <td key={s.id} className="p-4 text-center align-top">
+                    <ul className="space-y-2">
+                      {s.features?.slice(0, 4).map((f: string, i: number) => (
+                        <li key={i} className="text-[10px] font-medium text-slate-500 flex items-center justify-center gap-1">
+                          <CheckCircle2 className="h-2 w-2 text-emerald-500 shrink-0" /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export function Home() {
-  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading } = useData();
+  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading, settings, carMakes, carModels, fuelTypes } = useData();
   const [selectedService, setSelectedService] = useState<any>(null);
   const [bookingService, setBookingService] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [compareList, setCompareList] = useState<any[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
   const navigate = useNavigate();
   const [quickVehicle, setQuickVehicle] = useState({
     make: "",
@@ -311,6 +429,20 @@ export function Home() {
     year: "",
     licensePlate: ""
   });
+
+  const calculateCalculatedPrice = (service: any) => {
+    if (!quickVehicle.make || !quickVehicle.model || !quickVehicle.fuel) return service.price;
+    
+    let total = service.basePrice || 1499;
+    const make = carMakes.find(m => m.name === quickVehicle.make);
+    if (make) total += make.price;
+    const model = carModels.find(m => m.name === quickVehicle.model);
+    if (model) total += model.price;
+    const fuel = fuelTypes.find(f => f.name === quickVehicle.fuel);
+    if (fuel) total += fuel.price;
+    
+    return `₹${total.toLocaleString()}`;
+  };
   const [contactForm, setContactForm] = useState({
     firstName: "",
     lastName: "",
@@ -411,7 +543,7 @@ export function Home() {
             playsInline
             className="w-full h-full object-cover opacity-30 grayscale"
           >
-            <source src="https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4" type="video/mp4" />
+            <source src={uiSettings.heroVideoUrl || "https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4"} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px]" />
         </div>
@@ -675,7 +807,7 @@ export function Home() {
 
       {/* Brands Section (Marquee Style) */}
       {brands.length > 0 && (
-        <section className="py-16 bg-white border-b border-slate-100 overflow-hidden">
+        <section id="brands" className="py-16 bg-white border-b border-slate-100 overflow-hidden">
           <div className="container mx-auto px-4 mb-10">
             <div className="flex items-center gap-6">
               <div className="h-px flex-1 bg-slate-100" />
@@ -771,24 +903,65 @@ export function Home() {
                         </div>
                       </motion.div>
                       <h3 className="text-3xl font-bold mb-4 uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors">{service.title}</h3>
-                      <p className="text-slate-500 mb-10 text-base font-medium leading-relaxed line-clamp-2">{service.description}</p>
+                      <p className="text-slate-500 mb-6 text-base font-medium leading-relaxed line-clamp-2">{service.description}</p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-8">
+                        {service.features?.slice(0, 3).map((feature: string, i: number) => (
+                          <span key={i} className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/10 transition-colors">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                     
                     <div className="relative z-10 flex flex-col gap-6 mt-auto">
-                      <motion.div 
-                        whileHover={{ scale: 1.05, y: -2 }} 
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Button 
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Starting From</span>
+                          <span className="text-xl font-black text-primary">{service.price}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Duration</span>
+                          <span className="text-xs font-bold text-slate-600 flex items-center gap-1"><Clock className="h-3 w-3" /> {service.duration}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <motion.div 
+                          whileHover={{ scale: 1.05, y: -2 }} 
+                          whileTap={{ scale: 0.95 }}
+                          className="flex-1"
+                        >
+                          <Button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedService(service);
+                            }}
+                            className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none transition-all"
+                          >
+                            Book Now <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                        <Button
+                          variant="outline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setBookingService(service);
+                            if (compareList.find(s => s.id === service.id)) {
+                              setCompareList(compareList.filter(s => s.id !== service.id));
+                            } else if (compareList.length < 3) {
+                              setCompareList([...compareList, service]);
+                            } else {
+                              toast.error("You can compare up to 3 services");
+                            }
                           }}
-                          className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/10 bg-primary hover:bg-primary/90 text-white border-none transition-all"
+                          className={cn(
+                            "h-14 w-14 rounded-2xl border-slate-200 transition-all",
+                            compareList.find(s => s.id === service.id) ? "bg-primary text-white border-primary" : "bg-white text-slate-400 hover:bg-slate-50"
+                          )}
                         >
-                          Book Now <ArrowRight className="ml-2 h-4 w-4" />
+                          <Scale className="h-5 w-5" />
                         </Button>
-                      </motion.div>
+                      </div>
 
                       <div className="flex items-center justify-between pt-6 border-t border-slate-100">
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Technical Specs</span>
@@ -1014,7 +1187,7 @@ export function Home() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Base Operations</h3>
-                    <p className="text-lg font-bold text-slate-900">{uiSettings.adminLogin.loginTerminalId || "Main Service Hub, New Delhi"}</p>
+                    <p className="text-lg font-bold text-slate-900">{settings.address || "Newtown, Kolkata 700156"}</p>
                   </div>
                 </div>
 
@@ -1024,7 +1197,7 @@ export function Home() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Voice Uplink</h3>
-                    <p className="text-lg font-bold text-slate-900">+91 98765 43210</p>
+                    <p className="text-lg font-bold text-slate-900">{settings.phone || "+91 98765 43210"}</p>
                   </div>
                 </div>
 
@@ -1034,7 +1207,7 @@ export function Home() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Data Transmission</h3>
-                    <p className="text-lg font-bold text-slate-900">support@carmechs.com</p>
+                    <p className="text-lg font-bold text-slate-900">{settings.email || "support@carmechs.com"}</p>
                   </div>
                 </div>
               </div>
@@ -1121,6 +1294,77 @@ export function Home() {
       </section>
 
 
+      {/* Gallery Section */}
+      <GallerySection 
+        title="Our Premium Workshop" 
+        subtitle="Explore our state-of-the-art facilities and the luxury vehicles we service with precision." 
+      />
+
+      {/* Service Catalog Section */}
+      <ServiceCatalog />
+
+      {/* Core Services Section */}
+      <CoreServicesSection 
+        title="Core Engineering Services" 
+        subtitle="Specialized maintenance modules for high-performance and luxury vehicles." 
+      />
+
+      {/* Testimonials Section */}
+      <TestimonialsSection />
+
+      {/* Location Section */}
+      <div id="locations">
+        <LocationSection 
+          title="Visit Our Service Hubs" 
+          content="Our growing network of premium workshops is equipped with the latest diagnostic tools and OEM parts."
+        />
+      </div>
+
+      {/* Comparison Floating Bar */}
+      <AnimatePresence>
+        {compareList.length > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 backdrop-blur-xl border border-white/10 p-4 rounded-[2.5rem] shadow-2xl flex items-center gap-6"
+          >
+            <div className="flex -space-x-4">
+              {compareList.map(s => (
+                <div key={s.id} className="h-12 w-12 rounded-2xl bg-primary border-4 border-slate-900 flex items-center justify-center text-white shadow-lg">
+                  <Scale className="h-5 w-5" />
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Comparison Engine</span>
+              <span className="text-xs font-bold text-white">{compareList.length} Modules Selected</span>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setIsCompareOpen(true)}
+                className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px]"
+              >
+                Analyze Side-by-Side
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => setCompareList([])}
+                className="h-12 w-12 rounded-xl text-white/40 hover:text-white hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ComparisonModal 
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        services={compareList}
+      />
+
       {/* CTA Section */}
       <section className="py-48 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary -z-10" />
@@ -1171,6 +1415,9 @@ export function Home() {
         service={selectedService} 
         isOpen={!!selectedService} 
         onClose={() => setSelectedService(null)}
+        calculatedPrice={selectedService ? calculateCalculatedPrice(selectedService) : ""}
+        isVehicleSelected={!!(quickVehicle.make && quickVehicle.model && quickVehicle.fuel)}
+        vehicleDetails={quickVehicle}
       />
 
       <BookingModal 
@@ -1178,92 +1425,6 @@ export function Home() {
         isOpen={!!bookingService}
         onClose={() => setBookingService(null)}
       />
-      {/* Footer Section */}
-      <footer className="bg-slate-950 pt-32 pb-12 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-20" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
-            <div className="space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                  <Wrench className="h-6 w-6" />
-                </div>
-                <span className="text-2xl font-black tracking-tighter uppercase text-white">CarMechs</span>
-              </div>
-              <p className="text-slate-400 font-medium leading-relaxed">
-                Redefining automotive maintenance through precision engineering and digital transparency. Your vehicle's future starts here.
-              </p>
-              <div className="flex gap-4">
-                {(uiSettings.socialLinks || []).map((link, idx) => (
-                  <a 
-                    key={idx} 
-                    href={link.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-primary hover:border-primary transition-all group"
-                  >
-                    {link.platform.toLowerCase() === 'facebook' && <Facebook className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                    {link.platform.toLowerCase() === 'instagram' && <Instagram className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                    {link.platform.toLowerCase() === 'twitter' && <Twitter className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                    {link.platform.toLowerCase() === 'linkedin' && <Linkedin className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                    {link.platform.toLowerCase() === 'youtube' && <Youtube className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                    {!['facebook', 'instagram', 'twitter', 'linkedin', 'youtube'].includes(link.platform.toLowerCase()) && <Globe className="h-5 w-5 group-hover:scale-110 transition-transform" />}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Quick Navigation</h4>
-              <ul className="space-y-4">
-                {["Services", "Packages", "About Us", "Contact"].map(item => (
-                  <li key={item}>
-                    <Link to="/" className="text-slate-400 hover:text-primary font-bold uppercase tracking-widest text-[10px] transition-colors flex items-center gap-2 group">
-                      <ChevronRight className="h-3 w-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Service Hubs</h4>
-              <ul className="space-y-4">
-                {["Mumbai", "Pune", "Bangalore", "Delhi"].map(item => (
-                  <li key={item}>
-                    <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">
-                      <MapPin className="h-3 w-3 text-primary" />
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black text-white uppercase tracking-[0.3em] mb-10">Newsletter Uplink</h4>
-              <p className="text-slate-400 text-xs font-medium mb-6">Receive precision maintenance alerts and exclusive offers.</p>
-              <div className="flex gap-2">
-                <Input className="bg-white/5 border-white/10 text-white rounded-xl h-12" placeholder="Email Address" />
-                <Button className="h-12 w-12 rounded-xl bg-primary text-white shrink-0">
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              © {new Date().getFullYear()} CARMECHS AUTOMOTIVE. ALL SYSTEMS OPERATIONAL.
-            </div>
-            <div className="flex gap-8 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              <Link to="/" className="hover:text-white transition-colors">Privacy Protocol</Link>
-              <Link to="/" className="hover:text-white transition-colors">Service Terms</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

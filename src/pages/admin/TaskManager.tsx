@@ -34,9 +34,12 @@ export function TaskManager() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "pending">("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"alphabetical" | "dueDate" | "priority">("dueDate");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   
   const [newTask, setNewTask] = useState({
     title: "",
@@ -56,8 +59,11 @@ export function TaskManager() {
         if (!task.completed) {
           const dueDate = new Date(task.dueDate);
           if (dueDate > now && dueDate <= tomorrow) {
-            // Check if we already notified (simulated by checking if notification exists in state would be better but let's just toast for now)
-            // In a real app, we'd store 'notified' flag on task
+            // Show toast for upcoming deadline
+            toast.warning(`Deadline Approaching`, {
+              description: `Task "${task.title}" is due by ${new Date(task.dueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} tomorrow.`,
+              duration: 5000,
+            });
           }
         }
       });
@@ -73,9 +79,41 @@ export function TaskManager() {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    const selectedDate = new Date(newTask.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      toast.error("Due date cannot be in the past");
+      return;
+    }
+
     addTask(newTask);
     setNewTask({ title: "", description: "", dueDate: "", priority: "medium", assignedTo: "" });
     setIsAddModalOpen(false);
+  };
+
+  const handleEditTask = () => {
+    if (!editingTask || !editingTask.title || !editingTask.dueDate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const selectedDate = new Date(editingTask.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      toast.error("Due date cannot be in the past");
+      return;
+    }
+
+    const updated = tasks.map(t => t.id === editingTask.id ? editingTask : t);
+    updateTasks(updated);
+    setIsEditModalOpen(false);
+    setEditingTask(null);
+    toast.success("Task updated successfully");
   };
 
   const toggleTask = (id: string) => {
@@ -108,8 +146,9 @@ export function TaskManager() {
     const matchesStatus = statusFilter === "all" || 
                          (statusFilter === "completed" ? task.completed : !task.completed);
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+    const matchesAssignee = assigneeFilter === "all" || task.assignedTo === assigneeFilter;
     
-    return matchesSearch && matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
   }).sort((a, b) => {
     if (sortBy === "alphabetical") return a.title.localeCompare(b.title);
     if (sortBy === "dueDate") return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -160,7 +199,7 @@ export function TaskManager() {
       </div>
 
       {/* Filters & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input 
@@ -195,6 +234,20 @@ export function TaskManager() {
             <option value="high">High Priority</option>
             <option value="medium">Medium Priority</option>
             <option value="low">Low Priority</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 h-12 shadow-sm">
+          <User className="h-4 w-4 text-primary" />
+          <select
+            className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 focus:outline-none cursor-pointer pr-4 w-full"
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+          >
+            <option value="all">All Assignees</option>
+            {users.filter(u => u.role !== 'user').map(user => (
+              <option key={user.id} value={user.id}>{user.name}</option>
+            ))}
           </select>
         </div>
 
@@ -310,14 +363,27 @@ export function TaskManager() {
                           </div>
                         )}
 
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => deleteTask(task.id)}
-                          className="h-10 w-10 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              setEditingTask(task);
+                              setIsEditModalOpen(true);
+                            }}
+                            className="h-10 w-10 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5 transition-all"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => deleteTask(task.id)}
+                            className="h-10 w-10 rounded-xl text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -328,7 +394,100 @@ export function TaskManager() {
         </AnimatePresence>
       </div>
 
-      {/* Add Task Modal */}
+      {/* Edit Task Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="bg-white rounded-[2.5rem] border-slate-200 shadow-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Edit Task</DialogTitle>
+            <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Update the task details and assignments.</DialogDescription>
+          </DialogHeader>
+          
+          {editingTask && (
+            <div className="space-y-6 py-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Task Title</label>
+                <Input 
+                  placeholder="e.g. Inventory Audit" 
+                  value={editingTask.title}
+                  onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                  className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                <Input 
+                  placeholder="Brief details about the task..." 
+                  value={editingTask.description}
+                  onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                  className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Date</label>
+                  <Input 
+                    type="date"
+                    value={editingTask.dueDate}
+                    onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value})}
+                    className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
+                  <Select 
+                    value={editingTask.priority} 
+                    onValueChange={(val) => setEditingTask({...editingTask, priority: val as Task["priority"]})}
+                  >
+                    <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign To</label>
+                <Select 
+                  value={editingTask.assignedTo || ""} 
+                  onValueChange={(val) => setEditingTask({...editingTask, assignedTo: val})}
+                >
+                  <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                    <SelectValue placeholder="Select Staff" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    {users.filter(u => u.role !== 'user').map(user => (
+                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditModalOpen(false)}
+              className="flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleEditTask}
+              className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+            >
+              Update Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <DialogContent className="bg-white rounded-[2.5rem] border-slate-200 shadow-2xl max-w-md">
           <DialogHeader>

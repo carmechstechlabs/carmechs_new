@@ -18,11 +18,11 @@ export function AdminLogin() {
   });
 
   const adminUi = uiSettings.adminLogin || {
-    loginTitle: "Terminal 01",
-    loginSubtitle: "Security Clearance Required",
-    loginBgColor: "#050505",
-    loginAccentColor: "#fc9c0a",
-    loginTerminalId: "ID_REQ_001"
+    loginTitle: "Admin Portal",
+    loginSubtitle: "CarMechs Management System",
+    loginBgColor: "#f8fafc",
+    loginAccentColor: "#e31e24",
+    loginTerminalId: "ADMIN_MAIN"
   };
 
   // Redirect if already logged in
@@ -98,10 +98,12 @@ export function AdminLogin() {
     }
   };
 
+  const isDarkBg = adminUi.loginBgColor === '#050505' || adminUi.loginBgColor === '#000000';
+
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans bg-white">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans" style={{ backgroundColor: adminUi.loginBgColor }}>
       {/* Subtle Grid Background */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+      <div className={`absolute inset-0 opacity-[0.05] pointer-events-none ${isDarkBg ? 'invert-0' : 'invert'}`} 
            style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       
       <motion.div 
@@ -111,65 +113,65 @@ export function AdminLogin() {
         className="max-w-md w-full relative z-10"
       >
         {/* Header Section */}
-        <div className="mb-12 text-center">
+        <div className="mb-10 text-center">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="inline-block mb-6"
           >
-            <div className="relative p-1 rounded-3xl bg-slate-50 border border-slate-100 shadow-2xl">
-              <div className="bg-white rounded-[1.4rem] p-5 border border-slate-50 shadow-inner">
+            <div className={`relative p-1 rounded-3xl ${isDarkBg ? 'bg-white/5 border-white/10' : 'bg-slate-200/50 border-slate-200'} border shadow-2xl`}>
+              <div className={`${isDarkBg ? 'bg-white/10 border-white/5' : 'bg-white border-slate-100'} rounded-[1.4rem] p-5 border shadow-inner`}>
                 {(adminUi.loginLogoUrl || settings.logoUrl) ? (
                   <img src={adminUi.loginLogoUrl || settings.logoUrl} alt="Logo" className="h-12 w-12 object-contain" />
                 ) : (
-                  <ShieldCheck className="h-10 w-10 text-primary" />
+                  <ShieldCheck className="h-10 w-10" style={{ color: adminUi.loginAccentColor }} />
                 )}
               </div>
             </div>
           </motion.div>
 
           <motion.h2 
-            initial={{ opacity: 0, letterSpacing: "0.2em" }}
-            animate={{ opacity: 1, letterSpacing: "0.05em" }}
+            initial={{ opacity: 0, letterSpacing: "0.1em" }}
+            animate={{ opacity: 1, letterSpacing: "0.02em" }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-3"
+            className={`text-4xl font-display font-black uppercase tracking-tight mb-3 ${isDarkBg ? 'text-white' : 'text-slate-900'}`}
           >
-            Admin <span className="text-primary">Portal</span>
+            {adminUi.loginTitle.split(' ')[0]} <span style={{ color: adminUi.loginAccentColor }}>{adminUi.loginTitle.split(' ').slice(1).join(' ') || 'Portal'}</span>
           </motion.h2>
           
           <div className="flex flex-col items-center gap-3">
             <div className="flex items-center justify-center gap-3">
-              <div className="h-px w-8 bg-slate-100" />
-              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">
-                Authorized Personnel Only
+              <div className={`h-px w-8 ${isDarkBg ? 'bg-white/10' : 'bg-slate-200'}`} />
+              <p className={`text-[10px] uppercase font-bold tracking-[0.3em] ${isDarkBg ? 'text-white/40' : 'text-slate-400'}`}>
+                {adminUi.loginSubtitle}
               </p>
-              <div className="h-px w-8 bg-slate-100" />
+              <div className={`h-px w-8 ${isDarkBg ? 'bg-white/10' : 'bg-slate-200'}`} />
             </div>
             
             {/* Connection Status Badge */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-primary/5 border-primary/10 text-primary'}`}>
-              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : 'bg-primary'}`} />
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : isDarkBg ? 'bg-white/5 border-white/10 text-white/60' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : isDarkBg ? 'bg-white/40' : 'bg-slate-400'}`} />
               <span className="text-[8px] font-black uppercase tracking-widest">
-                Database: {supabase ? 'Connected' : 'Configuration Missing'}
+                Terminal: {adminUi.loginTerminalId} | DB: {supabase ? 'Online' : 'Offline'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-2xl shadow-slate-200/50 relative overflow-hidden group">
+        <div className={`${isDarkBg ? 'bg-white/5 border-white/10 backdrop-blur-xl' : 'bg-white border-slate-200 shadow-xl'} border rounded-[2rem] p-8 relative overflow-hidden group`}>
           <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div className="space-y-5">
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Username / Email</label>
+                <label className={`text-[9px] font-black uppercase tracking-widest px-1 ${isDarkBg ? 'text-white/40' : 'text-slate-400'}`}>Username / Email</label>
                 <div className="relative group">
                   <input
                     type="text"
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary/50 transition-all font-bold text-sm"
+                    className={`w-full border rounded-xl px-5 py-4 transition-all font-bold text-sm ${isDarkBg ? 'bg-white/5 border-white/10 text-white placeholder-white/20 focus:border-white/30' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary/30 focus:bg-white'}`}
                     placeholder="Enter your username"
                   />
                 </div>
@@ -177,11 +179,12 @@ export function AdminLogin() {
  
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password</label>
+                  <label className={`text-[9px] font-black uppercase tracking-widest ${isDarkBg ? 'text-white/40' : 'text-slate-400'}`}>Password</label>
                   <button 
                     type="button"
                     onClick={() => toast.info("Please contact the system administrator to reset your password.")}
-                    className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                    className="text-[9px] font-black uppercase tracking-widest hover:underline"
+                    style={{ color: adminUi.loginAccentColor }}
                   >
                     Forgot Password?
                   </button>
@@ -192,13 +195,13 @@ export function AdminLogin() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-primary/50 transition-all font-bold text-sm"
+                    className={`w-full border rounded-xl px-5 py-4 transition-all font-bold text-sm ${isDarkBg ? 'bg-white/5 border-white/10 text-white placeholder-white/20 focus:border-white/30' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-primary/30 focus:bg-white'}`}
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary transition-colors"
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${isDarkBg ? 'text-white/20 hover:text-white' : 'text-slate-300 hover:text-slate-600'}`}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -207,7 +210,8 @@ export function AdminLogin() {
             </div>
  
             <Button 
-              className="w-full h-14 bg-primary text-white font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg shadow-primary/20 hover:opacity-90"
+              className="w-full h-14 text-white font-black uppercase tracking-widest rounded-xl transition-all duration-300 shadow-lg border-none"
+              style={{ backgroundColor: adminUi.loginAccentColor }}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -227,11 +231,11 @@ export function AdminLogin() {
 
         {/* Footer Info */}
         <div className="mt-8 flex flex-col items-center gap-6">
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center max-w-xs">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Default Credentials</p>
-            <p className="text-[10px] text-slate-600 font-bold">admin@carmechs.in / admin</p>
+          <div className={`${isDarkBg ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'} border rounded-2xl p-4 text-center max-w-xs`}>
+            <p className={`text-[9px] font-black uppercase tracking-widest mb-2 ${isDarkBg ? 'text-white/20' : 'text-slate-400'}`}>Default Credentials</p>
+            <p className={`text-[10px] font-bold ${isDarkBg ? 'text-white/60' : 'text-slate-600'}`}>admin@carmechs.in / Admin@270389</p>
           </div>
-          <Link to="/" className="text-[10px] text-slate-400 hover:text-primary uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group">
+          <Link to="/" className={`text-[10px] uppercase font-bold tracking-[0.2em] transition-colors flex items-center gap-2 group ${isDarkBg ? 'text-white/40 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}>
             <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
             Back to Website
           </Link>

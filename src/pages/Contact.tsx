@@ -4,9 +4,10 @@ import { MapPin, Phone, Mail, Clock, Send, MessageSquare, ArrowRight, Loader2 } 
 import { motion } from "motion/react";
 import { useData } from "@/context/DataContext";
 import { toast } from "sonner";
+import { LocationSection } from "@/components/sections/LocationSection";
 
 export function Contact() {
-  const { addContactSubmission } = useData();
+  const { addContactSubmission, settings } = useData();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -81,7 +82,7 @@ export function Contact() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 lg:px-8 -mt-20 relative z-20 pb-32">
+      <div className="container mx-auto px-4 lg:px-8 -mt-20 relative z-20 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
           {/* Contact Info - Bento Style */}
           <div className="lg:col-span-5 space-y-8">
@@ -100,7 +101,7 @@ export function Contact() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Base Operations</h3>
-                    <p className="text-lg font-bold text-slate-900 leading-tight">Newtown, Kolkata 700156</p>
+                    <p className="text-lg font-bold text-slate-900 leading-tight">{settings.address || "Newtown, Kolkata 700156"}</p>
                     <p className="text-sm text-slate-500 font-medium mt-1">West Bengal, India</p>
                   </div>
                 </div>
@@ -111,7 +112,7 @@ export function Contact() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Voice Uplink</h3>
-                    <p className="text-lg font-bold text-slate-900">+91-70034-35356</p>
+                    <p className="text-lg font-bold text-slate-900">{settings.phone || "+91-70034-35356"}</p>
                     <p className="text-sm text-slate-500 font-medium mt-1">Mon-Sat 09:00 - 19:00</p>
                   </div>
                 </div>
@@ -122,7 +123,7 @@ export function Contact() {
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Data Transmission</h3>
-                    <p className="text-lg font-bold text-slate-900 lowercase">assist@carmechs.in</p>
+                    <p className="text-lg font-bold text-slate-900 lowercase">{settings.email || "assist@carmechs.in"}</p>
                     <p className="text-sm text-slate-500 font-medium mt-1">Average response: 2 hours</p>
                   </div>
                 </div>
@@ -231,6 +232,12 @@ export function Contact() {
           </motion.div>
         </div>
       </div>
+
+      {/* Locations Section */}
+      <LocationSection 
+        title="Our Workshop Network" 
+        content="Visit our premium service hubs in Kolkata and Howrah for expert automotive care and radical transparency."
+      />
     </div>
   );
 }

@@ -13,12 +13,20 @@ export function Header() {
   const { settings, currentUser, logout, uiSettings, locations } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState("New Delhi");
+  const [selectedLocation, setSelectedLocation] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (locations.length > 0 && !selectedLocation) {
+      const popular = locations.find(l => l.isPopular);
+      setSelectedLocation(popular ? popular.city : locations[0].city);
+    }
+  }, [locations, selectedLocation]);
+
   const filteredLocations = (locations || []).filter(loc => 
-    loc.name.toLowerCase().includes(locationSearch.toLowerCase())
+    loc.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+    loc.city.toLowerCase().includes(locationSearch.toLowerCase())
   );
 
   const popularLocations = (locations || []).filter(loc => loc.isPopular);
@@ -107,6 +115,8 @@ export function Header() {
           <nav className="hidden lg:flex items-center gap-8 text-[11px] font-bold uppercase tracking-wider text-slate-500">
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
             <Link to="/services" className="hover:text-primary transition-colors">Services</Link>
+            <a href="#brands" className="hover:text-primary transition-colors">Brands</a>
+            <a href="#locations" className="hover:text-primary transition-colors">Locations</a>
             {publishedPages.map(page => (
               <Link key={page.id} to={`/p/${page.slug}`} className="hover:text-primary transition-colors">
                 {page.title}
@@ -122,7 +132,7 @@ export function Header() {
             <PopoverTrigger asChild>
               <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-full border border-slate-100 mr-2 hover:bg-slate-100 transition-colors group">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider group-hover:text-primary transition-colors">{selectedLocation}</span>
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider group-hover:text-primary transition-colors">{selectedLocation || "Select City"}</span>
                 <ChevronDown className="h-3 w-3 text-slate-400 group-hover:text-primary transition-colors" />
               </button>
             </PopoverTrigger>
@@ -149,16 +159,16 @@ export function Header() {
                           <button
                             key={loc.id}
                             onClick={() => {
-                              setSelectedLocation(loc.name);
+                              setSelectedLocation(loc.city);
                               setLocationSearch("");
                             }}
                             className={cn(
                               "flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold transition-all text-left",
-                              selectedLocation === loc.name ? "bg-primary/10 text-primary" : "hover:bg-slate-50 text-slate-600"
+                              selectedLocation === loc.city ? "bg-primary/10 text-primary" : "hover:bg-slate-50 text-slate-600"
                             )}
                           >
-                            {loc.name}
-                            {selectedLocation === loc.name && <Check className="h-3 w-3" />}
+                            {loc.city}
+                            {selectedLocation === loc.city && <Check className="h-3 w-3" />}
                           </button>
                         ))}
                       </div>
@@ -166,23 +176,26 @@ export function Header() {
                   )}
                   
                   <div className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    {locationSearch === "" ? "All Cities" : "Search Results"}
+                    {locationSearch === "" ? "Other Cities" : "Search Results"}
                   </div>
                   <div className="space-y-1">
                     {(locationSearch === "" ? otherLocations : filteredLocations).map((loc) => (
                       <button
                         key={loc.id}
                         onClick={() => {
-                          setSelectedLocation(loc.name);
+                          setSelectedLocation(loc.city);
                           setLocationSearch("");
                         }}
                         className={cn(
                           "w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-bold transition-all text-left",
-                          selectedLocation === loc.name ? "bg-primary/10 text-primary" : "hover:bg-slate-50 text-slate-600"
+                          selectedLocation === loc.city ? "bg-primary/10 text-primary" : "hover:bg-slate-50 text-slate-600"
                         )}
                       >
-                        {loc.name}
-                        {selectedLocation === loc.name && <Check className="h-3 w-3" />}
+                        <div className="flex flex-col">
+                          <span>{loc.city}</span>
+                          <span className="text-[8px] opacity-50">{loc.name}</span>
+                        </div>
+                        {selectedLocation === loc.city && <Check className="h-3 w-3" />}
                       </button>
                     ))}
                     {filteredLocations.length === 0 && (
@@ -247,6 +260,8 @@ export function Header() {
               {[
                 { to: "/", label: "Home" },
                 { to: "/services", label: "Services" },
+                { to: "/#brands", label: "Brands" },
+                { to: "/#locations", label: "Locations" },
                 ...publishedPages.map(p => ({ to: `/p/${p.slug}`, label: p.title })),
                 { to: "/about", label: "About Us" },
                 { to: "/contact", label: "Contact" }

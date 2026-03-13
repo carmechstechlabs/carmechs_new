@@ -17,7 +17,7 @@ const steps = [
 ];
 
 export function Booking() {
-  const { services, servicePackages, carMakes, carModels, fuelTypes, addAppointment, users, updateWalletBalance, updateUser } = useData();
+  const { services, servicePackages, carMakes, carModels, fuelTypes, addAppointment, users, updateWalletBalance, updateUser, locations } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -39,6 +39,7 @@ export function Booking() {
     name: "",
     phone: "",
     email: "",
+    locationId: "",
     paymentMethod: "pay_after_service" as 'razorpay' | 'paytm' | 'pay_after_service'
   });
 
@@ -243,7 +244,7 @@ export function Booking() {
   const isStepValid = () => {
     if (currentStep === 1) return formData.make && formData.model && formData.fuel;
     if (currentStep === 2) return formData.service || formData.packageId;
-    if (currentStep === 3) return formData.date && formData.time && formData.name && formData.phone;
+    if (currentStep === 3) return formData.date && formData.time && formData.name && formData.phone && formData.locationId;
     if (currentStep === 4) return formData.paymentMethod;
     return false;
   };
@@ -692,6 +693,39 @@ export function Booking() {
                         className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Service City</label>
+                      <select 
+                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        value={locations.find(l => l.id === formData.locationId)?.city || ""}
+                        onChange={(e) => {
+                          const city = e.target.value;
+                          const firstLocInCity = locations.find(l => l.city === city);
+                          setFormData({ ...formData, locationId: firstLocInCity?.id || "" });
+                        }}
+                      >
+                        <option value="">Select City</option>
+                        {Array.from(new Set(locations.map(l => l.city))).map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Service Hub</label>
+                      <select 
+                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        value={formData.locationId}
+                        onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
+                        disabled={!locations.find(l => l.id === formData.locationId)?.city && !Array.from(new Set(locations.map(l => l.city))).length}
+                      >
+                        <option value="">Select Service Center</option>
+                        {locations
+                          .filter(loc => !locations.find(l => l.id === formData.locationId)?.city || loc.city === locations.find(l => l.id === formData.locationId)?.city)
+                          .map(loc => (
+                          <option key={loc.id} value={loc.id}>{loc.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
@@ -745,6 +779,12 @@ export function Booking() {
                             </p>
                           )}
                         </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-xs font-bold uppercase">Location</span>
+                        <span className="font-black uppercase tracking-tight">
+                          {locations.find(l => l.id === formData.locationId)?.city || "Not Selected"}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-white/40 text-xs font-bold uppercase">Protocol</span>

@@ -11,7 +11,7 @@ import { Facebook } from "lucide-react";
 
 export function Login() {
   const navigate = useNavigate();
-  const { apiKeys, uiSettings } = useData();
+  const { apiKeys, uiSettings, login } = useData();
   const { userLogin } = uiSettings;
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -48,16 +48,16 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
       if (formData.email && formData.password.length >= 6) {
+        await login(formData.email, formData.password);
         toast.success("Successfully signed in!");
         navigate("/");
       } else {
-        toast.error("Invalid credentials. Please try again.");
+        toast.error("Please enter a valid email and password (min 6 characters).");
       }
-    } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(getFirebaseErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

@@ -31,6 +31,7 @@ import { Inventory as AdminInventory } from "@/pages/admin/Inventory";
 import { Categories as AdminCategories } from "@/pages/admin/Categories";
 import { Coupons as AdminCoupons } from "@/pages/admin/Coupons";
 import { Reviews as AdminReviews } from "@/pages/admin/Reviews";
+import { Testimonials as AdminTestimonials } from "@/pages/admin/Testimonials";
 import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
 import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
 import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig";
@@ -50,6 +51,8 @@ function AppRoutes() {
         <Route path="book" element={<Booking />} />
         <Route path="contact" element={<DynamicPage slugOverride="contact" />} />
         <Route path="about" element={<DynamicPage slugOverride="about" />} />
+        <Route path="privacy" element={<DynamicPage slugOverride="privacy" />} />
+        <Route path="terms" element={<DynamicPage slugOverride="terms" />} />
         <Route path="faq" element={<DynamicPage slugOverride="faq" />} />
         <Route path="profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
@@ -76,6 +79,7 @@ function AppRoutes() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="coupons" element={<AdminCoupons />} />
           <Route path="reviews" element={<AdminReviews />} />
+          <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="cars" element={<AdminCars />} />
           <Route path="vehicle-config" element={<AdminVehicleConfig />} />
           <Route path="users" element={<AdminUsers />} />

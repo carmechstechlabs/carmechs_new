@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export function Profile() {
   const { 
     currentUser, users, appointments, vehicles, addVehicle, removeVehicle, settings, processReferral, services,
-    carMakes, carModels, fuelTypes
+    carMakes, carModels, fuelTypes, tasks
   } = useData();
   const [referralInput, setReferralInput] = useState("");
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
@@ -45,6 +45,8 @@ export function Profile() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   const userVehicles = vehicles.filter(v => v.userId === user?.id);
+  const userTasks = tasks.filter(t => t.assignedTo === user?.id && !t.completed)
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const getServiceTitle = (serviceId: string) => {
     return services.find(s => s.id === serviceId)?.title || serviceId;
@@ -376,6 +378,58 @@ export function Profile() {
               </div>
             </motion.div>
           </div>
+          
+          {/* Assigned Tasks Section (For Staff/Admin) */}
+          {userTasks.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold flex items-center gap-3 text-slate-900">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                  Assigned Tasks
+                </h3>
+                <div className="px-4 py-1 rounded-full bg-primary/5 border border-primary/10 text-xs font-bold text-primary">
+                  {userTasks.length} Pending
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userTasks.map((task) => (
+                  <Card key={task.id} className="bg-white border-slate-200 rounded-3xl overflow-hidden shadow-lg shadow-slate-200/30 hover:border-primary/30 transition-all group">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={cn(
+                          "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border",
+                          task.priority === 'high' ? 'text-rose-600 bg-rose-50 border-rose-100' :
+                          task.priority === 'medium' ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                          'text-emerald-600 bg-emerald-50 border-emerald-100'
+                        )}>
+                          {task.priority} Priority
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <Clock className="h-3 w-3" />
+                          {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors">{task.title}</h4>
+                      <p className="text-xs text-slate-500 line-clamp-2 mb-4">{task.description}</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full rounded-xl border-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white hover:border-primary transition-all"
+                        asChild
+                      >
+                        <a href="/admin/tasks">View in Terminal</a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
           {/* Account Details & Appointments */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

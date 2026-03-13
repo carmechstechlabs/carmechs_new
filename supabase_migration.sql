@@ -1,175 +1,254 @@
--- CarMechs Comprehensive Supabase Migration Script
--- This script creates all necessary tables, enables Realtime, and seeds initial data.
+-- Supabase Migration Script for CarMechs
+-- This script creates all necessary tables for the application to function in a production environment.
 
--- 1. TABLE CREATION
---------------------------------------------------------------------------------
-
--- Services Table
+-- 1. Services Table
 CREATE TABLE IF NOT EXISTS services (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT,
-  features TEXT[],
-  price TEXT,
-  base_price NUMERIC,
-  duration TEXT,
-  checks TEXT[],
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    price TEXT,
+    duration TEXT,
+    features TEXT[],
+    checks TEXT[],
+    base_price NUMERIC DEFAULT 0,
+    estimated_price NUMERIC DEFAULT 0,
+    estimated_duration TEXT,
+    icon_url TEXT,
+    icon_name TEXT,
+    category_id TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Car Makes Table
+-- 2. Car Makes Table
 CREATE TABLE IF NOT EXISTS car_makes (
-  name TEXT PRIMARY KEY,
-  price NUMERIC DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    name TEXT PRIMARY KEY,
+    price NUMERIC DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Car Models Table
+-- 3. Car Models Table
 CREATE TABLE IF NOT EXISTS car_models (
-  name TEXT NOT NULL,
-  make TEXT NOT NULL,
-  price NUMERIC DEFAULT 0,
-  year TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  PRIMARY KEY (name, make)
+    name TEXT PRIMARY KEY,
+    make TEXT NOT NULL,
+    price NUMERIC DEFAULT 0,
+    year TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Fuel Types Table
+-- 4. Fuel Types Table
 CREATE TABLE IF NOT EXISTS fuel_types (
-  name TEXT PRIMARY KEY,
-  price NUMERIC DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    name TEXT PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Appointments Table
-CREATE TABLE IF NOT EXISTS appointments (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  make TEXT NOT NULL,
-  model TEXT NOT NULL,
-  fuel TEXT NOT NULL,
-  service_id TEXT NOT NULL,
-  service_title TEXT NOT NULL,
-  date TEXT NOT NULL,
-  time TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  payment_method TEXT,
-  payment_status TEXT DEFAULT 'pending',
-  price NUMERIC,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Users Table
-CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  phone TEXT,
-  password TEXT,
-  role TEXT DEFAULT 'user',
-  verified BOOLEAN DEFAULT FALSE,
-  blocked BOOLEAN DEFAULT FALSE,
-  wallet_balance NUMERIC DEFAULT 0,
-  referral_code TEXT UNIQUE,
-  referrals_count INTEGER DEFAULT 0,
-  referred_by TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Brands Table
+-- 5. Brands Table
 CREATE TABLE IF NOT EXISTS brands (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  image_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Locations Table
+-- 6. Locations Table
 CREATE TABLE IF NOT EXISTS locations (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  is_popular BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT,
+    city TEXT,
+    phone TEXT,
+    email TEXT,
+    latitude NUMERIC,
+    longitude NUMERIC,
+    is_popular BOOLEAN DEFAULT FALSE,
+    working_hours TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inventory Table
+-- 7. Inventory Table
 CREATE TABLE IF NOT EXISTS inventory (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  category TEXT,
-  stock INTEGER DEFAULT 0,
-  min_stock INTEGER DEFAULT 5,
-  price NUMERIC,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    sku TEXT UNIQUE,
+    category TEXT,
+    quantity INTEGER DEFAULT 0,
+    min_quantity INTEGER DEFAULT 0,
+    price NUMERIC DEFAULT 0,
+    status TEXT DEFAULT 'in_stock',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Categories Table
+-- 8. Categories Table
 CREATE TABLE IF NOT EXISTS categories (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    icon_name TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Coupons Table
+-- 9. Coupons Table
 CREATE TABLE IF NOT EXISTS coupons (
-  id TEXT PRIMARY KEY,
-  code TEXT NOT NULL UNIQUE,
-  discount_type TEXT NOT NULL,
-  discount_value NUMERIC NOT NULL,
-  min_purchase NUMERIC DEFAULT 0,
-  expiry_date TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    discount_type TEXT NOT NULL,
+    discount_value NUMERIC NOT NULL,
+    min_order_amount NUMERIC DEFAULT 0,
+    max_discount NUMERIC,
+    expiry_date TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Reviews Table
+-- 10. Reviews Table
 CREATE TABLE IF NOT EXISTS reviews (
-  id TEXT PRIMARY KEY,
-  user_name TEXT NOT NULL,
-  rating INTEGER NOT NULL,
-  comment TEXT,
-  service_id TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    user_name TEXT,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    service_id TEXT,
+    is_published BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Notifications Table
+-- 11. Notifications Table
 CREATE TABLE IF NOT EXISTS notifications (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  title TEXT NOT NULL,
-  message TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id TEXT PRIMARY KEY,
+    user_id TEXT,
+    title TEXT NOT NULL,
+    message TEXT,
+    type TEXT DEFAULT 'info',
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Site Config Table (for settings, ui_settings, api_keys)
+-- 12. Service Packages Table
+CREATE TABLE IF NOT EXISTS service_packages (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    service_ids TEXT[],
+    discount_percentage NUMERIC DEFAULT 0,
+    base_price NUMERIC DEFAULT 0,
+    features TEXT[],
+    is_popular BOOLEAN DEFAULT FALSE,
+    image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. Vehicles Table
+CREATE TABLE IF NOT EXISTS vehicles (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    make TEXT NOT NULL,
+    model TEXT NOT NULL,
+    year TEXT,
+    fuel_type TEXT,
+    license_plate TEXT,
+    vin TEXT,
+    last_service_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Users Table
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    password TEXT,
+    role TEXT DEFAULT 'user',
+    verified BOOLEAN DEFAULT FALSE,
+    blocked BOOLEAN DEFAULT FALSE,
+    wallet_balance NUMERIC DEFAULT 0,
+    referral_code TEXT UNIQUE,
+    referred_by TEXT,
+    referrals_count INTEGER DEFAULT 0,
+    source TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. Appointments Table
+CREATE TABLE IF NOT EXISTS appointments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    email TEXT NOT NULL,
+    service_title TEXT NOT NULL,
+    service_id TEXT,
+    make TEXT NOT NULL,
+    model TEXT NOT NULL,
+    fuel TEXT NOT NULL,
+    year TEXT,
+    license_plate TEXT,
+    date TEXT NOT NULL,
+    time TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    priority TEXT DEFAULT 'medium',
+    payment_method TEXT,
+    payment_status TEXT DEFAULT 'pending',
+    amount NUMERIC,
+    technician_id TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 16. Tasks Table
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    due_date TEXT,
+    priority TEXT DEFAULT 'medium',
+    completed BOOLEAN DEFAULT FALSE,
+    assigned_to TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 17. Site Config Table
 CREATE TABLE IF NOT EXISTS site_config (
-  key TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. REALTIME ENABLEMENT
---------------------------------------------------------------------------------
--- Note: You may need to enable this manually in the Supabase Dashboard under Database -> Replication
--- if the publication doesn't exist yet.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    CREATE PUBLICATION supabase_realtime;
-  END IF;
-END $$;
+-- 18. Contact Submissions Table
+CREATE TABLE IF NOT EXISTS contact_submissions (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    subject TEXT,
+    message TEXT,
+    status TEXT DEFAULT 'new',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
+-- 19. Technicians Table
+CREATE TABLE IF NOT EXISTS technicians (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    specialty TEXT,
+    status TEXT DEFAULT 'available',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 20. Testimonials Table
+CREATE TABLE IF NOT EXISTS testimonials (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    quote TEXT NOT NULL,
+    avatar TEXT,
+    rating INTEGER DEFAULT 5,
+    location TEXT,
+    car_model TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable Realtime for all tables
 ALTER PUBLICATION supabase_realtime ADD TABLE services;
 ALTER PUBLICATION supabase_realtime ADD TABLE car_makes;
 ALTER PUBLICATION supabase_realtime ADD TABLE car_models;
 ALTER PUBLICATION supabase_realtime ADD TABLE fuel_types;
-ALTER PUBLICATION supabase_realtime ADD TABLE appointments;
-ALTER PUBLICATION supabase_realtime ADD TABLE users;
 ALTER PUBLICATION supabase_realtime ADD TABLE brands;
 ALTER PUBLICATION supabase_realtime ADD TABLE locations;
 ALTER PUBLICATION supabase_realtime ADD TABLE inventory;
@@ -177,95 +256,144 @@ ALTER PUBLICATION supabase_realtime ADD TABLE categories;
 ALTER PUBLICATION supabase_realtime ADD TABLE coupons;
 ALTER PUBLICATION supabase_realtime ADD TABLE reviews;
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE service_packages;
+ALTER PUBLICATION supabase_realtime ADD TABLE vehicles;
+ALTER PUBLICATION supabase_realtime ADD TABLE users;
+ALTER PUBLICATION supabase_realtime ADD TABLE appointments;
+ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
 ALTER PUBLICATION supabase_realtime ADD TABLE site_config;
+ALTER PUBLICATION supabase_realtime ADD TABLE contact_submissions;
+ALTER PUBLICATION supabase_realtime ADD TABLE technicians;
+ALTER PUBLICATION supabase_realtime ADD TABLE testimonials;
 
--- 3. INITIAL SEED DATA
---------------------------------------------------------------------------------
-
--- Seed Services
-INSERT INTO services (id, title, description, features, price, base_price, duration, checks) VALUES
-('periodic', 'Periodic Services', 'Comprehensive car service packages for complete peace of mind.', ARRAY['Oil Change', 'Filter Replacement', 'Brake Check', 'Fluid Top-up'], '₹1999', 1999, '4-6 Hours', ARRAY['Engine Oil Replacement', 'Oil Filter Replacement', 'Air Filter Cleaning', 'Coolant Top-up', 'Brake Fluid Top-up', 'Battery Water Top-up', 'Wiper Fluid Top-up', 'Heater/Spark Plugs Checking', 'Car Wash & Vacuuming', 'Brake Pads & Shoes Cleaning']),
-('tyres', 'Tyres & Wheels', 'Expert tyre services including alignment and balancing.', ARRAY['Wheel Alignment', 'Wheel Balancing', 'Tyre Rotation', 'Puncture Repair'], '₹999', 999, '1-2 Hours', ARRAY['Automated Wheel Balancing', 'Laser Wheel Alignment', 'Tyre Rotation (4 Wheels)', 'Tyre Health Inspection', 'Air Pressure Check', 'Steering Adjustment', 'Suspension Check']),
-('batteries', 'Batteries', 'Battery health check and replacement services.', ARRAY['Battery Testing', 'Charging System Check', 'Terminal Cleaning', 'Replacement'], '₹3499', 3499, '30-60 Minutes', ARRAY['Battery Voltage Check', 'Alternator Charging Check', 'Terminal Cleaning & Greasing', 'Distilled Water Top-up', 'Battery Health Report', 'Old Battery Buyback', 'Warranty Registration']),
-('denting', 'Denting & Painting', 'Restore your car''s look with our premium painting services.', ARRAY['Scratch Removal', 'Dent Repair', 'Full Body Paint', 'Polishing'], 'Custom', 4999, '2-5 Days', ARRAY['Grade A Primer Application', 'Premium Paint Matching', '3-Layer Painting Process', 'Clear Coat Application', 'Rubbing & Polishing', 'Panel Dent Removal', 'Rust Protection Coating']),
-('ac', 'AC Service', 'Keep your car cool with our AC maintenance packages.', ARRAY['Gas Refill', 'Cooling Coil Cleaning', 'Compressor Check', 'Leak Test'], '₹1499', 1499, '2-3 Hours', ARRAY['AC Gas Refill (up to 400g)', 'Cooling Coil Cleaning', 'Condenser Cleaning', 'AC Vent Cleaning', 'Compressor Oil Check', 'Leakage Inspection', 'Cabin Filter Cleaning']),
-('spa', 'Car Spa & Cleaning', 'Deep cleaning services for interior and exterior.', ARRAY['Interior Detailing', 'Exterior Wash', 'Waxing', 'Upholstery Cleaning'], '₹1199', 1199, '3-4 Hours', ARRAY['Complete Interior Vacuuming', 'Dashboard Cleaning & Polishing', 'Seats Dry Cleaning', 'Roof & Floor Cleaning', 'Exterior Foam Wash', 'Tyre Dressing', 'Glass Cleaning'])
+-- 21. Initial Data Seed
+-- Users (Admin & Viewer)
+INSERT INTO users (id, name, email, phone, password, role, verified, blocked, wallet_balance, referral_code)
+VALUES 
+('1', 'Admin User', 'admin@carmechs.in', '1234567890', 'Admin@270389', 'admin', true, false, 1000, 'ADMIN123'),
+('2', 'Test Viewer', 'viewer@carmechs.in', '0987654321', 'viewer', 'viewer', true, false, 250, 'VIEWER456')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed Car Makes
-INSERT INTO car_makes (name, price) VALUES
+-- Technicians
+INSERT INTO technicians (id, name, specialty, status)
+VALUES 
+('t1', 'Rajesh Kumar', 'Engine Specialist', 'available'),
+('t2', 'Amit Singh', 'AC & Electrical', 'busy'),
+('t3', 'Suresh Raina', 'Body & Paint', 'available'),
+('t4', 'Vikram Rathore', 'General Service', 'available')
+ON CONFLICT (id) DO NOTHING;
+
+-- Services
+INSERT INTO services (id, title, description, price, duration, features, checks, base_price, estimated_price, estimated_duration, icon_name, category_id)
+VALUES 
+('ser_1', 'Periodic Maintenance', 'Comprehensive oil change, filter replacement, and 60-point safety inspection.', '₹1,499', '90 Mins', ARRAY['Engine Oil Replacement', 'Oil Filter Replacement', 'Air Filter Cleaning', 'Coolant Top-up', 'Brake Fluid Top-up', '60-Point Inspection'], ARRAY['Engine Oil Level', 'Brake Pad Wear', 'Tyre Pressure', 'Battery Health', 'Fluid Levels', 'Lights & Horn'], 1499, 1499, '90 Mins', 'Wrench', 'cat_1'),
+('ser_2', 'AC Service & Repair', 'Cooling coil cleaning, gas refill, and compressor health check for maximum cooling.', '₹1,999', '2 Hours', ARRAY['AC Gas Refill', 'Condenser Cleaning', 'Cooling Coil Inspection', 'Cabin Filter Cleaning', 'Compressor Oil Top-up'], ARRAY['Vent Temperature', 'Gas Pressure', 'Compressor Noise', 'Leakage Test', 'Belt Tension'], 1999, 1999, '2 Hours', 'Zap', 'cat_2'),
+('ser_3', 'Brake Maintenance', 'Brake pad replacement and disc resurfacing for ultimate stopping power.', '₹899', '60 Mins', ARRAY['Brake Pad Cleaning', 'Disc Resurfacing', 'Brake Fluid Top-up', 'Caliper Greasing'], ARRAY['Brake Pad Thickness', 'Disc Condition', 'Brake Line Integrity', 'Pedal Feel'], 899, 899, '60 Mins', 'ShieldCheck', 'cat_1'),
+('ser_4', 'Wheel Care', 'Precision wheel alignment and balancing for a smoother, safer ride.', '₹699', '45 Mins', ARRAY['3D Wheel Alignment', 'Wheel Balancing', 'Tyre Rotation', 'Nitrogen Inflation'], ARRAY['Alignment Angles', 'Wheel Runout', 'Tyre Tread Depth', 'Suspension Play'], 699, 699, '45 Mins', 'Disc', 'cat_4'),
+('ser_5', 'Ceramic Coating', '9H Nano-ceramic coating for ultimate paint protection and mirror-like shine.', '₹14,999', '2 Days', ARRAY['Surface Decontamination', 'Multi-stage Paint Correction', '9H Ceramic Application', 'Interior Protection', 'Glass Coating'], ARRAY['Paint Thickness', 'Surface Smoothness', 'Hydrophobic Effect', 'Gloss Level'], 14999, 14999, '2 Days', 'Sparkles', 'cat_5'),
+('ser_6', 'Engine Overhaul', 'Complete engine disassembly, cleaning, and replacement of worn components.', '₹45,000', '7 Days', ARRAY['Engine Block Honing', 'Piston Ring Replacement', 'Bearing Replacement', 'Gasket Set Renewal', 'Timing Chain/Belt Replacement'], ARRAY['Compression Test', 'Oil Pressure', 'Cooling System Pressure', 'Leakage Test'], 45000, 45000, '7 Days', 'Settings', 'cat_1')
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  price = EXCLUDED.price,
+  duration = EXCLUDED.duration,
+  base_price = EXCLUDED.base_price,
+  estimated_price = EXCLUDED.estimated_price,
+  estimated_duration = EXCLUDED.estimated_duration,
+  icon_name = EXCLUDED.icon_name,
+  category_id = EXCLUDED.category_id,
+  features = EXCLUDED.features,
+  checks = EXCLUDED.checks;
+
+-- Car Makes
+INSERT INTO car_makes (name, price)
+VALUES 
 ('Toyota', 500),
 ('Honda', 500),
-('Ford', 500),
 ('BMW', 2000),
-('Mercedes', 2000),
+('Mercedes', 2500),
 ('Audi', 2000),
-('Hyundai', 0),
-('Kia', 0)
-ON CONFLICT (name) DO NOTHING;
+('Porsche', 5000),
+('Jaguar', 4000),
+('Land Rover', 4500),
+('Lexus', 3500),
+('Hyundai', 300),
+('Tata', 200),
+('Mahindra', 300),
+('Volkswagen', 600),
+('Skoda', 600),
+('Kia', 400),
+('MG', 500)
+ON CONFLICT (name) DO UPDATE SET price = EXCLUDED.price;
 
--- Seed Car Models
-INSERT INTO car_models (name, make, price) VALUES
-('Corolla', 'Toyota', 200),
+-- Car Models
+INSERT INTO car_models (name, make, price)
+VALUES 
+('Corolla', 'Toyota', 0),
 ('Camry', 'Toyota', 500),
 ('Fortuner', 'Toyota', 1000),
-('City', 'Honda', 200),
-('Civic', 'Honda', 400),
-('Amaze', 'Honda', 0),
-('EcoSport', 'Ford', 300),
-('Endeavour', 'Ford', 1200),
-('3 Series', 'BMW', 1500),
-('5 Series', 'BMW', 2500),
-('X5', 'BMW', 3500),
-('C-Class', 'Mercedes', 1500),
-('E-Class', 'Mercedes', 2500),
-('A4', 'Audi', 1500),
-('Q7', 'Audi', 3500),
-('Creta', 'Hyundai', 300),
-('Verna', 'Hyundai', 300),
-('Seltos', 'Kia', 300),
-('Sonet', 'Kia', 0)
-ON CONFLICT (name, make) DO NOTHING;
+('Civic', 'Honda', 0),
+('City', 'Honda', 0),
+('Accord', 'Honda', 500),
+('3 Series', 'BMW', 0),
+('5 Series', 'BMW', 1000),
+('7 Series', 'BMW', 2000),
+('C-Class', 'Mercedes', 0),
+('E-Class', 'Mercedes', 1000),
+('S-Class', 'Mercedes', 2000),
+('A4', 'Audi', 0),
+('A6', 'Audi', 1000),
+('Q7', 'Audi', 2000),
+('911 Carrera', 'Porsche', 5000),
+('Cayenne', 'Porsche', 3000),
+('XF', 'Jaguar', 1500),
+('F-PACE', 'Jaguar', 2000),
+('Range Rover', 'Land Rover', 3000),
+('Defender', 'Land Rover', 2500),
+('ES', 'Lexus', 1000),
+('RX', 'Lexus', 2000),
+('Creta', 'Hyundai', 0),
+('Verna', 'Hyundai', 0),
+('Nexon', 'Tata', 0),
+('Harrier', 'Tata', 500),
+('Safari', 'Tata', 700),
+('Thar', 'Mahindra', 0),
+('XUV700', 'Mahindra', 500)
+ON CONFLICT (name, make) DO UPDATE SET price = EXCLUDED.price;
 
--- Seed Fuel Types
-INSERT INTO fuel_types (name, price) VALUES
-('Petrol', 0),
-('Diesel', 400),
-('CNG', 200),
-('Electric', 600)
+-- Locations
+INSERT INTO locations (id, name, address, city, phone, email, latitude, longitude, is_popular, working_hours)
+VALUES 
+('kol-1', 'CarMechs Kolkata Hub', '123 Park Street, Near Maidan', 'Kolkata', '+91 98300 12345', 'kolkata@carmechs.in', 22.5488, 88.3522, true, '09:00 AM - 08:00 PM'),
+('how-1', 'CarMechs Howrah Center', '45 Foreshore Road, Near Howrah Bridge', 'Howrah', '+91 98300 67890', 'howrah@carmechs.in', 22.5851, 88.3416, false, '09:00 AM - 07:00 PM')
+ON CONFLICT (id) DO NOTHING;
+
+-- Testimonials
+INSERT INTO testimonials (id, name, quote, rating, location, car_model)
+VALUES 
+('t1', 'Arjun Mehta', 'Exceptional service for my BMW. The transparency in pricing is what sets them apart.', 5, 'Kolkata', 'BMW 5 Series'),
+('t2', 'Sneha Roy', 'Finally found a reliable workshop for my Audi in Howrah. Highly professional team.', 5, 'Howrah', 'Audi A4'),
+('t3', 'Vikram Singh', 'The diagnostic accuracy is impressive. They fixed an issue that two other workshops couldn''t.', 5, 'Kolkata', 'Mercedes C-Class')
+ON CONFLICT (id) DO NOTHING;
+
+-- Fuel Types
+INSERT INTO fuel_types (name)
+VALUES ('Petrol'), ('Diesel'), ('CNG'), ('Electric')
 ON CONFLICT (name) DO NOTHING;
 
--- Seed Admin User
-INSERT INTO users (id, name, email, phone, password, role, verified, blocked, wallet_balance, referral_code, referrals_count) VALUES
-('1', 'Admin User', 'admin@carmechs.in', '1234567890', 'admin', 'admin', TRUE, FALSE, 1000, 'ADMIN123', 0)
+-- Locations
+INSERT INTO locations (id, name, address, city, phone, email, latitude, longitude, is_popular, working_hours, google_maps_url)
+VALUES 
+('1', 'New Delhi Hub', 'Plot 12, Okhla Phase III', 'New Delhi', '+91-11-4567-8901', 'delhi@carmechs.in', 28.5355, 77.2737, true, '09:00 AM - 08:00 PM', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!1m3!1d3505.5191!2d77.2737!3d28.5355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjjCsDMyJzA3LjgiTiA3N8KwMTYnMjUuMyJF!5e0!3m2!1sen!2sin!4v1631234567890!5m2!1sen!2sin'),
+('2', 'Mumbai West', 'Andheri East, Near Metro Station', 'Mumbai', '+91-22-2345-6789', 'mumbai@carmechs.in', 19.1136, 72.8697, true, '09:00 AM - 09:00 PM', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3770.0!2d72.8697!3d19.1136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTnCsDA2JzQ5LjAiTiA3MsKwNTInMTAuOSJF!5e0!3m2!1sen!2sin!4v1631234567891!5m2!1sen!2sin'),
+('3', 'Bangalore Tech Park', 'Whitefield Main Road', 'Bangalore', '+91-80-3456-7890', 'blr@carmechs.in', 12.9698, 77.7499, true, '08:30 AM - 07:30 PM', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.0!2d77.7499!3d12.9698!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDU4JzExLjMiTiA3N8KwNDQnNTkuNiJF!5e0!3m2!1sen!2sin!4v1631234567892!5m2!1sen!2sin'),
+('4', 'Kolkata Premium Hub', 'Action Area 1, Newtown', 'Kolkata', '+91-70034-35356', 'kolkata@carmechs.in', 22.5867, 88.4748, true, '09:00 AM - 08:00 PM', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3684.0!2d88.4748!3d22.5867!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDM1JzEyLjEiTiA4OMKwMjgnMjkuMyJF!5e0!3m2!1sen!2sin!4v1631234567893!5m2!1sen!2sin'),
+('5', 'Howrah Service Center', 'GT Road, Near Howrah Maidan', 'Howrah', '+91-70034-35357', 'howrah@carmechs.in', 22.5851, 88.3248, true, '09:00 AM - 07:00 PM', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3684.0!2d88.3248!3d22.5851!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjLCsDM1JzA2LjQiTiA4OMKwMTknMjkuMyJF!5e0!3m2!1sen!2sin!4v1631234567894!5m2!1sen!2sin')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed Brands
-INSERT INTO brands (id, name, image_url) VALUES
-('1', 'Toyota', 'https://picsum.photos/seed/toyota/200/100'),
-('2', 'Honda', 'https://picsum.photos/seed/honda/200/100'),
-('3', 'Ford', 'https://picsum.photos/seed/ford/200/100'),
-('4', 'BMW', 'https://picsum.photos/seed/bmw/200/100'),
-('5', 'Mercedes', 'https://picsum.photos/seed/mercedes/200/100'),
-('6', 'Audi', 'https://picsum.photos/seed/audi/200/100')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Locations
-INSERT INTO locations (id, name, is_popular) VALUES
-('1', 'New Delhi', TRUE),
-('2', 'Mumbai', TRUE),
-('3', 'Bangalore', TRUE),
-('4', 'Hyderabad', TRUE),
-('5', 'Chennai', TRUE),
-('6', 'Kolkata', TRUE),
-('7', 'Pune', FALSE),
-('8', 'Ahmedabad', FALSE),
-('9', 'Gurgaon', FALSE),
-('10', 'Noida', FALSE)
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Initial Config
-INSERT INTO site_config (key, value) VALUES
-('settings', '{"logoText": "CarMechs", "logoUrl": "", "email": "assist@carmechs.in", "phone": "+91-70034-35356", "address": "Newtown, Kolkata 700156", "whatsapp": "+917003435356", "referralRewardAmount": 500, "facebook": "https://facebook.com/carmechs", "instagram": "https://instagram.com/carmechs", "twitter": "https://twitter.com/carmechs", "footerDescription": "Premium car service at your doorstep. We provide expert care for your vehicle with free pickup and drop facility.", "privacyPolicyUrl": "/privacy", "termsOfServiceUrl": "/terms"}'),
-('ui_settings', '{"heroTitle": "Expert Car Service at Your Doorstep", "heroSubtitle": "Professional mechanics, transparent pricing, and guaranteed satisfaction.", "heroBgImage": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2000&auto=format&fit=crop", "heroBgOpacity": 0.6, "primaryColor": "#0f172a", "whyChooseTitle": "Why Choose CarMechs?", "whyChooseDescription": "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands.", "whyChooseImage": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80", "features": [{"title": "Genuine Parts", "description": "We use only 100% genuine OEM/OES spare parts.", "iconName": "ShieldCheck"}, {"title": "Timely Delivery", "description": "We value your time and ensure on-time delivery.", "iconName": "Clock"}, {"title": "Transparent Pricing", "description": "Upfront pricing with no hidden charges.", "iconName": "IndianRupee"}, {"title": "Expert Mechanics", "description": "Highly trained and certified mechanics.", "iconName": "Wrench"}], "testimonialText": "Best service I''ve ever had! My car runs smoother than ever.", "testimonialAuthor": "Alex Johnson", "testimonialRating": 4.9, "adminLogin": {"loginTitle": "Terminal 01", "loginSubtitle": "Security Clearance Required", "loginBgColor": "#050505", "loginAccentColor": "#fc9c0a", "loginTerminalId": "ID_REQ_001"}, "userLogin": {"loginTitle": "Welcome back", "loginSubtitle": "Enter your details to access your account", "loginBgColor": "#050505", "loginAccentColor": "#3b82f6", "showGoogleLogin": true, "showPhoneLogin": true}, "pages": [{"id": "home", "slug": "home", "title": "Home", "isPublished": true, "sections": [{"id": "h1", "type": "hero", "title": "Expert Car Care At Your Doorstep", "subtitle": "Experience hassle-free car service with free pickup and drop."}, {"id": "f1", "type": "features", "title": "Why Choose Us"}, {"id": "s1", "type": "services", "title": "Our Services"}, {"id": "b1", "type": "brands", "title": "Brands We Service"}]}, {"id": "about", "slug": "about", "title": "About Us", "isPublished": true, "sections": [{"id": "a1", "type": "hero", "title": "About CarMechs", "subtitle": "Your trusted partner for car maintenance."}, {"id": "a2", "type": "content", "title": "Our Story", "content": "We started with a simple mission: to make car care easy."}]}]}')
+-- Site Config
+INSERT INTO site_config (key, value)
+VALUES 
+('settings', '{"logoText": "CarMechs", "logoUrl": "", "email": "assist@carmechs.in", "phone": "+91-70034-35356", "address": "Newtown, Kolkata 700156", "whatsapp": "+917003435356", "referralRewardAmount": 500}'),
+('ui_settings', '{"heroTitle": "Precision <br /><span class=\"text-primary\">Car Care</span>", "heroSubtitle": "Experience the next generation of car maintenance with our expert door-step service and transparent digital tracking.", "heroBgImage": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2000&auto=format&fit=crop", "adminLogin": {"loginTitle": "Admin Portal", "loginSubtitle": "CarMechs Management System", "loginBgColor": "#f8fafc", "loginAccentColor": "#e31e24", "loginTerminalId": "ADMIN_MAIN"}}')
 ON CONFLICT (key) DO NOTHING;

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
 import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase } from '@/services/supabaseService';
 
@@ -92,7 +92,14 @@ export interface Notification {
 export interface Location {
   id: string;
   name: string;
+  address: string;
+  city: string;
+  phone: string;
+  email: string;
+  latitude: number;
+  longitude: number;
   isPopular: boolean;
+  workingHours: string;
 }
 
 export interface PricingItem {
@@ -118,9 +125,11 @@ export interface Settings {
   facebook?: string;
   instagram?: string;
   twitter?: string;
+  linkedin?: string;
   footerDescription?: string;
   privacyPolicyUrl?: string;
   termsOfServiceUrl?: string;
+  googleMapsApiKey?: string;
 }
 
 export interface Appointment {
@@ -191,7 +200,7 @@ export interface Feature {
 
 export interface PageSection {
   id: string;
-  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands' | 'faq-list' | 'contact-form';
+  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands' | 'faq-list' | 'contact-form' | 'gallery' | 'core-services' | 'location';
   title?: string;
   subtitle?: string;
   content?: string;
@@ -256,6 +265,7 @@ export interface UiSettings {
   heroTitle: string;
   heroSubtitle: string;
   heroBgImage?: string;
+  heroVideoUrl?: string;
   heroBgOpacity?: number;
   primaryColor: string;
   whyChooseTitle: string;
@@ -271,6 +281,16 @@ export interface UiSettings {
   userLogin: UserLoginUiSettings;
   pages: Page[];
   seo: SeoSettings;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  quote: string;
+  avatar?: string;
+  rating: number;
+  location?: string;
+  carModel?: string;
 }
 
 export interface ApiKeys {
@@ -330,6 +350,7 @@ interface DataContextType {
   notifications: Notification[];
   servicePackages: ServicePackage[];
   technicians: Technician[];
+  testimonials: Testimonial[];
   contactSubmissions: ContactSubmission[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
@@ -351,6 +372,7 @@ interface DataContextType {
   updateNotifications: (notifications: Notification[]) => void;
   updateServicePackages: (packages: ServicePackage[]) => void;
   updateContactSubmissions: (submissions: ContactSubmission[]) => void;
+  updateTestimonials: (testimonials: Testimonial[]) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
   addContactSubmission: (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => void;
@@ -371,7 +393,92 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Initial Data
-const initialServices: Service[] = [];
+const initialServices: Service[] = [
+  {
+    id: "ser_1",
+    title: "Periodic Maintenance",
+    description: "Comprehensive oil change, filter replacement, and 60-point safety inspection.",
+    price: "₹1,499",
+    duration: "90 Mins",
+    basePrice: 1499,
+    estimatedPrice: 1499,
+    estimatedDuration: "90 Mins",
+    iconName: "Wrench",
+    categoryId: "cat_1",
+    features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection"],
+    checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn"]
+  },
+  {
+    id: "ser_2",
+    title: "AC Service & Repair",
+    description: "Cooling coil cleaning, gas refill, and compressor health check for maximum cooling.",
+    price: "₹1,999",
+    duration: "2 Hours",
+    basePrice: 1999,
+    estimatedPrice: 1999,
+    estimatedDuration: "2 Hours",
+    iconName: "Zap",
+    categoryId: "cat_2",
+    features: ["AC Gas Refill", "Condenser Cleaning", "Cooling Coil Inspection", "Cabin Filter Cleaning", "Compressor Oil Top-up"],
+    checks: ["Vent Temperature", "Gas Pressure", "Compressor Noise", "Leakage Test", "Belt Tension"]
+  },
+  {
+    id: "ser_3",
+    title: "Brake Maintenance",
+    description: "Brake pad replacement and disc resurfacing for ultimate stopping power.",
+    price: "₹899",
+    duration: "60 Mins",
+    basePrice: 899,
+    estimatedPrice: 899,
+    estimatedDuration: "60 Mins",
+    iconName: "ShieldCheck",
+    categoryId: "cat_1",
+    features: ["Brake Pad Cleaning", "Disc Resurfacing", "Brake Fluid Top-up", "Caliper Greasing"],
+    checks: ["Brake Pad Thickness", "Disc Condition", "Brake Line Integrity", "Pedal Feel"]
+  },
+  {
+    id: "ser_4",
+    title: "Wheel Care",
+    description: "Precision wheel alignment and balancing for a smoother, safer ride.",
+    price: "₹699",
+    duration: "45 Mins",
+    basePrice: 699,
+    estimatedPrice: 699,
+    estimatedDuration: "45 Mins",
+    iconName: "Disc",
+    categoryId: "cat_4",
+    features: ["3D Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Nitrogen Inflation"],
+    checks: ["Alignment Angles", "Wheel Runout", "Tyre Tread Depth", "Suspension Play"]
+  },
+  {
+    id: "ser_5",
+    title: "Ceramic Coating",
+    description: "9H Nano-ceramic coating for ultimate paint protection and mirror-like shine.",
+    price: "₹14,999",
+    duration: "2 Days",
+    basePrice: 14999,
+    estimatedPrice: 14999,
+    estimatedDuration: "2 Days",
+    iconName: "Sparkles",
+    categoryId: "cat_5",
+    features: ["Surface Decontamination", "Multi-stage Paint Correction", "9H Ceramic Application", "Interior Protection", "Glass Coating"],
+    checks: ["Paint Thickness", "Surface Smoothness", "Hydrophobic Effect", "Gloss Level"]
+  },
+  {
+    id: "ser_6",
+    title: "Engine Overhaul",
+    description: "Complete engine disassembly, cleaning, and replacement of worn components.",
+    price: "₹45,000",
+    duration: "7 Days",
+    basePrice: 45000,
+    estimatedPrice: 45000,
+    estimatedDuration: "7 Days",
+    iconName: "Settings",
+    categoryId: "cat_1",
+    features: ["Engine Block Honing", "Piston Ring Replacement", "Bearing Replacement", "Gasket Set Renewal", "Timing Chain/Belt Replacement"],
+    checks: ["Compression Test", "Oil Pressure", "Cooling System Pressure", "Leakage Test"]
+  }
+];
 const initialServicePackages: ServicePackage[] = [];
 const initialCarMakes: PricingItem[] = [
   { name: "Toyota", price: 500 },
@@ -379,6 +486,10 @@ const initialCarMakes: PricingItem[] = [
   { name: "BMW", price: 2000 },
   { name: "Mercedes", price: 2500 },
   { name: "Audi", price: 2000 },
+  { name: "Porsche", price: 5000 },
+  { name: "Jaguar", price: 4000 },
+  { name: "Land Rover", price: 4500 },
+  { name: "Lexus", price: 3500 },
   { name: "Hyundai", price: 300 },
   { name: "Tata", price: 200 },
   { name: "Mahindra", price: 300 },
@@ -403,6 +514,14 @@ const initialCarModels: CarModel[] = [
   { name: "A4", make: "Audi", price: 0 },
   { name: "A6", make: "Audi", price: 1000 },
   { name: "Q7", make: "Audi", price: 2000 },
+  { name: "911 Carrera", make: "Porsche", price: 5000 },
+  { name: "Cayenne", make: "Porsche", price: 3000 },
+  { name: "XF", make: "Jaguar", price: 1500 },
+  { name: "F-PACE", make: "Jaguar", price: 2000 },
+  { name: "Range Rover", make: "Land Rover", price: 3000 },
+  { name: "Defender", make: "Land Rover", price: 2500 },
+  { name: "ES", make: "Lexus", price: 1000 },
+  { name: "RX", make: "Lexus", price: 2000 },
   { name: "Creta", make: "Hyundai", price: 0 },
   { name: "Verna", make: "Hyundai", price: 0 },
   { name: "Nexon", make: "Tata", price: 0 },
@@ -442,6 +561,7 @@ const initialUiSettings: UiSettings = {
   heroTitle: "",
   heroSubtitle: "",
   heroBgImage: "",
+  heroVideoUrl: "https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4",
   heroBgOpacity: 0.5,
   primaryColor: "",
   whyChooseTitle: "Why Choose CarMechs?",
@@ -457,8 +577,11 @@ const initialUiSettings: UiSettings = {
   testimonialAuthor: "Alex Johnson",
   testimonialRating: 4.9,
   testimonials: [
-    { id: "1", name: "Rahul Sharma", quote: "Best service I've ever had for my car. Very professional!", rating: 5 },
-    { id: "2", name: "Priya Patel", quote: "Transparent pricing and timely delivery. Highly recommended!", rating: 5 }
+    { id: "1", name: "Rahul Sharma", quote: "Best service I've ever had for my car. Very professional!", rating: 5, location: "Kolkata", carModel: "BMW 5 Series" },
+    { id: "2", name: "Priya Patel", quote: "Transparent pricing and timely delivery. Highly recommended!", rating: 5, location: "Howrah", carModel: "Audi A4" },
+    { id: "3", name: "Vikram Singh", quote: "The diagnostic accuracy is impressive. They fixed an issue that two other workshops couldn't.", rating: 5, location: "Kolkata", carModel: "Mercedes C-Class" },
+    { id: "4", name: "Ananya Das", quote: "Excellent ceramic coating job on my new Porsche. The finish is mirror-like.", rating: 5, location: "Kolkata", carModel: "Porsche 911" },
+    { id: "5", name: "Sanjay Gupta", quote: "Reliable and honest mechanics. They explained everything clearly before starting the work.", rating: 5, location: "Howrah", carModel: "Toyota Fortuner" }
   ],
   socialLinks: [
     { id: "1", platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" },
@@ -466,17 +589,17 @@ const initialUiSettings: UiSettings = {
     { id: "3", platform: "Twitter", url: "https://twitter.com", iconName: "Twitter" }
   ],
   adminLogin: {
-    loginTitle: "Terminal 01",
-    loginSubtitle: "Security Clearance Required",
-    loginBgColor: "#050505",
-    loginAccentColor: "#fc9c0a",
-    loginTerminalId: "ID_REQ_001"
+    loginTitle: "Admin Portal",
+    loginSubtitle: "CarMechs Management System",
+    loginBgColor: "#f8fafc",
+    loginAccentColor: "#e31e24",
+    loginTerminalId: "ADMIN_MAIN"
   },
   userLogin: {
     loginTitle: "Welcome back",
     loginSubtitle: "Enter your details to access your account",
-    loginBgColor: "#050505",
-    loginAccentColor: "#3b82f6",
+    loginBgColor: "#ffffff",
+    loginAccentColor: "#e31e24",
     showGoogleLogin: true,
     showFacebookLogin: true,
     showPhoneLogin: true
@@ -518,7 +641,8 @@ const initialUiSettings: UiSettings = {
       isPublished: true,
       sections: [
         { id: "c1", type: "hero", title: "Direct Connection", subtitle: "Have a technical query or need immediate assistance? Our support engineers are standing by." },
-        { id: "c2", type: "contact-form", title: "Submit Inquiry" }
+        { id: "c2", type: "contact-form", title: "Submit Inquiry" },
+        { id: "c3", type: "location", title: "Our Service Hubs", content: "Visit our premium workshops in Kolkata and Howrah for expert automotive care." }
       ]
     },
     {
@@ -574,6 +698,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     { id: 'tech3', name: 'Suresh Raina', specialty: 'Body & Paint', status: 'available' },
     { id: 'tech4', name: 'Vijay Verma', specialty: 'AC Specialist', status: 'off' },
   ]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [missingTables, setMissingTables] = useState<string[]>([]);
@@ -592,15 +717,76 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
       try {
         const auth = getFirebaseAuth(apiKeys);
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
           setCurrentUser(user);
+          if (user) {
+            // Check if user exists in our Supabase users table
+            const existingUser = users.find(u => u.id === user.uid || u.email === user.email);
+            if (!existingUser) {
+              // Create user in Supabase if they don't exist
+              const newUser: User = {
+                id: user.uid,
+                name: user.displayName || user.email?.split('@')[0] || 'User',
+                email: user.email || '',
+                phone: user.phoneNumber || '',
+                role: 'user',
+                verified: user.emailVerified,
+                blocked: false,
+                walletBalance: 0,
+                referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                referralsCount: 0,
+                createdAt: new Date().toISOString()
+              };
+              const updatedUsers = [...users, newUser];
+              setUsers(updatedUsers);
+              updateTable('users', updatedUsers);
+            }
+          }
         });
         return unsubscribe;
       } catch (e) {
         console.error("Firebase auth error:", e);
       }
     }
-  }, [apiKeys]);
+  }, [apiKeys, users]);
+
+  const login = async (email: string, password: string) => {
+    if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
+      const auth = getFirebaseAuth(apiKeys);
+      return signInWithEmailAndPassword(auth, email, password);
+    }
+    throw new Error("Firebase not configured");
+  };
+
+  const signup = async (email: string, password: string, name: string) => {
+    if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
+      const auth = getFirebaseAuth(apiKeys);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      if (result.user) {
+        await updateProfile(result.user, { displayName: name });
+        
+        // Add to Supabase users table
+        const newUser: User = {
+          id: result.user.uid,
+          name: name,
+          email: email,
+          phone: '',
+          role: 'user',
+          verified: false,
+          blocked: false,
+          walletBalance: 0,
+          referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          referralsCount: 0,
+          createdAt: new Date().toISOString()
+        };
+        const updatedUsers = [...users, newUser];
+        setUsers(updatedUsers);
+        updateTable('users', updatedUsers);
+      }
+      return result;
+    }
+    throw new Error("Firebase not configured");
+  };
 
   const logout = async () => {
     if (apiKeys.firebaseApiKey && apiKeys.firebaseProjectId) {
@@ -646,6 +832,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setNotifications(state.notifications || []);
           setServicePackages(state.servicePackages || []);
           setContactSubmissions(state.contactSubmissions || []);
+          setTechnicians(state.technicians || []);
+          setTestimonials(state.testimonials || []);
         }
       } catch (error) {
         console.error("Error fetching initial data from Supabase:", error);
@@ -679,6 +867,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'service_packages' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_submissions' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'technicians' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => fetchInitialData())
         .subscribe();
 
       return () => {
@@ -1057,6 +1248,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateTestimonials = (newTestimonials: Testimonial[]) => {
+    setTestimonials(newTestimonials);
+    if (socket?.connected) {
+      socket.emit('update_testimonials', newTestimonials);
+    } else {
+      updateTable('testimonials', newTestimonials);
+    }
+  };
+
   const addNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'>) => {
     const newNotification: Notification = {
       ...notification,
@@ -1168,6 +1368,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       servicePackages,
       technicians,
       vehicles,
+      testimonials,
       contactSubmissions,
       updateServices,
       updateCarMakes,
@@ -1189,6 +1390,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateNotifications,
       updateServicePackages,
       updateContactSubmissions,
+      updateTestimonials,
       addAppointment,
       addTask,
       addContactSubmission,
@@ -1202,6 +1404,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       loginAdmin,
       logoutAdmin,
       currentUser,
+      login,
+      signup,
       logout,
       isLoading,
       missingTables

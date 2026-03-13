@@ -20,8 +20,16 @@ import {
   Phone, 
   Mail, 
   Send, 
-  MessageSquare 
+  MessageSquare,
+  Camera,
+  Map,
+  ExternalLink,
+  Activity,
+  CheckCircle2
 } from "lucide-react";
+import { GallerySection } from "@/components/sections/GallerySection";
+import { CoreServicesSection } from "@/components/sections/CoreServicesSection";
+import { LocationSection } from "@/components/sections/LocationSection";
 import { 
   Accordion, 
   AccordionContent, 
@@ -227,7 +235,7 @@ interface SectionRendererProps {
 }
 
 function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, services, brands, idx, carSelection, setCarSelection }: SectionRendererProps) {
-  const { carMakes, carModels, fuelTypes } = useData();
+  const { carMakes, carModels, fuelTypes, settings } = useData();
   const navigate = useNavigate();
 
   const calculatePrice = (basePrice: number) => {
@@ -534,6 +542,15 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
 
     case 'faq-list':
       return <FaqSection section={section} />;
+
+    case 'gallery':
+      return <GallerySection title={section.title} subtitle={section.subtitle} items={section.items} />;
+
+    case 'core-services':
+      return <CoreServicesSection title={section.title} subtitle={section.subtitle} />;
+
+    case 'location':
+      return <LocationSection title={section.title} content={section.content} />;
 
     case 'contact-form':
       return (

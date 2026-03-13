@@ -13,36 +13,68 @@ export function Locations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newLocation, setNewLocation] = useState({ name: "", isPopular: false });
-  const [editLocation, setEditLocation] = useState({ name: "", isPopular: false });
+  const [newLocation, setNewLocation] = useState({ 
+    name: "", 
+    address: "", 
+    city: "", 
+    phone: "", 
+    email: "", 
+    latitude: 0, 
+    longitude: 0, 
+    googleMapsUrl: "",
+    isPopular: false, 
+    workingHours: "09:00 AM - 08:00 PM" 
+  });
+  const [editLocation, setEditLocation] = useState({ 
+    name: "", 
+    address: "", 
+    city: "", 
+    phone: "", 
+    email: "", 
+    latitude: 0, 
+    longitude: 0, 
+    googleMapsUrl: "",
+    isPopular: false, 
+    workingHours: "" 
+  });
 
   const filteredLocations = locations.filter(l => 
-    l.name.toLowerCase().includes(searchTerm.toLowerCase())
+    l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    l.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAdd = () => {
-    if (!newLocation.name.trim()) {
-      toast.error("Location name is required");
+    if (!newLocation.name.trim() || !newLocation.city.trim()) {
+      toast.error("Name and City are required");
       return;
     }
     const location: Location = {
       id: Math.random().toString(36).substring(2, 9),
-      name: newLocation.name,
-      isPopular: newLocation.isPopular
+      ...newLocation
     };
     updateLocations([...locations, location]);
-    setNewLocation({ name: "", isPopular: false });
+    setNewLocation({ 
+      name: "", 
+      address: "", 
+      city: "", 
+      phone: "", 
+      email: "", 
+      latitude: 0, 
+      longitude: 0, 
+      isPopular: false, 
+      workingHours: "09:00 AM - 08:00 PM" 
+    });
     setIsAdding(false);
     toast.success("Location added successfully");
   };
 
   const handleUpdate = (id: string) => {
-    if (!editLocation.name.trim()) {
-      toast.error("Location name is required");
+    if (!editLocation.name.trim() || !editLocation.city.trim()) {
+      toast.error("Name and City are required");
       return;
     }
     const updated = locations.map(l => 
-      l.id === id ? { ...l, name: editLocation.name, isPopular: editLocation.isPopular } : l
+      l.id === id ? { ...l, ...editLocation } : l
     );
     updateLocations(updated);
     setEditingId(null);
@@ -114,34 +146,116 @@ export function Locations() {
             exit={{ opacity: 0, y: -20 }}
           >
             <Card className="bg-white border-primary/20 shadow-2xl rounded-[2.5rem] overflow-hidden">
-              <div className="p-8 flex flex-col md:flex-row items-end gap-6">
-                <div className="flex-1 space-y-3 w-full">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">City Name</label>
-                  <Input 
-                    value={newLocation.name}
-                    onChange={(e) => setNewLocation({...newLocation, name: e.target.value})}
-                    placeholder="E.G. GURGAON"
-                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
-                  />
+              <div className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Workshop Name</label>
+                    <Input 
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation({...newLocation, name: e.target.value})}
+                      placeholder="E.G. NEW DELHI HUB"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">City</label>
+                    <Input 
+                      value={newLocation.city}
+                      onChange={(e) => setNewLocation({...newLocation, city: e.target.value})}
+                      placeholder="E.G. NEW DELHI"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Address</label>
+                    <Input 
+                      value={newLocation.address}
+                      onChange={(e) => setNewLocation({...newLocation, address: e.target.value})}
+                      placeholder="FULL ADDRESS"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 h-14 px-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Popular Hub?</span>
-                  <button 
-                    onClick={() => setNewLocation({...newLocation, isPopular: !newLocation.isPopular})}
-                    className={cn(
-                      "h-6 w-11 rounded-full transition-all relative",
-                      newLocation.isPopular ? "bg-primary" : "bg-slate-200"
-                    )}
-                  >
-                    <div className={cn(
-                      "absolute top-1 left-1 h-4 w-4 bg-white rounded-full transition-all",
-                      newLocation.isPopular ? "translate-x-5" : "translate-x-0"
-                    )} />
-                  </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Phone</label>
+                    <Input 
+                      value={newLocation.phone}
+                      onChange={(e) => setNewLocation({...newLocation, phone: e.target.value})}
+                      placeholder="+91-XXXXX-XXXXX"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email</label>
+                    <Input 
+                      value={newLocation.email}
+                      onChange={(e) => setNewLocation({...newLocation, email: e.target.value})}
+                      placeholder="CITY@CARMECHS.IN"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Latitude</label>
+                    <Input 
+                      type="number"
+                      step="0.0001"
+                      value={newLocation.latitude}
+                      onChange={(e) => setNewLocation({...newLocation, latitude: parseFloat(e.target.value)})}
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Longitude</label>
+                    <Input 
+                      type="number"
+                      step="0.0001"
+                      value={newLocation.longitude}
+                      onChange={(e) => setNewLocation({...newLocation, longitude: parseFloat(e.target.value)})}
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-3 md:col-span-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Google Maps Embed URL</label>
+                    <Input 
+                      value={newLocation.googleMapsUrl}
+                      onChange={(e) => setNewLocation({...newLocation, googleMapsUrl: e.target.value})}
+                      placeholder="HTTPS://WWW.GOOGLE.COM/MAPS/EMBED?..."
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setIsAdding(false)} className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200">Cancel</Button>
-                  <Button onClick={handleAdd} className="h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">Confirm Add</Button>
+
+                <div className="flex flex-col md:flex-row items-end gap-6 pt-4">
+                  <div className="flex-1 space-y-3 w-full">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Working Hours</label>
+                    <Input 
+                      value={newLocation.workingHours}
+                      onChange={(e) => setNewLocation({...newLocation, workingHours: e.target.value})}
+                      placeholder="09:00 AM - 08:00 PM"
+                      className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4 h-14 px-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Popular Hub?</span>
+                    <button 
+                      onClick={() => setNewLocation({...newLocation, isPopular: !newLocation.isPopular})}
+                      className={cn(
+                        "h-6 w-11 rounded-full transition-all relative",
+                        newLocation.isPopular ? "bg-primary" : "bg-slate-200"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 left-1 h-4 w-4 bg-white rounded-full transition-all",
+                        newLocation.isPopular ? "translate-x-5" : "translate-x-0"
+                      )} />
+                    </button>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setIsAdding(false)} className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200">Cancel</Button>
+                    <Button onClick={handleAdd} className="h-14 px-8 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">Confirm Add</Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -165,11 +279,67 @@ export function Locations() {
               <CardContent className="p-6">
                 {editingId === location.id ? (
                   <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input 
+                        value={editLocation.name}
+                        onChange={(e) => setEditLocation({...editLocation, name: e.target.value})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="NAME"
+                      />
+                      <Input 
+                        value={editLocation.city}
+                        onChange={(e) => setEditLocation({...editLocation, city: e.target.value})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="CITY"
+                      />
+                    </div>
                     <Input 
-                      value={editLocation.name}
-                      onChange={(e) => setEditLocation({...editLocation, name: e.target.value})}
-                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest"
-                      autoFocus
+                      value={editLocation.address}
+                      onChange={(e) => setEditLocation({...editLocation, address: e.target.value})}
+                      className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                      placeholder="ADDRESS"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input 
+                        value={editLocation.phone}
+                        onChange={(e) => setEditLocation({...editLocation, phone: e.target.value})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="PHONE"
+                      />
+                      <Input 
+                        value={editLocation.email}
+                        onChange={(e) => setEditLocation({...editLocation, email: e.target.value})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="EMAIL"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input 
+                        type="number"
+                        value={editLocation.latitude}
+                        onChange={(e) => setEditLocation({...editLocation, latitude: parseFloat(e.target.value)})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="LAT"
+                      />
+                      <Input 
+                        type="number"
+                        value={editLocation.longitude}
+                        onChange={(e) => setEditLocation({...editLocation, longitude: parseFloat(e.target.value)})}
+                        className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                        placeholder="LNG"
+                      />
+                    </div>
+                    <Input 
+                      value={editLocation.workingHours}
+                      onChange={(e) => setEditLocation({...editLocation, workingHours: e.target.value})}
+                      className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                      placeholder="WORKING HOURS"
+                    />
+                    <Input 
+                      value={editLocation.googleMapsUrl}
+                      onChange={(e) => setEditLocation({...editLocation, googleMapsUrl: e.target.value})}
+                      className="h-10 bg-slate-50 border-slate-100 text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                      placeholder="GOOGLE MAPS EMBED URL"
                     />
                     <div className="flex items-center justify-between px-2">
                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Popular Hub</span>
@@ -202,6 +372,7 @@ export function Locations() {
                       </div>
                       <div>
                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest group-hover:text-primary transition-colors">{location.name}</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{location.city}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {location.isPopular && (
                             <span className="flex items-center gap-1 text-[8px] font-black text-primary uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded-full">
@@ -217,7 +388,18 @@ export function Locations() {
                       <button 
                         onClick={() => {
                           setEditingId(location.id);
-                          setEditLocation({ name: location.name, isPopular: location.isPopular });
+                          setEditLocation({ 
+                            name: location.name, 
+                            city: location.city,
+                            address: location.address,
+                            phone: location.phone,
+                            email: location.email,
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                            googleMapsUrl: location.googleMapsUrl || "",
+                            workingHours: location.workingHours,
+                            isPopular: location.isPopular 
+                          });
                         }}
                         className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors"
                       >

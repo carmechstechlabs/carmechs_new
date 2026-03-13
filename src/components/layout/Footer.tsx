@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Wrench, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Shield, Zap, ArrowRight } from "lucide-react";
+import { Wrench, Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Lock, Zap, ArrowRight } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,7 @@ export function Footer() {
             </Link>
             
             <p className="text-sm leading-relaxed max-w-sm font-medium text-slate-500">
-              {settings.footerDescription || "India's leading car service network. We provide high-quality car maintenance and repair services with genuine parts and expert mechanics."}
+              {settings.footerDescription || "Expert doorstep car care with transparent pricing and genuine parts. Your trusted partner for automotive excellence."}
             </p>
 
             <div className="flex gap-3">
@@ -106,9 +106,10 @@ export function Footer() {
           </p>
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             {settings.privacyPolicyUrl && <Link to={settings.privacyPolicyUrl} className="hover:text-primary transition-colors">Privacy Policy</Link>}
-            {settings.termsOfServiceUrl && <Link to={settings.termsOfServiceUrl} className="hover:text-primary transition-colors">Terms of Use</Link>}
-            <Link to="/admin" className="hover:text-primary transition-colors flex items-center gap-2">
-              <Shield className="h-3 w-3" /> Admin
+            {settings.termsOfServiceUrl && <Link to={settings.termsOfServiceUrl} className="hover:text-primary transition-colors">Terms of Service</Link>}
+            <Link to="/admin" className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100 hover:bg-primary hover:text-white hover:border-primary transition-all flex items-center gap-2 group/admin">
+              <Lock className="h-3 w-3 text-slate-400 group-hover/admin:text-white transition-colors" /> 
+              <span className="text-slate-500 group-hover/admin:text-white transition-colors">Admin Panel</span>
             </Link>
           </div>
         </div>

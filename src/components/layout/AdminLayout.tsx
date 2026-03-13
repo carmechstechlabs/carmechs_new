@@ -96,6 +96,7 @@ export function AdminLayout() {
       title: "CRM & Marketing",
       items: [
         { path: "/admin/customers", label: "Customers", icon: UsersRound },
+        { path: "/admin/testimonials", label: "Testimonials", icon: Star },
         { path: "/admin/reviews", label: "Reviews", icon: Star },
         { path: "/admin/coupons", label: "Coupons", icon: Ticket },
       ]

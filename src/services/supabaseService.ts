@@ -61,13 +61,15 @@ export async function getInitialState() {
       supabase.from('appointments').select('*').order('created_at', { ascending: false }),
       supabase.from('tasks').select('*').order('created_at', { ascending: false }),
       supabase.from('site_config').select('*'),
-      supabase.from('contact_submissions').select('*').order('created_at', { ascending: false })
+      supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
+      supabase.from('technicians').select('*'),
+      supabase.from('testimonials').select('*')
     ]);
 
     const tableNames = [
       'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
       'inventory', 'categories', 'coupons', 'reviews', 'notifications',
-      'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions'
+      'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions', 'technicians', 'testimonials'
     ];
 
     const missingTables: string[] = [];
@@ -106,7 +108,9 @@ export async function getInitialState() {
       { data: appointments },
       { data: tasks },
       { data: config },
-      { data: contactSubmissions }
+      { data: contactSubmissions },
+      { data: technicians },
+      { data: testimonials }
     ] = results;
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
@@ -138,6 +142,8 @@ export async function getInitialState() {
       servicePackages: (servicePackages || []).map(toCamelCase),
       vehicles: (vehicles || []).map(toCamelCase),
       contactSubmissions: (contactSubmissions || []).map(toCamelCase),
+      technicians: (technicians || []).map(toCamelCase),
+      testimonials: (testimonials || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
