@@ -162,9 +162,9 @@ const initialUsers = [
   { 
     id: "1", 
     name: "Admin User", 
-    email: "admin@carmechs.in", 
+    email: "carmechstechlabs@gmail.com", 
     phone: "1234567890", 
-    password: "admin123",
+    password: "Admin@270389",
     role: "admin", 
     verified: true,
     blocked: false,
