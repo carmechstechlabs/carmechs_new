@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "role": { "type": "string", "enum": ["admin", "user", "viewer"], "description": "User role" },
+        "phone": { "type": "string", "description": "Phone number" }
+      },
+      "required": ["name", "email"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Service appointment booking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Reference to user" },
+        "serviceTitle": { "type": "string", "description": "Name of the service" },
+        "date": { "type": "string", "format": "date", "description": "Appointment date" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"], "description": "Current status" }
+      },
+      "required": ["userId", "serviceTitle", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Appointment booking documents"
+    }
+  }
+}
