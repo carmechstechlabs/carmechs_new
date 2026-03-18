@@ -3,10 +3,11 @@ import { useData, CarModel, PricingItem } from "@/context/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, Car, Fuel, Layers, Activity, Zap } from "lucide-react";
+import { Plus, Trash2, Car, Fuel, Layers, Activity, Zap, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+import { ImageUpload } from "@/components/ImageUpload";
 
 export function VehicleConfig() {
   const { 
@@ -20,6 +21,7 @@ export function VehicleConfig() {
 
   // Makes State
   const [newMake, setNewMake] = useState("");
+  const [newMakeLogo, setNewMakeLogo] = useState("");
   
   // Models State
   const [newModel, setNewModel] = useState({ name: "", make: "", price: 0 });
@@ -33,8 +35,9 @@ export function VehicleConfig() {
       toast.error("Make already exists");
       return;
     }
-    updateCarMakes([...carMakes, { name: newMake, price: 0 }]);
+    updateCarMakes([...carMakes, { name: newMake, price: 0, imageUrl: newMakeLogo }]);
     setNewMake("");
+    setNewMakeLogo("");
     toast.success("Manufacturer added");
   };
 
@@ -149,6 +152,14 @@ export function VehicleConfig() {
                     className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold uppercase"
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Brand Logo</label>
+                  <ImageUpload 
+                    value={newMakeLogo}
+                    onChange={setNewMakeLogo}
+                    className="h-32"
+                  />
+                </div>
                 <Button onClick={handleAddMake} className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl">
                   Add Make
                 </Button>
@@ -160,8 +171,12 @@ export function VehicleConfig() {
                 <Card key={make.name} className="bg-white border-slate-100 shadow-sm hover:border-primary/30 transition-all rounded-2xl group">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-                        <Car className="h-5 w-5" />
+                      <div className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors overflow-hidden">
+                        {make.imageUrl ? (
+                          <img src={make.imageUrl} alt={make.name} className="h-full w-full object-contain p-1" referrerPolicy="no-referrer" />
+                        ) : (
+                          <Car className="h-5 w-5" />
+                        )}
                       </div>
                       <span className="text-sm font-black uppercase tracking-tight text-slate-900">{make.name}</span>
                     </div>

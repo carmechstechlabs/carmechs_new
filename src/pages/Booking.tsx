@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
 import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera } from "lucide-react";
@@ -58,6 +58,37 @@ export function Booking() {
     issuePhotos: [] as string[],
     paymentMethod: "pay_after_service" as 'razorpay' | 'paytm' | 'pay_after_service'
   });
+
+  const filteredServicesForVehicle = useMemo(() => {
+    return services.filter(service => {
+      // If no vehicle selected, show all
+      if (!formData.make) return true;
+
+      const matchesMake = !service.applicableMakes || service.applicableMakes.length === 0 || service.applicableMakes.includes(formData.make);
+      const matchesModel = !service.applicableModels || service.applicableModels.length === 0 || service.applicableModels.includes(formData.model);
+      const matchesFuel = !service.applicableFuelTypes || service.applicableFuelTypes.length === 0 || service.applicableFuelTypes.includes(formData.fuel);
+
+      return matchesMake && matchesModel && matchesFuel;
+    });
+  }, [services, formData.make, formData.model, formData.fuel]);
+
+  const filteredPackagesForVehicle = useMemo(() => {
+    return servicePackages.filter(pkg => {
+      // A package is applicable if all its services are applicable
+      return pkg.serviceIds.every(id => {
+        const service = services.find(s => s.id === id);
+        if (!service) return true;
+        
+        if (!formData.make) return true;
+
+        const matchesMake = !service.applicableMakes || service.applicableMakes.length === 0 || service.applicableMakes.includes(formData.make);
+        const matchesModel = !service.applicableModels || service.applicableModels.length === 0 || service.applicableModels.includes(formData.model);
+        const matchesFuel = !service.applicableFuelTypes || service.applicableFuelTypes.length === 0 || service.applicableFuelTypes.includes(formData.fuel);
+
+        return matchesMake && matchesModel && matchesFuel;
+      });
+    });
+  }, [servicePackages, services, formData.make, formData.model, formData.fuel]);
 
   useEffect(() => {
     if (user) {
@@ -563,10 +594,10 @@ export function Booking() {
                 
                 <div className="grid grid-cols-1 gap-4">
                   {/* Service Packages First */}
-                  {servicePackages.length > 0 && (
+                  {filteredPackagesForVehicle.length > 0 && (
                     <div className="space-y-4 mb-6">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Recommended Bundles</p>
-                      {servicePackages.map((pkg) => (
+                      {filteredPackagesForVehicle.map((pkg) => (
                         <motion.div
                           key={pkg.id}
                           whileHover={{ scale: 1.01 }}
@@ -619,7 +650,7 @@ export function Booking() {
                   )}
 
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Individual Services</p>
-                  {services.map((service) => (
+                  {filteredServicesForVehicle.map((service) => (
                     <motion.div
                       key={service.id}
                       whileHover={{ scale: 1.01 }}

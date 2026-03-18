@@ -198,6 +198,9 @@ export function UiSettingsPage() {
                 <TabsTrigger value="global" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Palette className="h-4 w-4 mr-2" /> Global Theme
                 </TabsTrigger>
+                <TabsTrigger value="home-content" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Layout className="h-4 w-4 mr-2" /> Home Content
+                </TabsTrigger>
                 <TabsTrigger value="pages" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Layout className="h-4 w-4 mr-2" /> Page Builder
                 </TabsTrigger>
@@ -289,11 +292,6 @@ export function UiSettingsPage() {
                           value={formData.heroBgImage || ""}
                           onChange={(url) => setFormData({...formData, heroBgImage: url})}
                         />
-                        <ImageUpload 
-                          label="Why Choose Us Image"
-                          value={formData.whyChooseImage || ""}
-                          onChange={(url) => setFormData({...formData, whyChooseImage: url})}
-                        />
                         <div className="space-y-2">
                           <div className="flex justify-between items-center px-1">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overlay Intensity</label>
@@ -344,6 +342,117 @@ export function UiSettingsPage() {
                           />
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="home-content" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-[2rem] border-slate-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <Layout className="h-5 w-5 text-primary" /> Why Choose Us
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Section Title</label>
+                          <Input 
+                            value={formData.whyChooseTitle} 
+                            onChange={(e) => setFormData({...formData, whyChooseTitle: e.target.value})}
+                            className="h-12 rounded-xl font-bold"
+                            placeholder="Why Choose CarMechs?"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Section Description</label>
+                          <Textarea 
+                            value={formData.whyChooseDescription} 
+                            onChange={(e) => setFormData({...formData, whyChooseDescription: e.target.value})}
+                            className="rounded-2xl min-h-[120px]"
+                            placeholder="Enter description..."
+                          />
+                        </div>
+                        <ImageUpload 
+                          label="Section Image"
+                          value={formData.whyChooseImage || ""}
+                          onChange={(url) => setFormData({...formData, whyChooseImage: url})}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="rounded-[2rem] border-slate-200 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary" /> Features
+                      </CardTitle>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => setFormData({
+                          ...formData,
+                          features: [...(formData.features || []), { title: "New Feature", description: "Description here", iconName: "ShieldCheck" }]
+                        })}
+                        className="rounded-xl border-slate-200 h-9"
+                      >
+                        <Plus className="h-3 w-3 mr-2" /> Add Feature
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {(formData.features || []).map((feature, idx) => (
+                        <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3 relative group">
+                          <button 
+                            onClick={() => setFormData({
+                              ...formData,
+                              features: formData.features.filter((_, i) => i !== idx)
+                            })}
+                            className="absolute top-4 right-4 h-8 w-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-200 opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Title</label>
+                              <Input 
+                                value={feature.title} 
+                                onChange={(e) => {
+                                  const newFeatures = [...formData.features];
+                                  newFeatures[idx] = { ...feature, title: e.target.value };
+                                  setFormData({ ...formData, features: newFeatures });
+                                }}
+                                className="h-10 rounded-lg font-bold text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Name</label>
+                              <Input 
+                                value={feature.iconName} 
+                                onChange={(e) => {
+                                  const newFeatures = [...formData.features];
+                                  newFeatures[idx] = { ...feature, iconName: e.target.value };
+                                  setFormData({ ...formData, features: newFeatures });
+                                }}
+                                className="h-10 rounded-lg font-mono text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
+                            <Input 
+                              value={feature.description} 
+                              onChange={(e) => {
+                                const newFeatures = [...formData.features];
+                                newFeatures[idx] = { ...feature, description: e.target.value };
+                                setFormData({ ...formData, features: newFeatures });
+                              }}
+                              className="h-10 rounded-lg text-xs"
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </CardContent>
                   </Card>
                 </div>

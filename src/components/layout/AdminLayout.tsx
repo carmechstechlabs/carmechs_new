@@ -16,6 +16,7 @@ import {
   Shield,
   Activity,
   Cpu,
+  Zap,
   Terminal,
   MapPin,
   Package,
@@ -90,6 +91,7 @@ export function AdminLayout() {
         { path: "/admin/brands", label: "Brands", icon: Shield, adminOnly: true },
         { path: "/admin/cars", label: "Car DB", icon: Car, adminOnly: true },
         { path: "/admin/vehicle-config", label: "Vehicle Config", icon: Settings, adminOnly: true },
+        { path: "/admin/smart-diagnostic", label: "Smart Diagnostic", icon: Zap, adminOnly: true },
       ]
     },
     {
@@ -99,6 +101,7 @@ export function AdminLayout() {
         { path: "/admin/testimonials", label: "Testimonials", icon: Star, adminOnly: true },
         { path: "/admin/reviews", label: "Reviews", icon: Star, adminOnly: true },
         { path: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
+        { path: "/faq", label: "FAQs", icon: Globe },
       ]
     },
     {

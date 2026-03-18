@@ -35,6 +35,7 @@ import { Testimonials as AdminTestimonials } from "@/pages/admin/Testimonials";
 import { ServicePackages as AdminServicePackages } from "@/pages/admin/ServicePackages";
 import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
 import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig";
+import { SmartDiagnostic as AdminSmartDiagnostic } from "@/pages/admin/SmartDiagnostic";
 import { TaskManager as AdminTasks } from "@/pages/admin/TaskManager";
 import NavigationManager from "@/pages/admin/NavigationManager";
 
@@ -84,6 +85,7 @@ function AppRoutes() {
           <Route path="testimonials" element={<AdminTestimonials />} />
           <Route path="cars" element={<AdminCars />} />
           <Route path="vehicle-config" element={<AdminVehicleConfig />} />
+          <Route path="smart-diagnostic" element={<AdminSmartDiagnostic />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="ui-settings" element={<AdminUiSettings />} />
           <Route path="seo" element={<AdminSeoSettings />} />

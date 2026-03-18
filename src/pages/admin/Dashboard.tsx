@@ -8,8 +8,9 @@ import {
   XCircle, Shield, IndianRupee, TrendingUp, ArrowUpRight, 
   ArrowDownRight, Gift, Wallet, Activity, Zap, Cpu, 
   Globe, Database, Palette, Plus, MapPin, Package, Star, AlertCircle,
-  Settings2, Key
+  Settings2, Key, Trash2, Edit2, Check, X
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from "recharts";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
@@ -22,11 +23,23 @@ export function Dashboard() {
     services, carMakes, carModels, fuelTypes, appointments, 
     users, brands, settings, uiSettings, updateUiSettings, 
     locations, updateLocations, inventory, reviews, categories, coupons,
-    vehicles, missingTables
+    vehicles, missingTables, updateServices, updateCarModels, updateFuelTypes
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
   const [newCityName, setNewCityName] = useState("");
+
+  // New state for vehicle & service management
+  const [selectedMakeForModel, setSelectedMakeForModel] = useState("");
+  const [newModelName, setNewModelName] = useState("");
+  const [newFuelName, setNewFuelName] = useState("");
+  const [newFuelPrice, setNewFuelPrice] = useState(0);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [serviceApplicability, setServiceApplicability] = useState({
+    makes: [] as string[],
+    models: [] as string[],
+    fuels: [] as string[]
+  });
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newColor = e.target.value;
@@ -398,6 +411,7 @@ export function Dashboard() {
                 { label: "UI Designer", icon: Palette, path: "/admin/ui-settings", color: "bg-emerald-500/10 text-emerald-600" },
                 { label: "SEO Config", icon: Globe, path: "/admin/seo", color: "bg-primary/10 text-primary" },
                 { label: "API Keys", icon: Key, path: "/admin/api-keys", color: "bg-slate-500/10 text-slate-600" },
+                { label: "Smart AI", icon: Zap, path: "/admin/smart-diagnostic", color: "bg-amber-500/10 text-amber-600" },
                 { label: "Workshop", icon: Cpu, path: "/admin/workshop", color: "bg-purple-500/10 text-purple-600" },
                 { label: "System Logs", icon: Activity, path: "/admin/dashboard", color: "bg-cyan-500/10 text-cyan-600" },
               ].map((action, i) => (
@@ -1011,6 +1025,380 @@ export function Dashboard() {
                   <span className="text-[9px] font-bold text-emerald-600/60 uppercase tracking-widest">All modules operational</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Vehicle & Service Management Section */}
+        <div className="lg:col-span-12 mt-8">
+          <Card className="bg-card border-border shadow-2xl shadow-black/5 overflow-hidden">
+            <CardHeader className="border-b border-border bg-accent/30">
+              <div className="flex items-center gap-2 mb-1">
+                <Database className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Master Data Control</span>
+              </div>
+              <CardTitle className="text-foreground uppercase tracking-tighter text-2xl font-black">Vehicle & Service Logic</CardTitle>
+              <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Manage vehicle applicability and master data.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs defaultValue="models" className="w-full">
+                <TabsList className="w-full justify-start h-14 bg-accent/50 rounded-none border-b border-border px-6 gap-8">
+                  <TabsTrigger value="models" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Car Models</TabsTrigger>
+                  <TabsTrigger value="fuels" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Fuel Types</TabsTrigger>
+                  <TabsTrigger value="applicability" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Service Applicability</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="models" className="p-8 m-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Add New Model</h3>
+                        <div className="space-y-4 bg-accent/30 p-6 rounded-2xl border border-border">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Select Manufacturer</label>
+                            <select 
+                              className="w-full h-11 bg-card border border-border rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                              value={selectedMakeForModel}
+                              onChange={(e) => setSelectedMakeForModel(e.target.value)}
+                            >
+                              <option value="">Choose Make...</option>
+                              {carMakes.map(make => (
+                                <option key={make.id} value={make.name}>{make.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Model Name</label>
+                            <Input 
+                              placeholder="E.G. CIVIC, MUSTANG..." 
+                              value={newModelName}
+                              onChange={(e) => setNewModelName(e.target.value)}
+                              className="h-11 bg-card border-border text-foreground rounded-xl font-black text-[10px] uppercase tracking-widest"
+                            />
+                          </div>
+                          <Button 
+                            onClick={() => {
+                              if (!selectedMakeForModel || !newModelName.trim()) {
+                                toast.error("Please select a make and enter a model name");
+                                return;
+                              }
+                              const newModel = { id: `model_${Date.now()}`, name: newModelName, make: selectedMakeForModel, basePrice: 0 };
+                              updateCarModels([...carModels, newModel]);
+                              setNewModelName("");
+                              toast.success(`${newModelName} added to ${selectedMakeForModel}`);
+                            }}
+                            className="w-full h-11 bg-primary hover:opacity-90 text-white rounded-xl font-black uppercase tracking-widest text-[10px]"
+                          >
+                            <Plus className="mr-2 h-4 w-4" /> Add Model
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Existing Models</h3>
+                      <div className="bg-accent/30 rounded-2xl border border-border overflow-hidden">
+                        <div className="max-h-[300px] overflow-y-auto">
+                          <table className="w-full text-left">
+                            <thead className="bg-accent border-b border-border sticky top-0 z-10">
+                              <tr>
+                                <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Make</th>
+                                <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground">Model</th>
+                                <th className="px-6 py-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {carModels.map(model => (
+                                <tr key={model.id} className="hover:bg-accent/50 transition-colors">
+                                  <td className="px-6 py-3">
+                                    <span className="text-[10px] font-black uppercase text-primary">{model.make}</span>
+                                  </td>
+                                  <td className="px-6 py-3">
+                                    <span className="text-[10px] font-bold uppercase text-foreground">{model.name}</span>
+                                  </td>
+                                  <td className="px-6 py-3 text-right">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                                      onClick={() => {
+                                        if (confirm(`Delete ${model.name}?`)) {
+                                          updateCarModels(carModels.filter(m => m.id !== model.id));
+                                          toast.success("Model removed");
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="fuels" className="p-8 m-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Add Fuel Type</h3>
+                        <div className="space-y-4 bg-accent/30 p-6 rounded-2xl border border-border">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Fuel Name</label>
+                            <Input 
+                              placeholder="E.G. PETROL, DIESEL, EV..." 
+                              value={newFuelName}
+                              onChange={(e) => setNewFuelName(e.target.value)}
+                              className="h-11 bg-card border-border text-foreground rounded-xl font-black text-[10px] uppercase tracking-widest"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Price Adjustment (%)</label>
+                            <Input 
+                              type="number"
+                              value={newFuelPrice}
+                              onChange={(e) => setNewFuelPrice(Number(e.target.value))}
+                              className="h-11 bg-card border-border text-foreground rounded-xl font-black text-[10px] uppercase tracking-widest"
+                            />
+                          </div>
+                          <Button 
+                            onClick={() => {
+                              if (!newFuelName.trim()) return;
+                              const newFuel = { id: `fuel_${Date.now()}`, name: newFuelName, basePrice: newFuelPrice };
+                              updateFuelTypes([...fuelTypes, newFuel]);
+                              setNewFuelName("");
+                              setNewFuelPrice(0);
+                              toast.success(`${newFuelName} added`);
+                            }}
+                            className="w-full h-11 bg-primary hover:opacity-90 text-white rounded-xl font-black uppercase tracking-widest text-[10px]"
+                          >
+                            <Plus className="mr-2 h-4 w-4" /> Add Fuel Type
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Active Fuel Types</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        {fuelTypes.map(fuel => (
+                          <div key={fuel.id} className="flex items-center justify-between p-4 bg-accent/30 border border-border rounded-2xl hover:border-primary/30 transition-all group">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Zap className="h-4 w-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{fuel.name}</p>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Adjustment: {fuel.basePrice}%</p>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => {
+                                if (confirm(`Delete ${fuel.name}?`)) {
+                                  updateFuelTypes(fuelTypes.filter(f => f.id !== fuel.id));
+                                  toast.success("Fuel type removed");
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="applicability" className="p-8 m-0">
+                  <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                      <div>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Service Applicability Matrix</h3>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Define which vehicles can book specific services.</p>
+                      </div>
+                      <select 
+                        className="h-11 bg-accent border border-border rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-primary/20 min-w-[250px]"
+                        value={editingServiceId || ""}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          setEditingServiceId(id);
+                          const service = services.find(s => s.id === id);
+                          if (service) {
+                            setServiceApplicability({
+                              makes: service.applicableMakes || [],
+                              models: service.applicableModels || [],
+                              fuels: service.applicableFuelTypes || []
+                            });
+                          }
+                        }}
+                      >
+                        <option value="">Select Service to Configure...</option>
+                        {services.map(s => (
+                          <option key={s.id} value={s.id}>{s.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {editingServiceId ? (
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Makes */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Applicable Makes</label>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 text-[8px] font-black uppercase tracking-widest"
+                              onClick={() => setServiceApplicability(prev => ({ ...prev, makes: carMakes.map(m => m.name) }))}
+                            >
+                              Select All
+                            </Button>
+                          </div>
+                          <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
+                            {carMakes.map(make => (
+                              <label key={make.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                                <input 
+                                  type="checkbox" 
+                                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+                                  checked={serviceApplicability.makes.includes(make.name)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setServiceApplicability(prev => ({
+                                      ...prev,
+                                      makes: checked 
+                                        ? [...prev.makes, make.name]
+                                        : prev.makes.filter(m => m !== make.name)
+                                    }));
+                                  }}
+                                />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">{make.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Models */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Applicable Models</label>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 text-[8px] font-black uppercase tracking-widest"
+                              onClick={() => setServiceApplicability(prev => ({ ...prev, models: carModels.map(m => m.name) }))}
+                            >
+                              Select All
+                            </Button>
+                          </div>
+                          <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
+                            {carModels.map(model => (
+                              <label key={model.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                                <input 
+                                  type="checkbox" 
+                                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+                                  checked={serviceApplicability.models.includes(model.name)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setServiceApplicability(prev => ({
+                                      ...prev,
+                                      models: checked 
+                                        ? [...prev.models, model.name]
+                                        : prev.models.filter(m => m !== model.name)
+                                    }));
+                                  }}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">{model.name}</span>
+                                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{model.make}</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Fuel Types */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Applicable Fuel Types</label>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 text-[8px] font-black uppercase tracking-widest"
+                              onClick={() => setServiceApplicability(prev => ({ ...prev, fuels: fuelTypes.map(f => f.name) }))}
+                            >
+                              Select All
+                            </Button>
+                          </div>
+                          <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
+                            {fuelTypes.map(fuel => (
+                              <label key={fuel.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                                <input 
+                                  type="checkbox" 
+                                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+                                  checked={serviceApplicability.fuels.includes(fuel.name)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setServiceApplicability(prev => ({
+                                      ...prev,
+                                      fuels: checked 
+                                        ? [...prev.fuels, fuel.name]
+                                        : prev.fuels.filter(f => f !== fuel.name)
+                                    }));
+                                  }}
+                                />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">{fuel.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="lg:col-span-3 pt-6 border-t border-border flex justify-end gap-4">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setEditingServiceId(null)}
+                            className="h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={() => {
+                              const updatedServices = services.map(s => {
+                                if (s.id === editingServiceId) {
+                                  return {
+                                    ...s,
+                                    applicableMakes: serviceApplicability.makes,
+                                    applicableModels: serviceApplicability.models,
+                                    applicableFuelTypes: serviceApplicability.fuels
+                                  };
+                                }
+                                return s;
+                              });
+                              updateServices(updatedServices);
+                              toast.success("Service applicability updated");
+                              setEditingServiceId(null);
+                            }}
+                            className="h-11 px-12 bg-primary hover:opacity-90 text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+                          >
+                            Save Configuration
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-3xl bg-accent/10">
+                        <Wrench className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                        <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Select a service above to configure its vehicle applicability</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>

@@ -21,6 +21,9 @@ export interface Service {
   iconUrl?: string;
   iconName?: string;
   categoryId?: string;
+  applicableMakes?: string[];
+  applicableModels?: string[];
+  applicableFuelTypes?: string[];
 }
 
 export interface ServicePackage {
@@ -107,6 +110,7 @@ export interface Location {
 export interface PricingItem {
   name: string;
   price: number;
+  imageUrl?: string;
 }
 
 export interface CarModel {
@@ -420,8 +424,8 @@ const initialServices: Service[] = [
     estimatedDuration: "90 Mins",
     iconName: "Wrench",
     categoryId: "cat_1",
-    features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection"],
-    checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn"],
+    features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection", "Tyre Rotation"],
+    checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn", "Suspension Check"],
     commonIssues: ["Low Engine Oil", "Dirty Air Filter", "Coolant Leakage"],
     recommendedCheckups: ["Every 10,000 KM", "Before Long Trips"]
   },
@@ -604,7 +608,8 @@ const initialCategories: ServiceCategory[] = [
   { id: "cat_2", name: "AC & Electrical", description: "Air conditioning service, battery replacement, and wiring diagnostics.", iconName: "Zap" },
   { id: "cat_3", name: "Body & Paint", description: "Dent removal, scratch repair, and full body repainting services.", iconName: "PaintBucket" },
   { id: "cat_4", name: "Tires & Wheels", description: "Wheel alignment, balancing, and tire replacement services.", iconName: "Disc" },
-  { id: "cat_5", name: "Deep Cleaning", description: "Interior detailing, exterior polishing, and engine bay cleaning.", iconName: "Sparkles" }
+  { id: "cat_5", name: "Deep Cleaning", description: "Interior detailing, exterior polishing, and engine bay cleaning.", iconName: "Sparkles" },
+  { id: "cat_6", name: "Wheel Alignment & Balancing", description: "Precision alignment and balancing for smooth driving.", iconName: "Disc" }
 ];
 
 const initialUiSettings: UiSettings = {
@@ -613,7 +618,7 @@ const initialUiSettings: UiSettings = {
   heroBgImage: "",
   heroVideoUrl: "https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4",
   heroBgOpacity: 0.5,
-  primaryColor: "",
+  primaryColor: "#3b82f6",
   whyChooseTitle: "Why Choose CarMechs?",
   whyChooseDescription: "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands.",
   whyChooseImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
@@ -649,7 +654,7 @@ const initialUiSettings: UiSettings = {
     loginTitle: "Welcome back",
     loginSubtitle: "Enter your details to access your account",
     loginBgColor: "#ffffff",
-    loginAccentColor: "#e31e24",
+    loginAccentColor: "#3b82f6",
     showGoogleLogin: true,
     showFacebookLogin: true,
     showPhoneLogin: true
@@ -729,6 +734,7 @@ const initialNavigationItems: NavigationItem[] = [
   { id: "4", label: "Locations", path: "/#locations", order: 4, isActive: true, isExternal: false },
   { id: "5", label: "About", path: "/about", order: 5, isActive: true, isExternal: false },
   { id: "6", label: "Contact", path: "/contact", order: 6, isActive: true, isExternal: false },
+  { id: "7", label: "FAQs", path: "/faq", order: 7, isActive: true, isExternal: false },
 ];
 
 export function DataProvider({ children }: { children: ReactNode }) {

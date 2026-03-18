@@ -49,7 +49,7 @@ const COMMON_ICONS = [
 ];
 
 export function Services() {
-  const { services, updateServices, adminRole, categories, updateCategories } = useData();
+  const { services, updateServices, adminRole, categories, updateCategories, carMakes, carModels, fuelTypes } = useData();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Service>>({});
@@ -217,6 +217,9 @@ export function Services() {
       checks: Array.isArray(formData.checks) 
         ? formData.checks 
         : (formData.checks as string || "").split(',').map(s => s.trim()).filter(Boolean),
+      applicableMakes: formData.applicableMakes || [],
+      applicableModels: formData.applicableModels || [],
+      applicableFuelTypes: formData.applicableFuelTypes || [],
     };
 
     if (editingId) {
@@ -403,6 +406,9 @@ export function Services() {
                         </TabsTrigger>
                         <TabsTrigger value="appearance" className="rounded-lg px-6 font-bold text-[10px] uppercase tracking-widest">
                           <ImageIcon className="h-3 w-3 mr-2" /> Appearance
+                        </TabsTrigger>
+                        <TabsTrigger value="applicability" className="rounded-lg px-6 font-bold text-[10px] uppercase tracking-widest">
+                          <Car className="h-3 w-3 mr-2" /> Applicability
                         </TabsTrigger>
                       </TabsList>
 
@@ -617,6 +623,87 @@ export function Services() {
                                   </PopoverContent>
                                 </Popover>
                               </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="applicability" className="space-y-8 mt-0 outline-none">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                          <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Makes</label>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
+                              {carMakes.map(make => (
+                                <div key={make.name} className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    id={`make-${make.name}`}
+                                    checked={(formData.applicableMakes || []).includes(make.name)}
+                                    onChange={(e) => {
+                                      const current = formData.applicableMakes || [];
+                                      if (e.target.checked) {
+                                        setFormData({ ...formData, applicableMakes: [...current, make.name] });
+                                      } else {
+                                        setFormData({ ...formData, applicableMakes: current.filter(m => m !== make.name) });
+                                      }
+                                    }}
+                                    className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                                  />
+                                  <label htmlFor={`make-${make.name}`} className="text-xs font-bold text-slate-700 uppercase tracking-tight cursor-pointer">{make.name}</label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Models</label>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
+                              {carModels.map(model => (
+                                <div key={`${model.make}-${model.name}`} className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    id={`model-${model.make}-${model.name}`}
+                                    checked={(formData.applicableModels || []).includes(model.name)}
+                                    onChange={(e) => {
+                                      const current = formData.applicableModels || [];
+                                      if (e.target.checked) {
+                                        setFormData({ ...formData, applicableModels: [...current, model.name] });
+                                      } else {
+                                        setFormData({ ...formData, applicableModels: current.filter(m => m !== model.name) });
+                                      }
+                                    }}
+                                    className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                                  />
+                                  <label htmlFor={`model-${model.make}-${model.name}`} className="text-xs font-bold text-slate-700 uppercase tracking-tight cursor-pointer">
+                                    {model.name} <span className="text-[8px] text-slate-400">({model.make})</span>
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Fuel Types</label>
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
+                              {fuelTypes.map(fuel => (
+                                <div key={fuel.name} className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    id={`fuel-${fuel.name}`}
+                                    checked={(formData.applicableFuelTypes || []).includes(fuel.name)}
+                                    onChange={(e) => {
+                                      const current = formData.applicableFuelTypes || [];
+                                      if (e.target.checked) {
+                                        setFormData({ ...formData, applicableFuelTypes: [...current, fuel.name] });
+                                      } else {
+                                        setFormData({ ...formData, applicableFuelTypes: current.filter(f => f !== fuel.name) });
+                                      }
+                                    }}
+                                    className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary/20"
+                                  />
+                                  <label htmlFor={`fuel-${fuel.name}`} className="text-xs font-bold text-slate-700 uppercase tracking-tight cursor-pointer">{fuel.name}</label>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
