@@ -24,6 +24,8 @@ export interface Service {
   applicableMakes?: string[];
   applicableModels?: string[];
   applicableFuelTypes?: string[];
+  timeEstimate?: string;
+  warranty?: string;
 }
 
 export interface ServicePackage {
@@ -53,6 +55,8 @@ export interface InventoryItem {
   minQuantity: number;
   price: number;
   status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  stock: number;
+  minStock?: number;
 }
 
 export interface ServiceCategory {
@@ -105,18 +109,22 @@ export interface Location {
   longitude: number;
   isPopular: boolean;
   workingHours: string;
+  googleMapsUrl?: string;
 }
 
 export interface PricingItem {
+  id?: string;
   name: string;
   price: number;
   imageUrl?: string;
 }
 
 export interface CarModel {
+  id?: string;
   name: string;
   price: number;
   make: string;
+  makeId?: string;
   year?: string;
 }
 
@@ -148,16 +156,24 @@ export interface Appointment {
   make: string;
   model: string;
   fuel: string;
+  fuelType?: string;
   year?: string;
   licensePlate?: string;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
   paymentMethod?: 'razorpay' | 'paytm' | 'pay_after_service';
   paymentStatus?: 'pending' | 'paid' | 'failed';
   amount?: number;
+  walletUsed?: number;
+  finalPaid?: number;
+  locationName?: string;
   technicianId?: string;
+  workshopId?: string;
+  customerName?: string; // For workshop portal compatibility
+  carModel?: string; // For workshop portal compatibility
+  totalPrice?: number; // For workshop portal compatibility
   issuePhotos?: string[];
   createdAt: string;
 }
@@ -174,8 +190,9 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  avatar?: string;
   password?: string; // Added for admin/staff login
-  role: 'admin' | 'viewer' | 'user';
+  role: 'admin' | 'viewer' | 'user' | 'mechanic' | 'workshop_owner';
   verified: boolean;
   blocked: boolean;
   walletBalance: number;
@@ -183,6 +200,30 @@ export interface User {
   referredBy?: string;
   referralsCount: number;
   source?: 'google' | 'social' | 'referral' | 'direct' | 'other';
+  createdAt: string;
+}
+
+export interface Workshop {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  description: string;
+  logoUrl?: string;
+  rating: number;
+  reviewsCount: number;
+  servicesOffered: string[]; // IDs of services they offer
+  isVerified: boolean;
+  status: 'active' | 'inactive' | 'pending';
+  ownerId: string; // User ID of the workshop owner
+  workingHours: {
+    [key: string]: { open: string; close: string; closed: boolean };
+  };
+  location?: {
+    lat: number;
+    lng: number;
+  };
   createdAt: string;
 }
 
@@ -255,10 +296,14 @@ export interface SeoSettings {
 
 export interface Testimonial {
   id: string;
-  name: string;
-  quote: string;
-  avatar?: string;
+  author: string;
+  role: string;
+  content: string;
   rating: number;
+  carModel?: string;
+  image?: string;
+  createdAt: string;
+  location?: string;
 }
 
 export interface SocialLink {
@@ -298,16 +343,6 @@ export interface UiSettings {
   pages: Page[];
   seo: SeoSettings;
   darkMode: boolean;
-}
-
-export interface Testimonial {
-  id: string;
-  name: string;
-  quote: string;
-  avatar?: string;
-  rating: number;
-  location?: string;
-  carModel?: string;
 }
 
 export interface ApiKeys {
@@ -370,6 +405,7 @@ interface DataContextType {
   testimonials: Testimonial[];
   contactSubmissions: ContactSubmission[];
   navigationItems: NavigationItem[];
+  workshops: Workshop[];
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -392,7 +428,12 @@ interface DataContextType {
   updateContactSubmissions: (submissions: ContactSubmission[]) => void;
   updateTestimonials: (testimonials: Testimonial[]) => void;
   updateNavigationItems: (items: NavigationItem[]) => void;
-  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => void;
+  updateWorkshops: (workshops: Workshop[]) => void;
+  updateWorkshop: (workshopId: string, updates: Partial<Workshop>) => void;
+  updateAppointment: (appointmentId: string, updates: Partial<Appointment>) => void;
+  addService: (service: Omit<Service, 'id'>) => Service;
+  addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => void;
+  addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
   addContactSubmission: (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt'>) => void;
@@ -404,6 +445,8 @@ interface DataContextType {
   loginAdmin: (role?: 'admin' | 'viewer') => void;
   logoutAdmin: () => void;
   currentUser: FirebaseUser | null;
+  login: (email: string, password: string) => Promise<any>;
+  signup: (email: string, password: string, name: string, phone: string) => Promise<any>;
   logout: () => Promise<void>;
   isLoading: boolean;
   missingTables: string[];
@@ -632,11 +675,11 @@ const initialUiSettings: UiSettings = {
   testimonialAuthor: "Alex Johnson",
   testimonialRating: 4.9,
   testimonials: [
-    { id: "1", name: "Rahul Sharma", quote: "Best service I've ever had for my car. Very professional!", rating: 5, location: "Kolkata", carModel: "BMW 5 Series" },
-    { id: "2", name: "Priya Patel", quote: "Transparent pricing and timely delivery. Highly recommended!", rating: 5, location: "Howrah", carModel: "Audi A4" },
-    { id: "3", name: "Vikram Singh", quote: "The diagnostic accuracy is impressive. They fixed an issue that two other workshops couldn't.", rating: 5, location: "Kolkata", carModel: "Mercedes C-Class" },
-    { id: "4", name: "Ananya Das", quote: "Excellent ceramic coating job on my new Porsche. The finish is mirror-like.", rating: 5, location: "Kolkata", carModel: "Porsche 911" },
-    { id: "5", name: "Sanjay Gupta", quote: "Reliable and honest mechanics. They explained everything clearly before starting the work.", rating: 5, location: "Howrah", carModel: "Toyota Fortuner" }
+    { id: "1", author: "Rahul Sharma", content: "Best service I've ever had for my car. Very professional!", rating: 5, location: "Kolkata", carModel: "BMW 5 Series", role: "Customer", createdAt: new Date().toISOString() },
+    { id: "2", author: "Priya Patel", content: "Transparent pricing and timely delivery. Highly recommended!", rating: 5, location: "Howrah", carModel: "Audi A4", role: "Customer", createdAt: new Date().toISOString() },
+    { id: "3", author: "Vikram Singh", content: "The diagnostic accuracy is impressive. They fixed an issue that two other workshops couldn't.", rating: 5, location: "Kolkata", carModel: "Mercedes C-Class", role: "Customer", createdAt: new Date().toISOString() },
+    { id: "4", author: "Ananya Das", content: "Excellent ceramic coating job on my new Porsche. The finish is mirror-like.", rating: 5, location: "Kolkata", carModel: "Porsche 911", role: "Customer", createdAt: new Date().toISOString() },
+    { id: "5", author: "Sanjay Gupta", content: "Reliable and honest mechanics. They explained everything clearly before starting the work.", rating: 5, location: "Howrah", carModel: "Toyota Fortuner", role: "Customer", createdAt: new Date().toISOString() }
   ],
   socialLinks: [
     { id: "1", platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" },
@@ -767,6 +810,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(initialNavigationItems);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [missingTables, setMissingTables] = useState<string[]>([]);
 
@@ -789,26 +833,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setCurrentUser(user);
           if (user) {
             // Check if user exists in our Supabase users table
-            const existingUser = users.find(u => u.id === user.uid || u.email === user.email);
-            if (!existingUser) {
-              // Create user in Supabase if they don't exist
-              const newUser: User = {
-                id: user.uid,
-                name: user.displayName || user.email?.split('@')[0] || 'User',
-                email: user.email || '',
-                phone: user.phoneNumber || '',
-                role: 'user',
-                verified: user.emailVerified,
-                blocked: false,
-                walletBalance: 0,
-                referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                referralsCount: 0,
-                createdAt: new Date().toISOString()
-              };
-              const updatedUsers = [...users, newUser];
-              setUsers(updatedUsers);
-              updateTable('users', updatedUsers);
-            }
+            setUsers(prev => {
+              const existingUser = prev.find(u => u.id === user.uid || u.email === user.email);
+              if (!existingUser) {
+                // Create user in Supabase if they don't exist
+                const newUser: User = {
+                  id: user.uid,
+                  name: user.displayName || user.email?.split('@')[0] || 'User',
+                  email: user.email || '',
+                  phone: user.phoneNumber || '',
+                  role: 'user',
+                  verified: user.emailVerified,
+                  blocked: false,
+                  walletBalance: 0,
+                  referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                  referralsCount: 0,
+                  createdAt: new Date().toISOString()
+                };
+                const updatedUsers = [...prev, newUser];
+                updateTable('users', updatedUsers);
+                return updatedUsers;
+              }
+              return prev;
+            });
           }
         });
         return unsubscribe;
@@ -816,7 +863,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         console.error("Firebase auth error:", e);
       }
     }
-  }, [apiKeys, users]);
+  }, [apiKeys]);
 
   const login = async (email: string, password: string) => {
     const config = getFirebaseConfig(apiKeys);
@@ -827,7 +874,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     throw new Error("Firebase not configured");
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, phone: string) => {
     const config = getFirebaseConfig(apiKeys);
     if (config.apiKey && config.projectId) {
       const auth = getFirebaseAuth(apiKeys);
@@ -840,7 +887,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           id: result.user.uid,
           name: name,
           email: email,
-          phone: '',
+          phone: phone,
           role: 'user',
           verified: false,
           blocked: false,
@@ -849,9 +896,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
           referralsCount: 0,
           createdAt: new Date().toISOString()
         };
-        const updatedUsers = [...users, newUser];
-        setUsers(updatedUsers);
-        updateTable('users', updatedUsers);
+        setUsers(prev => {
+          const updatedUsers = [...prev, newUser];
+          updateTable('users', updatedUsers);
+          return updatedUsers;
+        });
       }
       return result;
     }
@@ -914,6 +963,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setTechnicians(state.technicians || []);
           setTestimonials(state.testimonials || []);
           setNavigationItems(state.navigationItems || initialNavigationItems);
+          setWorkshops(state.workshops || []);
         }
       } catch (error) {
         console.error("Error fetching initial data from Supabase:", error);
@@ -951,6 +1001,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'technicians' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => fetchInitialData())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'navigation_items' }, () => fetchInitialData())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workshops' }, () => fetchInitialData())
         .subscribe();
 
       return () => {
@@ -1008,6 +1059,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setNotifications(state.notifications || []);
       setServicePackages(state.servicePackages || []);
       setContactSubmissions(state.contactSubmissions || []);
+      setWorkshops(state.workshops || []);
       setIsLoading(false);
     });
 
@@ -1031,6 +1083,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('notifications_updated', (newNotifications) => setNotifications(newNotifications));
     newSocket.on('service_packages_updated', (newPackages) => setServicePackages(newPackages));
     newSocket.on('contact_submissions_updated', (newSubmissions) => setContactSubmissions(newSubmissions));
+    newSocket.on('workshops_updated', (newWorkshops) => setWorkshops(newWorkshops));
 
     return () => {
       newSocket.disconnect();
@@ -1406,6 +1459,50 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateWorkshops = (newWorkshops: Workshop[]) => {
+    setWorkshops(newWorkshops);
+    if (socket?.connected) {
+      socket.emit('update_workshops', newWorkshops);
+    } else {
+      updateTable('workshops', newWorkshops);
+    }
+  };
+
+  const updateWorkshop = (workshopId: string, updates: Partial<Workshop>) => {
+    const updatedWorkshops = workshops.map(w => w.id === workshopId ? { ...w, ...updates } : w);
+    setWorkshops(updatedWorkshops);
+    if (socket?.connected) {
+      socket.emit('update_workshops', updatedWorkshops);
+    } else {
+      updateTable('workshops', updatedWorkshops);
+    }
+  };
+
+  const updateAppointment = (appointmentId: string, updates: Partial<Appointment>) => {
+    const updatedAppointments = appointments.map(a => a.id === appointmentId ? { ...a, ...updates } : a);
+    setAppointments(updatedAppointments);
+    if (socket?.connected) {
+      socket.emit('update_appointments', updatedAppointments);
+    } else {
+      updateTable('appointments', updatedAppointments);
+    }
+  };
+
+  const addService = (service: Omit<Service, 'id'>) => {
+    const newService: Service = { 
+      ...service, 
+      id: `ser_${Date.now()}`,
+      features: service.features || [],
+      checks: service.checks || [],
+      basePrice: service.basePrice || 0,
+      estimatedPrice: service.estimatedPrice || 0,
+      estimatedDuration: service.estimatedDuration || "1 Hour"
+    };
+    const updatedServices = [...services, newService];
+    updateServices(updatedServices);
+    return newService;
+  };
+
   const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => {
     // Ensure we have a service title if only ID was provided
     let serviceTitle = appointment.service;
@@ -1509,6 +1606,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       testimonials,
       contactSubmissions,
       navigationItems,
+      workshops,
       updateServices,
       updateCarMakes,
       updateCarModels,
@@ -1531,6 +1629,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateContactSubmissions,
       updateTestimonials,
       updateNavigationItems,
+      updateWorkshops,
+      updateWorkshop,
+      updateAppointment,
+      addService,
       addAppointment,
       addTask,
       addContactSubmission,

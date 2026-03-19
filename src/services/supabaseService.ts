@@ -64,13 +64,14 @@ export async function getInitialState() {
       supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
       supabase.from('technicians').select('*'),
       supabase.from('testimonials').select('*'),
-      supabase.from('navigation_items').select('*').order('order', { ascending: true })
+      supabase.from('navigation_items').select('*').order('order', { ascending: true }),
+      supabase.from('workshops').select('*')
     ]);
 
     const tableNames = [
       'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
       'inventory', 'categories', 'coupons', 'reviews', 'notifications',
-      'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions', 'technicians', 'testimonials', 'navigation_items'
+      'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions', 'technicians', 'testimonials', 'navigation_items', 'workshops'
     ];
 
     const missingTables: string[] = [];
@@ -112,7 +113,8 @@ export async function getInitialState() {
       { data: contactSubmissions },
       { data: technicians },
       { data: testimonials },
-      { data: navigationItems }
+      { data: navigationItems },
+      { data: workshops }
     ] = results;
 
     const settings = config?.find(c => c.key === 'settings')?.value || {};
@@ -147,6 +149,7 @@ export async function getInitialState() {
       technicians: (technicians || []).map(toCamelCase),
       testimonials: (testimonials || []).map(toCamelCase),
       navigationItems: (navigationItems || []).map(toCamelCase),
+      workshops: (workshops || []).map(toCamelCase),
     };
   } catch (error) {
     console.error('Unexpected error in getInitialState:', error);
@@ -210,13 +213,17 @@ export async function updateTable(table: string, data: any[]) {
     if (error) console.error(`Error updating ${table}:`, error.message || error);
 
     // Handle deletions: Remove items from DB that are not in the new data list
-    const currentIds = data.map(item => item[primaryKey]).filter(Boolean);
-    if (currentIds.length > 0) {
-      const { error: delError } = await supabase
-        .from(table)
-        .delete()
-        .not(primaryKey, 'in', `(${currentIds.map(id => typeof id === 'string' ? `"${id}"` : id).join(',')})`);
-      if (delError) console.error(`Error cleaning up ${table}:`, delError.message || delError);
+    // Skip deletion for sensitive tables to prevent accidental data loss during partial state updates
+    const sensitiveTables = ['users', 'appointments', 'tasks', 'notifications', 'reviews', 'contact_submissions', 'workshops'];
+    if (!sensitiveTables.includes(table)) {
+      const currentIds = data.map(item => item[primaryKey]).filter(Boolean);
+      if (currentIds.length > 0) {
+        const { error: delError } = await supabase
+          .from(table)
+          .delete()
+          .not(primaryKey, 'in', `(${currentIds.map(id => `"${id}"`).join(',')})`);
+        if (delError) console.error(`Error cleaning up ${table}:`, delError.message || delError);
+      }
     }
   } catch (error: any) {
     console.error(`Unexpected error updating ${table}:`, error.message || error);

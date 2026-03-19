@@ -42,11 +42,12 @@ export function Cars() {
     }
 
     if (activeTab === 'makes') {
-      updateCarMakes([...carMakes, { name: newItem, price }]);
+      updateCarMakes([...carMakes, { id: `make_${Date.now()}`, name: newItem, price }]);
     } else if (activeTab === 'models') {
-      updateCarModels([...carModels, { name: newItem, price, make: selectedMake, year: newYear }]);
+      const makeId = carMakes.find(m => m.name === selectedMake)?.id || `make_${Date.now()}`;
+      updateCarModels([...carModels, { id: `model_${Date.now()}`, makeId, name: newItem, price, make: selectedMake, year: newYear }]);
     } else {
-      updateFuelTypes([...fuelTypes, { name: newItem, price }]);
+      updateFuelTypes([...fuelTypes, { id: `fuel_${Date.now()}`, name: newItem, price }]);
     }
     
     setNewItem("");
@@ -74,13 +75,17 @@ export function Cars() {
     }
 
     if (activeTab === 'makes') {
-      const updatedItem = { name: editingItem.name, price };
+      const original = carMakes.find(item => item.name === editingItem.originalName);
+      const updatedItem = { ...original, id: original?.id || `make_${Date.now()}`, name: editingItem.name, price };
       updateCarMakes(carMakes.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else if (activeTab === 'models') {
-      const updatedItem = { name: editingItem.name, price, make: editingItem.make!, year: editingItem.year };
+      const original = carModels.find(item => item.name === editingItem.originalName);
+      const makeId = carMakes.find(m => m.name === editingItem.make)?.id || original?.makeId || `make_${Date.now()}`;
+      const updatedItem = { ...original, id: original?.id || `model_${Date.now()}`, makeId, name: editingItem.name, price, make: editingItem.make!, year: editingItem.year };
       updateCarModels(carModels.map(item => item.name === editingItem.originalName ? updatedItem : item));
     } else {
-      const updatedItem = { name: editingItem.name, price };
+      const original = fuelTypes.find(item => item.name === editingItem.originalName);
+      const updatedItem = { ...original, id: original?.id || `fuel_${Date.now()}`, name: editingItem.name, price };
       updateFuelTypes(fuelTypes.map(item => item.name === editingItem.originalName ? updatedItem : item));
     }
 

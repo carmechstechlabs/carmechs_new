@@ -7,7 +7,7 @@ import {
   User, Mail, Phone, Shield, Wallet, Gift, 
   Calendar, Clock, CheckCircle2, XCircle, 
   Copy, ArrowRight, Car, Plus, Trash2,
-  Wrench, Fuel, Hash, Info, ChevronRight, Zap
+  Wrench, Fuel, Hash, Info, ChevronRight, Zap, Building2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
@@ -39,7 +39,8 @@ export function Profile() {
     walletBalance: 0,
     referralCode: "N/A",
     referralsCount: 0,
-    verified: !!currentUser?.emailVerified
+    verified: !!currentUser?.emailVerified,
+    role: 'user' as const
   };
 
   const userAppointments = appointments.filter(a => a.email === currentUser?.email || a.phone === user.phone)
@@ -146,6 +147,17 @@ export function Profile() {
                 Welcome back, <span className="text-primary">{user.name}</span>
               </h1>
               <p className="text-slate-500 text-lg">Manage your vehicle services, wallet, and rewards.</p>
+              
+              {(user.role === 'workshop_owner' || user.role === 'mechanic') && (
+                <div className="pt-4">
+                  <Button asChild className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl px-8 h-12 font-bold shadow-xl shadow-zinc-200/50">
+                    <a href="/workshop-portal" className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Workshop Management Portal
+                    </a>
+                  </Button>
+                </div>
+              )}
             </div>
             
             <motion.div 

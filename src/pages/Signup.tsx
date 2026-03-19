@@ -9,6 +9,12 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWit
 import { motion, AnimatePresence } from "motion/react";
 import { Facebook } from "lucide-react";
 
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
+
 export function Signup() {
   const navigate = useNavigate();
   const { apiKeys, uiSettings, signup } = useData();
@@ -26,6 +32,7 @@ export function Signup() {
     name: "",
     email: "",
     password: "",
+    phone: "",
   });
 
   useEffect(() => {
@@ -49,8 +56,8 @@ export function Signup() {
     setIsLoading(true);
 
     try {
-      if (formData.name && formData.email && formData.password.length >= 6) {
-        await signup(formData.email, formData.password, formData.name);
+      if (formData.name && formData.email && formData.password.length >= 6 && formData.phone) {
+        await signup(formData.email, formData.password, formData.name, formData.phone);
         toast.success("Successfully signed up!");
         navigate("/");
       } else {
@@ -201,6 +208,17 @@ export function Signup() {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Email address"
+                      />
+                    </div>
+                    <div className="relative group">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        placeholder="Phone Number"
                       />
                     </div>
                     <div className="relative group">

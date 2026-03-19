@@ -189,18 +189,31 @@ export function ServiceDetail() {
 
           <div className="space-y-8">
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8 sticky top-32">
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Need Assistance?</h3>
-              <p className="text-slate-500 font-medium leading-relaxed">
-                Not sure if this is the right service for your vehicle? Speak with our technical advisors.
-              </p>
               <div className="space-y-4">
-                <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-black uppercase tracking-widest text-xs">
-                  Request Callback
+                <Button 
+                  onClick={() => navigate(`/book?serviceId=${service.id}`)}
+                  className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 group"
+                >
+                  Book This Service <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs">
-                  Chat with Expert
-                </Button>
+                <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Instant Confirmation Available</p>
               </div>
+
+              <div className="pt-8 border-t border-slate-100">
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Need Assistance?</h3>
+                <p className="text-slate-500 font-medium leading-relaxed mb-8">
+                  Not sure if this is the right service for your vehicle? Speak with our technical advisors.
+                </p>
+                <div className="space-y-4">
+                  <Button variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-black uppercase tracking-widest text-xs">
+                    Request Callback
+                  </Button>
+                  <Button className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs">
+                    Chat with Expert
+                  </Button>
+                </div>
+              </div>
+              
               <div className="pt-8 border-t border-slate-100">
                 <div className="flex items-center gap-4">
                   <div className="flex -space-x-3">

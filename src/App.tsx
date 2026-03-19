@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Layout } from "@/components/layout/Layout";
 import { Home } from "@/pages/Home";
@@ -11,6 +11,8 @@ import { DynamicPage } from "@/pages/DynamicPage";
 import { NotFound } from "@/pages/NotFound";
 import { DataProvider, useData } from "@/context/DataContext";
 import { useEffect } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AnimatePresence } from "motion/react";
 
 // Admin
 import { AdminLogin } from "@/pages/admin/AdminLogin";
@@ -38,62 +40,78 @@ import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig
 import { SmartDiagnostic as AdminSmartDiagnostic } from "@/pages/admin/SmartDiagnostic";
 import { TaskManager as AdminTasks } from "@/pages/admin/TaskManager";
 import NavigationManager from "@/pages/admin/NavigationManager";
+import WorkshopPortal from "@/pages/WorkshopPortal";
+
+import { motion } from "motion/react";
 
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
+  const location = useLocation();
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<DynamicPage />} />
-        <Route path="p/:slug" element={<DynamicPage />} />
-        <Route path="services" element={<Services />} />
-        <Route path="services/:id" element={<ServiceDetail />} />
-        <Route path="book" element={<Booking />} />
-        <Route path="contact" element={<DynamicPage slugOverride="contact" />} />
-        <Route path="about" element={<DynamicPage slugOverride="about" />} />
-        <Route path="privacy" element={<DynamicPage slugOverride="privacy" />} />
-        <Route path="terms" element={<DynamicPage slugOverride="terms" />} />
-        <Route path="faq" element={<DynamicPage slugOverride="faq" />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-      <Route path="/login" element={<Login />} />
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Routes location={location}>
+          {/* Public Routes */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<DynamicPage />} />
+            <Route path="p/:slug" element={<DynamicPage />} />
+            <Route path="services" element={<Services />} />
+            <Route path="services/:id" element={<ServiceDetail />} />
+            <Route path="book" element={<Booking />} />
+            <Route path="contact" element={<DynamicPage slugOverride="contact" />} />
+            <Route path="about" element={<DynamicPage slugOverride="about" />} />
+            <Route path="privacy" element={<DynamicPage slugOverride="privacy" />} />
+            <Route path="terms" element={<DynamicPage slugOverride="terms" />} />
+            <Route path="faq" element={<DynamicPage slugOverride="faq" />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="workshop-portal" element={<WorkshopPortal />} />
+            <Route path="404" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="/login" element={<Login />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin">
-        <Route 
-          index 
-          element={isAdminLoggedIn ? <Navigate to="dashboard" replace /> : <AdminLogin />} 
-        />
-        <Route element={<AdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="workshop" element={<AdminWorkshop />} />
-          <Route path="tasks" element={<AdminTasks />} />
-          <Route path="appointments" element={<AdminAppointments />} />
-          <Route path="customers" element={<AdminCustomers />} />
-          <Route path="services" element={<AdminServices />} />
-          <Route path="service-packages" element={<AdminServicePackages />} />
-          <Route path="brands" element={<AdminBrands />} />
-          <Route path="locations" element={<AdminLocations />} />
-          <Route path="navigation" element={<NavigationManager />} />
-          <Route path="inventory" element={<AdminInventory />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="coupons" element={<AdminCoupons />} />
-          <Route path="reviews" element={<AdminReviews />} />
-          <Route path="testimonials" element={<AdminTestimonials />} />
-          <Route path="cars" element={<AdminCars />} />
-          <Route path="vehicle-config" element={<AdminVehicleConfig />} />
-          <Route path="smart-diagnostic" element={<AdminSmartDiagnostic />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="ui-settings" element={<AdminUiSettings />} />
-          <Route path="seo" element={<AdminSeoSettings />} />
-          <Route path="api-keys" element={<AdminApiKeys />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
-      </Route>
-    </Routes>
+          {/* Admin Routes */}
+          <Route path="/admin">
+            <Route 
+              index 
+              element={isAdminLoggedIn ? <Navigate to="dashboard" replace /> : <AdminLogin />} 
+            />
+            <Route element={<AdminLayout />}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="workshop" element={<AdminWorkshop />} />
+              <Route path="tasks" element={<AdminTasks />} />
+              <Route path="appointments" element={<AdminAppointments />} />
+              <Route path="customers" element={<AdminCustomers />} />
+              <Route path="services" element={<AdminServices />} />
+              <Route path="service-packages" element={<AdminServicePackages />} />
+              <Route path="brands" element={<AdminBrands />} />
+              <Route path="locations" element={<AdminLocations />} />
+              <Route path="navigation" element={<NavigationManager />} />
+              <Route path="inventory" element={<AdminInventory />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="reviews" element={<AdminReviews />} />
+              <Route path="testimonials" element={<AdminTestimonials />} />
+              <Route path="cars" element={<AdminCars />} />
+              <Route path="vehicle-config" element={<AdminVehicleConfig />} />
+              <Route path="smart-diagnostic" element={<AdminSmartDiagnostic />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="ui-settings" element={<AdminUiSettings />} />
+              <Route path="seo" element={<AdminSeoSettings />} />
+              <Route path="api-keys" element={<AdminApiKeys />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+          </Route>
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -119,12 +137,14 @@ function ThemeInjector() {
 
 export default function App() {
   return (
-    <DataProvider>
-      <ThemeInjector />
-      <BrowserRouter>
-        <Toaster position="top-center" richColors />
-        <AppRoutes />
-      </BrowserRouter>
-    </DataProvider>
+    <ErrorBoundary>
+      <DataProvider>
+        <ThemeInjector />
+        <BrowserRouter>
+          <Toaster position="top-center" richColors />
+          <AppRoutes />
+        </BrowserRouter>
+      </DataProvider>
+    </ErrorBoundary>
   );
 }

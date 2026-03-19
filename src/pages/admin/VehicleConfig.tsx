@@ -35,7 +35,7 @@ export function VehicleConfig() {
       toast.error("Make already exists");
       return;
     }
-    updateCarMakes([...carMakes, { name: newMake, price: 0, imageUrl: newMakeLogo }]);
+    updateCarMakes([...carMakes, { id: `make_${Date.now()}`, name: newMake, price: 0, imageUrl: newMakeLogo }]);
     setNewMake("");
     setNewMakeLogo("");
     toast.success("Manufacturer added");
@@ -53,7 +53,12 @@ export function VehicleConfig() {
       toast.error("Please fill all fields");
       return;
     }
-    updateCarModels([...carModels, { ...newModel }]);
+    const makeId = carMakes.find(m => m.name === newModel.make)?.id || `make_${Date.now()}`;
+    updateCarModels([...carModels, { 
+      id: `model_${Date.now()}`, 
+      makeId, 
+      ...newModel 
+    }]);
     setNewModel({ name: "", make: "", price: 0 });
     toast.success("Model added");
   };
@@ -65,7 +70,7 @@ export function VehicleConfig() {
 
   const handleAddFuel = () => {
     if (!newFuel.name) return;
-    updateFuelTypes([...fuelTypes, { ...newFuel }]);
+    updateFuelTypes([...fuelTypes, { id: `fuel_${Date.now()}`, ...newFuel }]);
     setNewFuel({ name: "", price: 0 });
     toast.success("Fuel type added");
   };

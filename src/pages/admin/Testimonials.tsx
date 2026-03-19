@@ -268,7 +268,14 @@ export function Testimonials() {
                         <button 
                           onClick={() => {
                             setEditingId(testimonial.id);
-                            setEditTestimonial({ ...testimonial });
+                            setEditTestimonial({ 
+                              author: testimonial.author,
+                              role: testimonial.role,
+                              content: testimonial.content,
+                              rating: testimonial.rating,
+                              carModel: testimonial.carModel || "",
+                              image: testimonial.image || ""
+                            });
                           }}
                           className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors"
                         >

@@ -68,8 +68,8 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
     locationId: "",
     date: new Date().toISOString().split('T')[0],
     time: "09:00 AM",
-    name: currentUser?.name || "",
-    phone: currentUser?.phone || "",
+    name: currentUser?.displayName || "",
+    phone: currentUser?.phoneNumber || "",
     email: currentUser?.email || ""
   });
 
@@ -90,8 +90,8 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
     if (currentUser) {
       setFormData(prev => ({
         ...prev,
-        name: currentUser.name || prev.name,
-        phone: currentUser.phone || prev.phone,
+        name: currentUser.displayName || prev.name,
+        phone: currentUser.phoneNumber || prev.phone,
         email: currentUser.email || prev.email
       }));
     }

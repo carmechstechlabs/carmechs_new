@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera, Building2, MapPin, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -14,15 +14,16 @@ const steps = [
   { id: 1, title: "Machine Config", icon: Car },
   { id: 2, title: "Protocol Selection", icon: Wrench },
   { id: 3, title: "Visual Diagnostics", icon: Camera },
-  { id: 4, title: "Temporal Sync", icon: CalendarIcon },
-  { id: 5, title: "Final Authorization", icon: ShieldCheck },
+  { id: 4, title: "Service Center", icon: Building2 },
+  { id: 5, title: "Temporal Sync", icon: CalendarIcon },
+  { id: 6, title: "Final Authorization", icon: ShieldCheck },
 ];
 
 export function Booking() {
   const { 
     services, servicePackages, carMakes, carModels, fuelTypes, 
     addAppointment, users, updateWalletBalance, updateUser, locations,
-    currentUser
+    currentUser, workshops
   } = useData();
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ export function Booking() {
     phone: "",
     email: "",
     locationId: "",
+    workshopId: "",
     issuePhotos: [] as string[],
     paymentMethod: "pay_after_service" as 'razorpay' | 'paytm' | 'pay_after_service'
   });
@@ -181,6 +183,19 @@ export function Booking() {
     return breakdown;
   };
 
+  const filteredWorkshops = useMemo(() => {
+    if (!formData.service && !formData.packageId) return workshops;
+    
+    return workshops.filter(w => {
+      if (formData.packageId) {
+        const pkg = servicePackages.find(p => p.id === formData.packageId);
+        if (!pkg) return true;
+        return pkg.serviceIds.every(sId => w.servicesOffered.includes(sId));
+      }
+      return w.servicesOffered.includes(formData.service);
+    });
+  }, [workshops, formData.service, formData.packageId, servicePackages]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [otp, setOtp] = useState("");
@@ -258,6 +273,7 @@ export function Booking() {
         amount: totalPrice,
         walletUsed: walletDeduction,
         finalPaid: amountToPay,
+        locationName: locations.find(l => l.id === formData.locationId)?.name,
         paymentStatus: amountToPay > 0 && formData.paymentMethod === 'pay_after_service' ? 'pending' : 'paid'
       });
       
@@ -303,7 +319,7 @@ export function Booking() {
   };
 
   const handleNext = () => {
-    if (currentStep < 5) setCurrentStep(currentStep + 1);
+    if (currentStep < 6) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
@@ -314,8 +330,9 @@ export function Booking() {
     if (currentStep === 1) return formData.make && formData.model && formData.fuel;
     if (currentStep === 2) return formData.service || formData.packageId;
     if (currentStep === 3) return true; // Visual Diagnostics is optional
-    if (currentStep === 4) return formData.date && formData.time && formData.name && formData.phone && formData.locationId;
-    if (currentStep === 5) return formData.paymentMethod;
+    if (currentStep === 4) return formData.workshopId;
+    if (currentStep === 5) return formData.date && formData.time && formData.name && formData.phone && formData.locationId;
+    if (currentStep === 6) return formData.paymentMethod;
     return false;
   };
 
@@ -767,6 +784,93 @@ export function Booking() {
                 className="space-y-10"
               >
                 <div>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Center</h2>
+                  <p className="text-slate-400 font-medium">Select a certified workshop for your vehicle's maintenance.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredWorkshops.map((workshop) => (
+                    <button
+                      key={workshop.id}
+                      onClick={() => setFormData({ ...formData, workshopId: workshop.id })}
+                      className={cn(
+                        "p-6 rounded-[2.5rem] border text-left transition-all flex flex-col gap-4 group relative overflow-hidden",
+                        formData.workshopId === workshop.id 
+                          ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10" 
+                          : "border-slate-100 bg-white hover:border-primary/30 shadow-sm"
+                      )}
+                    >
+                      <div className="flex justify-between items-start w-full">
+                        <div className={cn(
+                          "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500",
+                          formData.workshopId === workshop.id ? "bg-primary text-white scale-110 shadow-xl shadow-primary/20" : "bg-slate-50 text-slate-400 group-hover:text-primary"
+                        )}>
+                          <Building2 className="h-7 w-7" />
+                        </div>
+                        <div className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                          <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                          <span className="text-[10px] font-black text-amber-700">{workshop.rating}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className={cn(
+                          "text-xl font-black uppercase tracking-tight transition-colors",
+                          formData.workshopId === workshop.id ? "text-primary" : "text-slate-900"
+                        )}>{workshop.name}</h3>
+                        <div className="flex items-center gap-2 mt-1 text-slate-400">
+                          <MapPin className="h-3 w-3" />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">{workshop.address}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {workshop.servicesOffered.slice(0, 3).map(sId => {
+                          const s = services.find(srv => srv.id === sId);
+                          return s ? (
+                            <span key={sId} className="px-2 py-1 bg-slate-100 rounded-md text-[8px] font-black uppercase tracking-widest text-slate-500">
+                              {s.title}
+                            </span>
+                          ) : null;
+                        })}
+                        {workshop.servicesOffered.length > 3 && (
+                          <span className="px-2 py-1 bg-slate-100 rounded-md text-[8px] font-black uppercase tracking-widest text-slate-500">
+                            +{workshop.servicesOffered.length - 3} More
+                          </span>
+                        )}
+                      </div>
+
+                      {formData.workshopId === workshop.id && (
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute top-6 right-6 h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white shadow-lg shadow-primary/20"
+                        >
+                          <Check className="h-5 w-5 stroke-[3]" />
+                        </motion.div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredWorkshops.length === 0 && (
+                  <div className="p-12 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+                    <Building2 className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No workshops found for the selected services.</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {currentStep === 5 && (
+              <motion.div
+                key="step5"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-10"
+              >
+                <div>
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Scheduling</h2>
                   <p className="text-slate-400 font-medium">Define your temporal coordinates and contact details.</p>
                 </div>
@@ -896,6 +1000,12 @@ export function Booking() {
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Service Center</span>
+                        <span className="font-black uppercase tracking-tight text-primary">
+                          {workshops.find(w => w.id === formData.workshopId)?.name || "Awaiting Selection"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
                         <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Active Protocol</span>
                         <span className="font-black uppercase tracking-tight text-primary">
                           {formData.packageId 
@@ -940,9 +1050,9 @@ export function Booking() {
               </motion.div>
             )}
 
-            {currentStep === 5 && (
+            {currentStep === 6 && (
               <motion.div
-                key="step5"
+                key="step6"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -986,6 +1096,21 @@ export function Booking() {
                             </p>
                             <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">
                               {formData.packageId ? "Bundle Module" : "Standard Procedure"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-6">
+                          <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+                            <Building2 className="h-7 w-7 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Service Center</p>
+                            <p className="text-2xl font-black uppercase tracking-tight">
+                              {workshops.find(w => w.id === formData.workshopId)?.name || "Not Selected"}
+                            </p>
+                            <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mt-1">
+                              {workshops.find(w => w.id === formData.workshopId)?.address || "No Address"}
                             </p>
                           </div>
                         </div>
@@ -1148,7 +1273,7 @@ export function Booking() {
             <ChevronLeft className="w-5 h-5 mr-3" /> Back
           </Button>
 
-          {currentStep < 5 ? (
+          {currentStep < 6 ? (
             <Button
               onClick={handleNext}
               disabled={!isStepValid() || user?.blocked || showVerification}

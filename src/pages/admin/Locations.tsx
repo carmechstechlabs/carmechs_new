@@ -61,6 +61,7 @@ export function Locations() {
       email: "", 
       latitude: 0, 
       longitude: 0, 
+      googleMapsUrl: "",
       isPopular: false, 
       workingHours: "09:00 AM - 08:00 PM" 
     });

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useData } from "@/context/DataContext";
+import { useData, Location, CarModel, PricingItem } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +55,19 @@ export function Dashboard() {
 
   const handleAddCity = () => {
     if (!newCityName.trim()) return;
-    const newLoc = { id: `loc_${Date.now()}`, name: newCityName, isPopular: false };
+    const newLoc: Location = { 
+      id: `loc_${Date.now()}`, 
+      name: newCityName, 
+      isPopular: false,
+      address: "",
+      city: newCityName,
+      phone: "",
+      email: "",
+      latitude: 0,
+      longitude: 0,
+      workingHours: "09:00 AM - 07:00 PM",
+      googleMapsUrl: ""
+    };
     updateLocations([...locations, newLoc]);
     setNewCityName("");
     toast.success(`${newCityName} added to service areas`);
@@ -1082,7 +1094,15 @@ export function Dashboard() {
                                 toast.error("Please select a make and enter a model name");
                                 return;
                               }
-                              const newModel = { id: `model_${Date.now()}`, name: newModelName, make: selectedMakeForModel, basePrice: 0 };
+                              const makeId = carMakes.find(m => m.name === selectedMakeForModel)?.id || `make_${Date.now()}`;
+                              const newModel: CarModel = { 
+                                id: `model_${Date.now()}`, 
+                                makeId,
+                                name: newModelName, 
+                                make: selectedMakeForModel, 
+                                price: 0,
+                                year: new Date().getFullYear().toString()
+                              };
                               updateCarModels([...carModels, newModel]);
                               setNewModelName("");
                               toast.success(`${newModelName} added to ${selectedMakeForModel}`);
@@ -1168,7 +1188,7 @@ export function Dashboard() {
                           <Button 
                             onClick={() => {
                               if (!newFuelName.trim()) return;
-                              const newFuel = { id: `fuel_${Date.now()}`, name: newFuelName, basePrice: newFuelPrice };
+                              const newFuel: PricingItem = { id: `fuel_${Date.now()}`, name: newFuelName, price: newFuelPrice };
                               updateFuelTypes([...fuelTypes, newFuel]);
                               setNewFuelName("");
                               setNewFuelPrice(0);
@@ -1193,7 +1213,7 @@ export function Dashboard() {
                               </div>
                               <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{fuel.name}</p>
-                                <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Adjustment: {fuel.basePrice}%</p>
+                                <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Adjustment: {fuel.price}%</p>
                               </div>
                             </div>
                             <Button 

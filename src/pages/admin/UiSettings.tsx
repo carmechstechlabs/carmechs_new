@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useData, UiSettings, Page, PageSection, AdminUiSettings } from "@/context/DataContext";
+import { useData, UiSettings, Page, PageSection, AdminUiSettings, Location } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,7 +75,7 @@ export function UiSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("global");
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile" | "seo">("desktop");
 
   const handleSave = async () => {
     if (adminRole !== 'admin') {
@@ -814,7 +814,14 @@ export function UiSettingsPage() {
                   </div>
                   <Button 
                     onClick={() => {
-                      const newTestimonial = { id: `test_${Date.now()}`, name: "New Customer", quote: "Excellent service!", rating: 5 };
+                      const newTestimonial = { 
+                        id: `test_${Date.now()}`, 
+                        author: "New Customer", 
+                        content: "Excellent service!", 
+                        rating: 5,
+                        role: "Customer",
+                        createdAt: new Date().toISOString()
+                      };
                       setFormData({...formData, testimonials: [...(formData.testimonials || []), newTestimonial]});
                     }} 
                     className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
@@ -829,10 +836,10 @@ export function UiSettingsPage() {
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-6">
                           <ImageUpload 
-                            value={test.avatar || ""}
+                            value={test.image || ""}
                             onChange={(url) => {
                               const newTests = [...formData.testimonials];
-                              newTests[idx].avatar = url;
+                              newTests[idx].image = url;
                               setFormData({...formData, testimonials: newTests});
                             }}
                             className="h-16 w-16 rounded-2xl"
@@ -851,22 +858,34 @@ export function UiSettingsPage() {
                           <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Customer Name</label>
                             <Input 
-                              value={test.name} 
+                              value={test.author} 
                               onChange={(e) => {
                                 const newTests = [...formData.testimonials];
-                                newTests[idx].name = e.target.value;
+                                newTests[idx].author = e.target.value;
                                 setFormData({...formData, testimonials: newTests});
                               }}
                               className="h-12 rounded-xl font-bold"
                             />
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quote</label>
-                            <Textarea 
-                              value={test.quote} 
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role / Location</label>
+                            <Input 
+                              value={test.role || ""} 
                               onChange={(e) => {
                                 const newTests = [...formData.testimonials];
-                                newTests[idx].quote = e.target.value;
+                                newTests[idx].role = e.target.value;
+                                setFormData({...formData, testimonials: newTests});
+                              }}
+                              className="h-12 rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Testimonial Content</label>
+                            <Textarea 
+                              value={test.content} 
+                              onChange={(e) => {
+                                const newTests = [...formData.testimonials];
+                                newTests[idx].content = e.target.value;
                                 setFormData({...formData, testimonials: newTests});
                               }}
                               className="rounded-xl min-h-[80px]"
@@ -900,7 +919,7 @@ export function UiSettingsPage() {
                   </div>
                   <Button 
                     onClick={() => {
-                      const newLink = { platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" };
+                      const newLink = { id: `link_${Date.now()}`, platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" };
                       setFormData({...formData, socialLinks: [...(formData.socialLinks || []), newLink]});
                     }} 
                     className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
@@ -1048,7 +1067,18 @@ export function UiSettingsPage() {
                   </div>
                   <Button 
                     onClick={() => {
-                      const newLoc = { id: `loc_${Date.now()}`, name: "New City", isPopular: false };
+                      const newLoc: Location = { 
+                        id: `loc_${Date.now()}`, 
+                        name: "New City", 
+                        isPopular: false,
+                        address: "",
+                        city: "New City",
+                        phone: "",
+                        email: "",
+                        latitude: 0,
+                        longitude: 0,
+                        workingHours: "09:00 AM - 07:00 PM"
+                      };
                       setLocalLocations([...localLocations, newLoc]);
                     }} 
                     className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"

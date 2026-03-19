@@ -63,9 +63,11 @@ export function AdminLogin() {
           setIsLoading(false);
           return;
         }
-        loginAdmin(user.role);
-        toast.success(`Identity Verified: ${user.name}. Access Granted.`);
-        navigate("/admin/dashboard");
+        if (user.role === 'admin' || user.role === 'viewer') {
+          loginAdmin(user.role);
+          toast.success(`Identity Verified: ${user.name}. Access Granted.`);
+          navigate("/admin/dashboard");
+        }
       } else {
         // Check if it's a password mismatch or role issue
         const foundUser = users.find(u => u.email.toLowerCase() === identifier || u.name.toLowerCase() === identifier);

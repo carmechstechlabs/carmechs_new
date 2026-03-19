@@ -52,21 +52,21 @@ export function TestimonialsSection() {
               </div>
 
               <p className="text-lg text-white/80 font-medium leading-relaxed mb-10 italic">
-                "{testimonial.quote}"
+                "{testimonial.content}"
               </p>
 
               <div className="flex items-center gap-4">
                 <div className="h-14 w-14 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-black text-xl overflow-hidden">
-                  {testimonial.avatar ? (
-                    <img src={testimonial.avatar} alt={testimonial.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                  {testimonial.image ? (
+                    <img src={testimonial.image} alt={testimonial.author} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    testimonial.name.charAt(0)
+                    testimonial.author.charAt(0)
                   )}
                 </div>
                 <div>
-                  <h4 className="text-lg font-black uppercase tracking-tight">{testimonial.name}</h4>
+                  <h4 className="text-lg font-black uppercase tracking-tight">{testimonial.author}</h4>
                   <p className="text-xs text-white/40 font-bold uppercase tracking-widest">
-                    {testimonial.carModel} • {testimonial.location}
+                    {testimonial.carModel} • {testimonial.role}
                   </p>
                 </div>
               </div>
