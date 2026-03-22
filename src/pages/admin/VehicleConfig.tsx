@@ -24,7 +24,7 @@ export function VehicleConfig() {
   const [newMakeLogo, setNewMakeLogo] = useState("");
   
   // Models State
-  const [newModel, setNewModel] = useState({ name: "", make: "", price: 0 });
+  const [newModel, setNewModel] = useState({ name: "", make: "", year: "", price: 0 });
 
   // Fuel State
   const [newFuel, setNewFuel] = useState({ name: "", price: 0 });
@@ -59,7 +59,7 @@ export function VehicleConfig() {
       makeId, 
       ...newModel 
     }]);
-    setNewModel({ name: "", make: "", price: 0 });
+    setNewModel({ name: "", make: "", year: "", price: 0 });
     toast.success("Model added");
   };
 
@@ -234,6 +234,15 @@ export function VehicleConfig() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Year</label>
+                  <Input 
+                    placeholder="e.g. 2024" 
+                    value={newModel.year}
+                    onChange={e => setNewModel({...newModel, year: e.target.value})}
+                    className="h-12 bg-slate-50 border-slate-100 rounded-xl font-bold uppercase"
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Price Adjustment (₹)</label>
                   <Input 
                     type="number"
@@ -261,7 +270,10 @@ export function VehicleConfig() {
                         <Card key={`${model.make}-${model.name}`} className="bg-white border-slate-100 shadow-sm hover:border-primary/30 transition-all rounded-2xl group">
                           <CardContent className="p-4 flex items-center justify-between">
                             <div className="flex flex-col">
-                              <span className="text-sm font-black uppercase tracking-tight text-slate-900">{model.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-black uppercase tracking-tight text-slate-900">{model.name}</span>
+                                {model.year && <span className="text-[10px] font-bold text-slate-400">({model.year})</span>}
+                              </div>
                               <span className="text-[10px] font-bold text-primary uppercase tracking-widest">+₹{model.price}</span>
                             </div>
                             <Button 

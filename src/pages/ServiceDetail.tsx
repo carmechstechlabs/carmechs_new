@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
 import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { 
   ArrowLeft, Clock, ShieldCheck, CheckCircle2, 
   ArrowRight, IndianRupee, Wrench, Zap, Sparkles, 
@@ -11,9 +13,39 @@ import { useEffect, useState } from "react";
 
 export function ServiceDetail() {
   const { id } = useParams();
-  const { services, categories } = useData();
+  const { services, categories, reviews, addReview, currentUser } = useData();
   const navigate = useNavigate();
   const [service, setService] = useState<any>(null);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const handleSubmitReview = async () => {
+    if (!currentUser) {
+      toast.error("Please login to leave a review");
+      return;
+    }
+    if (!newReview.comment.trim()) {
+      toast.error("Please enter a comment");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      addReview({
+        userId: currentUser.uid,
+        userName: currentUser.displayName || "Anonymous User",
+        rating: newReview.rating,
+        comment: newReview.comment,
+        serviceId: service.id,
+      });
+      setNewReview({ rating: 5, comment: "" });
+      toast.success("Review submitted for moderation!");
+    } catch (error) {
+      toast.error("Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -281,6 +313,112 @@ export function ServiceDetail() {
                 </div>
               </div>
             </div>
+
+            {/* Reviews Section */}
+            <section className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm mt-12">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                <div>
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">User Feedback</h2>
+                  <h3 className="text-4xl font-black uppercase tracking-tighter text-slate-900">Service Reviews</h3>
+                </div>
+                <div className="text-left md:text-right">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
+                    <span className="text-3xl font-black text-slate-900">
+                      {reviews.filter(r => r.serviceId === service.id && r.isPublished).length > 0
+                        ? (reviews.filter(r => r.serviceId === service.id && r.isPublished).reduce((acc, r) => acc + r.rating, 0) / 
+                           reviews.filter(r => r.serviceId === service.id && r.isPublished).length).toFixed(1)
+                        : "5.0"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    {reviews.filter(r => r.serviceId === service.id && r.isPublished).length} Verified Reviews
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-8 mb-12">
+                {reviews.filter(r => r.serviceId === service.id && r.isPublished).length > 0 ? (
+                  reviews.filter(r => r.serviceId === service.id && r.isPublished).map((review) => (
+                    <div key={review.id} className="pb-8 border-b border-slate-50 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-100">
+                            <span className="text-sm font-black text-primary uppercase">{review.userName.charAt(0)}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-900 uppercase tracking-tight">{review.userName}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={cn(
+                                "h-3 w-3",
+                                star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-200"
+                              )} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-slate-500 font-medium leading-relaxed italic">"{review.comment}"</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                    <Star className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No reviews yet for this service.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Add Review Form */}
+              <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-6">Leave a Review</h4>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Rating</p>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setNewReview({ ...newReview, rating: star })}
+                          className="focus:outline-none transition-transform hover:scale-110"
+                        >
+                          <Star 
+                            className={cn(
+                              "h-6 w-6",
+                              star <= newReview.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300"
+                            )} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Your Comment</label>
+                    <textarea
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      placeholder="Share your experience with this service..."
+                      className="w-full p-6 rounded-2xl border border-slate-100 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium resize-none"
+                      rows={3}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleSubmitReview}
+                    disabled={!newReview.comment || isSubmittingReview}
+                    className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-xs"
+                  >
+                    {isSubmittingReview ? "Submitting..." : "Submit Review for Moderation"}
+                  </Button>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>

@@ -31,6 +31,7 @@ export default function NavigationManager() {
     path: "",
     isActive: true,
     isExternal: false,
+    adminOnly: false,
   });
 
   const handleSave = () => {
@@ -51,6 +52,7 @@ export default function NavigationManager() {
       order: items.length + 1,
       isActive: newItem.isActive ?? true,
       isExternal: newItem.isExternal ?? false,
+      adminOnly: newItem.adminOnly ?? false,
     };
 
     const updatedItems = [...items, item];
@@ -148,6 +150,9 @@ export default function NavigationManager() {
                         <span className="font-bold text-sm text-slate-900">{item.label}</span>
                         {!item.isActive && (
                           <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded">Hidden</span>
+                        )}
+                        {item.adminOnly && (
+                          <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-primary/10 text-primary rounded">Admin Only</span>
                         )}
                         {item.isExternal && (
                           <ExternalLink className="h-3 w-3 text-slate-400" />
@@ -275,6 +280,20 @@ export default function NavigationManager() {
                   onCheckedChange={(checked) => editingItem 
                     ? setEditingItem({...editingItem, isExternal: checked})
                     : setNewItem({...newItem, isExternal: checked})
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="space-y-0.5">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-900">Admin Only</Label>
+                  <p className="text-[9px] text-slate-500 font-medium">Only visible to admins</p>
+                </div>
+                <Switch 
+                  checked={editingItem ? editingItem.adminOnly : newItem.adminOnly}
+                  onCheckedChange={(checked) => editingItem 
+                    ? setEditingItem({...editingItem, adminOnly: checked})
+                    : setNewItem({...newItem, adminOnly: checked})
                   }
                 />
               </div>

@@ -23,7 +23,8 @@ export function Dashboard() {
     services, carMakes, carModels, fuelTypes, appointments, 
     users, brands, settings, uiSettings, updateUiSettings, 
     locations, updateLocations, inventory, reviews, categories, coupons,
-    vehicles, missingTables, updateServices, updateCarModels, updateFuelTypes
+    vehicles, missingTables, updateServices, updateCarModels, updateFuelTypes,
+    technicians, updateTechnicians
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
@@ -1058,6 +1059,7 @@ export function Dashboard() {
                   <TabsTrigger value="models" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Car Models</TabsTrigger>
                   <TabsTrigger value="fuels" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Fuel Types</TabsTrigger>
                   <TabsTrigger value="applicability" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Service Applicability</TabsTrigger>
+                  <TabsTrigger value="technicians" className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-14 px-0 font-black uppercase tracking-widest text-[10px]">Technicians</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="models" className="p-8 m-0">
@@ -1416,6 +1418,73 @@ export function Dashboard() {
                         <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Select a service above to configure its vehicle applicability</p>
                       </div>
                     )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="technicians" className="p-8 m-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {technicians.map((tech) => (
+                      <div key={tech.id} className="p-6 rounded-2xl border border-border bg-accent/30 flex flex-col gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black">
+                            {tech.name.charAt(0)}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black tracking-tight">{tech.name}</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{tech.specialty}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-border">
+                          <span className={cn(
+                            "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
+                            tech.status === 'available' ? "bg-emerald-500/10 text-emerald-600" :
+                            tech.status === 'busy' ? "bg-amber-500/10 text-amber-600" :
+                            "bg-rose-500/10 text-rose-600"
+                          )}>
+                            {tech.status}
+                          </span>
+                          
+                          <div className="flex gap-1">
+                            <Button 
+                              size="sm" 
+                              variant={tech.status === 'available' ? "default" : "outline"}
+                              className="h-8 px-2 text-[8px] font-black uppercase"
+                              onClick={() => {
+                                const updated = technicians.map(t => t.id === tech.id ? { ...t, status: 'available' as const } : t);
+                                updateTechnicians(updated);
+                                toast.success(`${tech.name} is now Available`);
+                              }}
+                            >
+                              Avail
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={tech.status === 'busy' ? "default" : "outline"}
+                              className="h-8 px-2 text-[8px] font-black uppercase"
+                              onClick={() => {
+                                const updated = technicians.map(t => t.id === tech.id ? { ...t, status: 'busy' as const } : t);
+                                updateTechnicians(updated);
+                                toast.success(`${tech.name} is now Busy`);
+                              }}
+                            >
+                              Busy
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={tech.status === 'off' ? "default" : "outline"}
+                              className="h-8 px-2 text-[8px] font-black uppercase"
+                              onClick={() => {
+                                const updated = technicians.map(t => t.id === tech.id ? { ...t, status: 'off' as const } : t);
+                                updateTechnicians(updated);
+                                toast.success(`${tech.name} is now Offline`);
+                              }}
+                            >
+                              Off
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>

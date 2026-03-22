@@ -3,10 +3,12 @@ import { useData, Review } from "@/context/DataContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Star, Search, Trash2, CheckCircle2, 
   XCircle, Filter, MessageSquare, User,
-  Calendar, Eye, EyeOff, ShieldCheck
+  Calendar, Eye, EyeOff, ShieldCheck,
+  Edit2, Save, X
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -16,6 +18,8 @@ export function Reviews() {
   const { reviews, updateReviews, adminRole } = useData();
   const [search, setSearch] = useState("");
   const [filterRating, setFilterRating] = useState("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editComment, setEditComment] = useState("");
 
   const filteredReviews = reviews.filter(r => {
     const matchesSearch = r.userName.toLowerCase().includes(search.toLowerCase()) || 
@@ -37,6 +41,21 @@ export function Reviews() {
     if (adminRole !== 'admin') return;
     updateReviews(reviews.map(r => r.id === id ? { ...r, isPublished: !r.isPublished } : r));
     toast.success("Review visibility updated");
+  };
+
+  const handleEdit = (review: Review) => {
+    setEditingId(review.id);
+    setEditComment(review.comment);
+  };
+
+  const saveEdit = (id: string) => {
+    if (!editComment.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+    updateReviews(reviews.map(r => r.id === id ? { ...r, comment: editComment } : r));
+    setEditingId(null);
+    toast.success("Review updated");
   };
 
   const averageRating = reviews.length > 0 
@@ -180,9 +199,34 @@ export function Reviews() {
                       </div>
                     </div>
                     
-                    <p className="text-slate-600 font-medium leading-relaxed mb-6 italic">
-                      "{review.comment}"
-                    </p>
+                    {editingId === review.id ? (
+                      <div className="space-y-3 mb-6">
+                        <Textarea 
+                          value={editComment}
+                          onChange={(e) => setEditComment(e.target.value)}
+                          className="min-h-[100px] rounded-2xl border-slate-200 bg-white font-medium text-slate-600 focus:ring-primary/20"
+                        />
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => saveEdit(review.id)}
+                            className="h-10 px-4 rounded-xl bg-primary text-white font-bold text-[10px] uppercase tracking-widest"
+                          >
+                            <Save className="h-4 w-4 mr-2" /> Save Changes
+                          </Button>
+                          <Button 
+                            variant="ghost"
+                            onClick={() => setEditingId(null)}
+                            className="h-10 px-4 rounded-xl text-slate-400 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest"
+                          >
+                            <X className="h-4 w-4 mr-2" /> Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-slate-600 font-medium leading-relaxed mb-6 italic">
+                        "{review.comment}"
+                      </p>
+                    )}
 
                     <div className="flex items-center gap-3">
                       <span className={cn(
@@ -200,6 +244,13 @@ export function Reviews() {
                   </div>
 
                   <div className="flex lg:flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      onClick={() => handleEdit(review)}
+                      variant="ghost"
+                      className="h-12 px-6 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 font-bold uppercase tracking-widest text-[10px]"
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                    </Button>
                     <Button 
                       onClick={() => togglePublish(review.id)}
                       variant="outline"

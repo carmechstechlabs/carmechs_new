@@ -54,7 +54,8 @@ export function Customers() {
       name: editingUser.name,
       email: editingUser.email,
       phone: editingUser.phone,
-      verified: editingUser.verified
+      verified: editingUser.verified,
+      role: editingUser.role
     });
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsSaving(false);
@@ -292,6 +293,20 @@ export function Customers() {
                     onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
                     className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Access Role</label>
+                  <select 
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value as any})}
+                    className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest px-4 outline-none appearance-none cursor-pointer hover:bg-white transition-colors"
+                  >
+                    <option value="user">Standard User</option>
+                    <option value="mechanic">Technician / Mechanic</option>
+                    <option value="workshop_owner">Workshop Owner</option>
+                    <option value="viewer">System Viewer</option>
+                    <option value="admin">System Administrator</option>
+                  </select>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center h-5">

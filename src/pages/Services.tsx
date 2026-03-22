@@ -34,6 +34,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
+import ServiceCard from "@/components/ServiceCard";
 
 import * as LucideIcons from "lucide-react";
 
@@ -540,178 +541,92 @@ export function Services() {
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">
               Showing {filteredServices.length} Results
             </span>
+
+            {(selectedIssues.length > 0 || selectedCheckups.length > 0 || selectedCategory !== "all" || searchQuery || selectedMake || selectedModel || selectedFuel) && (
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setSelectedIssues([]);
+                  setSelectedCheckups([]);
+                  setSelectedCategory("all");
+                  setSearchQuery("");
+                  setSelectedMake("");
+                  setSelectedModel("");
+                  setSelectedFuel("");
+                }}
+                className="h-16 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        <AnimatePresence>
+          {(selectedIssues.length > 0 || selectedCheckups.length > 0 || selectedMake || selectedModel || selectedFuel) && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-wrap gap-2 mb-8"
+            >
+              {selectedMake && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
+                  <span>Make: {selectedMake}</span>
+                  <button onClick={() => { setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {selectedModel && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
+                  <span>Model: {selectedModel}</span>
+                  <button onClick={() => { setSelectedModel(""); setSelectedFuel(""); }}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {selectedFuel && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
+                  <span>Fuel: {selectedFuel}</span>
+                  <button onClick={() => setSelectedFuel("")}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {selectedIssues.map(issue => (
+                <div key={issue} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold text-primary">
+                  <span>Issue: {issue}</span>
+                  <button onClick={() => setSelectedIssues(selectedIssues.filter(i => i !== issue))}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {selectedCheckups.map(checkup => (
+                <div key={checkup} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-bold text-emerald-600">
+                  <span>Checkup: {checkup}</span>
+                  <button onClick={() => setSelectedCheckups(selectedCheckups.filter(c => c !== checkup))}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Services Grid */}
         <div className="min-h-[400px]">
           {filteredServices.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {filteredServices.map((service, index) => (
-                <motion.div 
-                  key={index} 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -10 }}
-                  className="bg-card rounded-[2.5rem] shadow-2xl shadow-black/5 dark:shadow-black/20 border border-border flex flex-col group overflow-hidden"
-                >
-                  <div className="p-10 flex-1">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="bg-muted w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-primary transition-all duration-500 shadow-sm border border-border group-hover:shadow-primary/20">
-                        <div className="group-hover:scale-110 transition-transform duration-500">
-                          {getIcon(service)}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-3xl font-black text-foreground uppercase tracking-tight leading-none group-hover:text-primary transition-colors">{service.title}</h3>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-lg font-black text-primary tracking-tighter">
-                              ₹{(service.estimatedPrice || service.basePrice || 0).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground text-sm font-medium leading-relaxed mb-8 line-clamp-2">{service.description}</p>
-                    
-                    <div className="space-y-6">
-                      {service.features && service.features.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Key Features</div>
-                          {service.features.slice(0, 3).map((feature, idx) => (
-                            <div key={idx} className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
-                              <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                              </div>
-                              <span>{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {service.checks && service.checks.length > 0 && (
-                        <div className="space-y-3 pt-4 border-t border-border/50">
-                          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            <ClipboardCheck className="h-3 w-3 text-primary" />
-                            Quality Checks Performed
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {service.checks.slice(0, 4).map((check, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-                                <span className="h-1 w-1 rounded-full bg-primary" />
-                                <span className="truncate">{check}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="p-10 pt-0">
-                    <div className="bg-muted/50 rounded-[2rem] p-6 flex flex-col gap-6 group-hover:bg-primary/5 transition-colors border border-border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-1">
-                            {isVehicleSelected ? "Final Quote" : "Base Price"}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-3xl font-black text-primary tracking-tighter">
-                              {isVehicleSelected 
-                                ? `₹${calculatePrice(service.basePrice)}` 
-                                : service.price}
-                            </span>
-                            {isVehicleSelected && (
-                              <Popover>
-                                <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <div className="h-6 w-6 rounded-full bg-card border border-border flex items-center justify-center cursor-help hover:border-primary transition-colors">
-                                    <Info className="h-3 w-3 text-muted-foreground" />
-                                  </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64 rounded-2xl p-6 shadow-2xl border-border bg-card text-foreground">
-                                  <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Price Breakdown</h4>
-                                  <div className="space-y-3 text-xs font-bold">
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Base Service</span>
-                                      <span>₹{service.basePrice}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Make Adjustment</span>
-                                      <span>+₹{carMakes.find(m => m.name === selectedMake)?.price || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Model Adjustment</span>
-                                      <span>+₹{carModels.find(m => m.name === selectedModel)?.price || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">Fuel Adjustment</span>
-                                      <span>+₹{fuelTypes.find(f => f.name === selectedFuel)?.price || 0}</span>
-                                    </div>
-                                    <div className="flex justify-between border-t border-border pt-3 text-primary">
-                                      <span>Total Estimate</span>
-                                      <span>₹{calculatePrice(service.basePrice)}</span>
-                                    </div>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-1">Duration</span>
-                          <div className="flex items-center gap-1.5 text-sm font-black text-foreground uppercase tracking-tight">
-                            <Clock className="h-3 w-3 text-primary" />
-                            {service.estimatedDuration || service.duration || "2-4 Hours"}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          size="lg" 
-                          className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white border-none flex-1 group/btn"
-                          asChild
-                        >
-                          <Link 
-                            to="/book" 
-                            state={{ 
-                              serviceId: service.id,
-                              vehicleDetails: isVehicleSelected ? {
-                                make: selectedMake,
-                                model: selectedModel,
-                                fuel: selectedFuel
-                              } : undefined
-                            }}
-                          >
-                            Book Now <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                          </Link>
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => toggleCompare(service.id)}
-                          className={cn(
-                            "h-16 w-16 rounded-2xl border-border transition-all",
-                            compareList.includes(service.id) ? "bg-primary border-primary text-white" : "bg-card text-muted-foreground hover:border-primary hover:text-primary"
-                          )}
-                        >
-                          <ArrowLeftRight className="h-5 w-5" />
-                        </Button>
-                      </div>
-
-                      <button 
-                        onClick={() => setSelectedService({ ...service, icon: getIcon(service) })}
-                        className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors text-center py-2"
-                      >
-                        View Full Technical Specs
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
+              {filteredServices.map((service) => (
+                <ServiceCard 
+                  key={service.id}
+                  service={service}
+                  onViewDetail={(id) => setSelectedService(services.find(s => s.id === id))}
+                  onBook={(s) => setSelectedService(s)} // Or navigate to booking
+                />
               ))}
             </div>
           ) : (

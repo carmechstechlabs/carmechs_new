@@ -113,7 +113,10 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            {navigationItems.filter(item => item.isActive).sort((a, b) => a.order - b.order).map(item => (
+            {navigationItems
+              .filter(item => item.isActive && !item.adminOnly)
+              .sort((a, b) => a.order - b.order)
+              .map(item => (
               item.isExternal ? (
                 <a key={item.id} href={item.path} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                   {item.label}
@@ -263,7 +266,10 @@ export function Header() {
             className="md:hidden absolute top-full left-0 w-full bg-card border-b border-border shadow-xl overflow-hidden"
           >
             <div className="container mx-auto flex flex-col gap-1 p-4">
-              {navigationItems.filter(item => item.isActive).sort((a, b) => a.order - b.order).map((item) => (
+              {navigationItems
+                .filter(item => item.isActive && !item.adminOnly)
+                .sort((a, b) => a.order - b.order)
+                .map((item) => (
                 item.isExternal ? (
                   <a
                     key={item.id}

@@ -54,6 +54,7 @@ import { CoreServicesSection } from "@/components/sections/CoreServicesSection";
 import { LocationSection } from "@/components/sections/LocationSection";
 import { ServiceCatalog } from "@/components/sections/ServiceCatalog";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
+import { BrandsCarousel } from "@/components/sections/BrandsCarousel";
 
 const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: () => void, service: any }) => {
   const { carMakes, carModels, fuelTypes, locations, addAppointment, currentUser, vehicles } = useData();
@@ -800,16 +801,118 @@ export function Home() {
                       toast.error("Please fill in the basic vehicle details");
                       return;
                     }
-                    navigate("/book", { state: { vehicleDetails: quickVehicle } });
+                    toast.success("Vehicle details saved for booking!");
+                    navigate("/services");
                   }}
-                  className="h-14 px-10 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 group border-none"
+                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-white border-none"
                 >
-                  Start Booking <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  Apply & Browse Services
                 </Button>
               </div>
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* Service Packages Section */}
+      <section className="py-24 bg-accent/30">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-4">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Curated Bundles</span>
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black text-foreground uppercase tracking-tighter leading-[0.85] mb-6">
+                Service <br /><span className="text-primary">Packages</span>
+              </h2>
+              <p className="text-xl text-muted-foreground font-medium">
+                Maximize value and performance with our expert-curated maintenance bundles.
+              </p>
+            </div>
+            <Link to="/services">
+              <Button variant="outline" className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-xs bg-card border-border hover:bg-accent text-foreground">
+                View All Services <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {servicePackages.map((pkg, idx) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                viewport={{ once: true }}
+                className="group relative bg-card rounded-[3rem] overflow-hidden border border-border shadow-xl hover:shadow-2xl transition-all duration-500"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="relative h-64 lg:h-auto overflow-hidden">
+                    <img 
+                      src={pkg.imageUrl || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000"} 
+                      alt={pkg.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-card via-transparent to-transparent hidden lg:block" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent lg:hidden" />
+                    
+                    {pkg.isPopular && (
+                      <div className="absolute top-6 left-6 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg">
+                        Most Popular
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-10 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter mb-4 leading-none">
+                        {pkg.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm font-medium mb-8 leading-relaxed">
+                        {pkg.description}
+                      </p>
+                      
+                      <div className="space-y-3 mb-8">
+                        {pkg.features.map((feature, i) => (
+                          <div key={i} className="flex items-center gap-3 text-xs font-bold text-foreground">
+                            <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                            </div>
+                            {feature}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-6 border-t border-border">
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Bundle Price</div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl font-black text-primary tracking-tighter">₹{pkg.basePrice}</span>
+                          <span className="text-sm text-muted-foreground line-through font-bold">₹{Math.round(pkg.basePrice / (1 - pkg.discountPercentage / 100))}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          setBookingService({
+                            id: pkg.id,
+                            title: pkg.title,
+                            basePrice: pkg.basePrice,
+                            isPackage: true
+                          });
+                        }}
+                        className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white border-none"
+                      >
+                        Book Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* Brands Section (Marquee Style) */}
@@ -1393,6 +1496,9 @@ export function Home() {
         title="Our Premium Workshop" 
         subtitle="Explore our state-of-the-art facilities and the luxury vehicles we service with precision." 
       />
+
+      {/* Brands Carousel */}
+      <BrandsCarousel />
 
       {/* Service Catalog Section */}
       <ServiceCatalog />

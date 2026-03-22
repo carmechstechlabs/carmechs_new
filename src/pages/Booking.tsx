@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera, Building2, MapPin, Star } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera, Building2, MapPin, Star, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ export function Booking() {
   const { 
     services, servicePackages, carMakes, carModels, fuelTypes, 
     addAppointment, users, updateWalletBalance, updateUser, locations,
-    currentUser, workshops
+    currentUser, workshops, technicians, coupons
   } = useData();
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,9 +57,40 @@ export function Booking() {
     email: "",
     locationId: "",
     workshopId: "",
+    technicianId: "",
     issuePhotos: [] as string[],
     paymentMethod: "pay_after_service" as 'razorpay' | 'paytm' | 'pay_after_service'
   });
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+
+  const handleApplyCoupon = () => {
+    const coupon = coupons.find(c => c.code.toUpperCase() === couponCode.toUpperCase() && c.isActive);
+    if (!coupon) {
+      toast.error("Invalid or inactive coupon code");
+      return;
+    }
+    
+    const now = new Date();
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < now) {
+      toast.error("Coupon has expired");
+      return;
+    }
+
+    const basePrice = formData.packageId 
+      ? (servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0)
+      : (services.find(s => s.id === formData.service)?.basePrice || 0);
+
+    const currentTotal = calculatePrice(basePrice);
+    if (currentTotal < coupon.minOrderAmount) {
+      toast.error(`Minimum order amount for this coupon is ₹${coupon.minOrderAmount}`);
+      return;
+    }
+
+    setAppliedCoupon(coupon);
+    toast.success(`Coupon "${coupon.code}" applied!`);
+  };
 
   const filteredServicesForVehicle = useMemo(() => {
     return services.filter(service => {
@@ -136,7 +167,7 @@ export function Booking() {
     // Packages have their own discounted base price already calculated
     if (packageId) {
       const pkg = servicePackages.find(p => p.id === packageId);
-      if (pkg) return pkg.basePrice;
+      if (pkg) basePrice = pkg.basePrice;
     }
 
     const selectedMake = carMakes.find(m => m.name === make);
@@ -148,7 +179,22 @@ export function Booking() {
     const selectedFuel = fuelTypes.find(f => f.name === fuel);
     if (selectedFuel) additionalPrice += selectedFuel.price;
 
-    return Math.round(basePrice + additionalPrice);
+    let total = Math.round(basePrice + additionalPrice);
+
+    if (appliedCoupon) {
+      let discount = 0;
+      if (appliedCoupon.discountType === 'percentage') {
+        discount = (total * appliedCoupon.discountValue) / 100;
+        if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+          discount = appliedCoupon.maxDiscount;
+        }
+      } else {
+        discount = appliedCoupon.discountValue;
+      }
+      total -= discount;
+    }
+
+    return Math.max(0, Math.round(total));
   };
 
   const getPriceBreakdown = (basePrice: number) => {
@@ -159,11 +205,11 @@ export function Booking() {
       const pkg = servicePackages.find(p => p.id === packageId);
       if (pkg) {
         breakdown.push({ label: "Package Base", value: `₹${pkg.basePrice}` });
-        return breakdown;
+        basePrice = pkg.basePrice;
       }
+    } else {
+      breakdown.push({ label: "Base Price", value: `₹${basePrice}` });
     }
-
-    breakdown.push({ label: "Base Price", value: `₹${basePrice}` });
 
     const selectedMake = carMakes.find(m => m.name === make);
     if (selectedMake && selectedMake.price !== 0) {
@@ -178,6 +224,20 @@ export function Booking() {
     const selectedFuel = fuelTypes.find(f => f.name === fuel);
     if (selectedFuel && selectedFuel.price !== 0) {
       breakdown.push({ label: `${fuel} Adjustment`, value: `+₹${selectedFuel.price}` });
+    }
+
+    if (appliedCoupon) {
+      let totalBeforeDiscount = Math.round(basePrice + (selectedMake?.price || 0) + (selectedModel?.price || 0) + (selectedFuel?.price || 0));
+      let discount = 0;
+      if (appliedCoupon.discountType === 'percentage') {
+        discount = (totalBeforeDiscount * appliedCoupon.discountValue) / 100;
+        if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+          discount = appliedCoupon.maxDiscount;
+        }
+      } else {
+        discount = appliedCoupon.discountValue;
+      }
+      breakdown.push({ label: `Coupon (${appliedCoupon.code})`, value: `-₹${Math.round(discount)}`, isDiscount: true });
     }
 
     return breakdown;
@@ -983,6 +1043,67 @@ export function Booking() {
                   </div>
                 </div>
 
+                {/* Mechanic Selection */}
+                <div className="space-y-6 pt-10 border-t border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black tracking-tight uppercase">Select Expert Mechanic</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Choose a specialist for your vehicle</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {technicians.map((tech) => (
+                      <button
+                        key={tech.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, technicianId: tech.id })}
+                        className={cn(
+                          "p-5 rounded-3xl border-2 text-left transition-all duration-300 group relative overflow-hidden",
+                          formData.technicianId === tech.id
+                            ? "border-primary bg-primary/5 shadow-xl shadow-primary/10"
+                            : "border-slate-50 bg-slate-50/50 hover:border-primary/30 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "h-12 w-12 rounded-2xl flex items-center justify-center font-black text-lg transition-colors",
+                            formData.technicianId === tech.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:bg-primary/10 group-hover:text-primary shadow-sm"
+                          )}>
+                            {tech.name.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-black tracking-tight">{tech.name}</h4>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tech.specialty}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                tech.status === 'available' ? "bg-emerald-500" :
+                                tech.status === 'busy' ? "bg-amber-500" : "bg-rose-500"
+                              )} />
+                              <span className={cn(
+                                "text-[8px] font-black uppercase tracking-widest",
+                                tech.status === 'available' ? "text-emerald-600" :
+                                tech.status === 'busy' ? "text-amber-600" : "text-rose-600"
+                              )}>
+                                {tech.status === 'off' ? 'offline' : tech.status}
+                              </span>
+                            </div>
+                          </div>
+                          {formData.technicianId === tech.id && (
+                            <div className="bg-primary text-white p-1 rounded-full">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-8 border-b border-white/10 pb-4">Configuration Snapshot</h3>
@@ -1017,6 +1138,12 @@ export function Booking() {
                           {formData.packageId 
                             ? servicePackages.find(p => p.id === formData.packageId)?.title 
                             : services.find(s => s.id === formData.service)?.title || "None Selected"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Assigned Expert</span>
+                        <span className="font-black uppercase tracking-tight text-primary">
+                          {technicians.find(t => t.id === formData.technicianId)?.name || "Auto Assignment"}
                         </span>
                       </div>
                     </div>
@@ -1138,10 +1265,10 @@ export function Booking() {
                               <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Total Settlement</p>
                               <p className="text-6xl font-black text-primary tracking-tighter">
                                 ₹{(() => {
-                                  const total = formData.packageId 
+                                  const basePrice = formData.packageId 
                                     ? (servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0)
-                                    : (services.find(s => s.id === formData.service) ? calculatePrice(services.find(s => s.id === formData.service)!.basePrice) : 0);
-                                  return total.toLocaleString();
+                                    : (services.find(s => s.id === formData.service)?.basePrice || 0);
+                                  return calculatePrice(basePrice).toLocaleString();
                                 })()}
                               </p>
                             </div>
@@ -1149,9 +1276,10 @@ export function Booking() {
                               <div className="text-right">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-2">Wallet Deduction</p>
                                 <p className="text-xl font-black text-emerald-500 tracking-tight">-₹{(() => {
-                                  const total = formData.packageId 
+                                  const basePrice = formData.packageId 
                                     ? (servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0)
-                                    : (services.find(s => s.id === formData.service) ? calculatePrice(services.find(s => s.id === formData.service)!.basePrice) : 0);
+                                    : (services.find(s => s.id === formData.service)?.basePrice || 0);
+                                  const total = calculatePrice(basePrice);
                                   return Math.min(total, user?.walletBalance || 0).toLocaleString();
                                 })()}</p>
                               </div>
@@ -1163,6 +1291,53 @@ export function Booking() {
                   </div>
 
                   <div className="space-y-8">
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                        <Zap className="h-3 w-3 text-primary" /> Promotional Protocol
+                      </h3>
+                      <div className="flex gap-4">
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder="ENTER COUPON CODE"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            className="h-16 rounded-2xl bg-white border-slate-200 pl-6 font-black uppercase tracking-widest text-slate-900 placeholder:text-slate-300 focus:ring-primary/20"
+                            disabled={!!appliedCoupon}
+                          />
+                          {appliedCoupon && (
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-emerald-600">
+                              <Check className="h-5 w-5" />
+                              <span className="text-[10px] font-black uppercase tracking-widest">Applied</span>
+                            </div>
+                          )}
+                        </div>
+                        {appliedCoupon ? (
+                          <Button 
+                            variant="outline"
+                            onClick={() => {
+                              setAppliedCoupon(null);
+                              setCouponCode("");
+                            }}
+                            className="h-16 px-8 rounded-2xl border-red-100 text-red-600 hover:bg-red-50 font-black uppercase tracking-widest text-[10px]"
+                          >
+                            Remove
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={handleApplyCoupon}
+                            className="h-16 px-8 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-slate-900/10"
+                          >
+                            Apply
+                          </Button>
+                        )}
+                      </div>
+                      {appliedCoupon && (
+                        <p className="mt-4 text-[10px] font-bold text-emerald-600 uppercase tracking-widest ml-2">
+                          {appliedCoupon.description}
+                        </p>
+                      )}
+                    </div>
+
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Transaction Gateway</h3>
                     <div className="grid grid-cols-1 gap-4">
                       {[
@@ -1419,6 +1594,12 @@ export function Booking() {
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Service Center</p>
                         <p className="text-lg font-black text-slate-900 uppercase tracking-tight">
                           {workshops.find(w => w.id === formData.workshopId)?.name || "Not Selected"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned Mechanic</p>
+                        <p className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                          {technicians.find(t => t.id === formData.technicianId)?.name || "Auto Assignment"}
                         </p>
                       </div>
                     </div>

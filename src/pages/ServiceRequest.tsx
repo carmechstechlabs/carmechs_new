@@ -1,62 +1,80 @@
 import React, { useState } from 'react';
-import { useData } from '@/context/DataContext';
 import { motion } from 'motion/react';
-import { Car, Wrench, Calendar, Clock, MapPin, Send, CheckCircle2, AlertCircle, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useData } from '../context/DataContext';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Car, Calendar, Clock, Image as ImageIcon, Send, MapPin, Activity, Loader2, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
-const ServiceRequest = () => {
-  const { addServiceRequest, currentUser, carMakes, carModels, fuelTypes } = useData();
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
+const ServiceRequest: React.FC = () => {
+  const { carMakes, carModels, fuelTypes, addServiceRequest, currentUser } = useData();
   const [formData, setFormData] = useState({
     make: '',
     model: '',
     year: '',
-    fuelType: '',
     problemDescription: '',
     preferredDate: '',
     preferredTime: '',
-    location: ''
+    location: '',
   });
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setPhotos(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!currentUser) {
       toast.error('Please login to submit a service request');
-      navigate('/login');
       return;
     }
 
-    if (!formData.make || !formData.model || !formData.problemDescription || !formData.preferredDate || !formData.location) {
+    if (!formData.make || !formData.model || !formData.problemDescription) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       addServiceRequest({
         userId: currentUser.uid,
         userName: currentUser.displayName || 'User',
-        userPhone: '', // Should ideally be from user profile
-        make: formData.make,
-        model: formData.model,
-        year: formData.year,
-        problemDescription: formData.problemDescription,
-        preferredDate: formData.preferredDate,
-        preferredTime: formData.preferredTime,
-        location: formData.location
+        userPhone: '', 
+        ...formData,
       });
-      
-      setIsSubmitted(true);
+
       toast.success('Service request submitted successfully!');
+      setFormData({
+        make: '',
+        model: '',
+        year: '',
+        problemDescription: '',
+        preferredDate: '',
+        preferredTime: '',
+        location: '',
+      });
+      setPhotos([]);
     } catch (error) {
       toast.error('Failed to submit request. Please try again.');
     } finally {
@@ -64,207 +82,243 @@ const ServiceRequest = () => {
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-24 pb-12 px-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full"
-        >
-          <Card className="rounded-[3rem] border-slate-200 shadow-2xl overflow-hidden bg-white p-12 text-center">
-            <div className="h-24 w-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
-              <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-            </div>
-            <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-4">Request Sent!</h2>
-            <p className="text-slate-500 mb-10 leading-relaxed">
-              Your service request has been broadcasted to our expert mechanics. You'll receive a notification as soon as a mechanic accepts your request.
-            </p>
-            <div className="space-y-4">
-              <Button onClick={() => navigate('/profile')} className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-primary text-white font-bold uppercase tracking-wider transition-all">
-                View My Requests
-              </Button>
-              <Button onClick={() => setIsSubmitted(false)} variant="outline" className="w-full h-14 rounded-2xl border-slate-200 font-bold uppercase tracking-wider">
-                Submit Another
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
+  const shareLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setFormData(prev => ({ ...prev, location: `${latitude}, ${longitude}` }));
+        toast.success('Location shared successfully!');
+      }, () => {
+        toast.error('Unable to retrieve your location');
+      });
+    } else {
+      toast.error('Geolocation is not supported by your browser');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-12 text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-black text-slate-900 uppercase tracking-tight mb-4"
-          >
-            Submit a <span className="text-primary">Service Request</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-slate-500 text-lg"
-          >
-            Describe your car problem and our expert mechanics will get back to you with quotes.
-          </motion.p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Vehicle Details */}
-            <Card className="rounded-[2.5rem] border-slate-200 shadow-sm bg-white overflow-hidden">
-              <div className="bg-slate-900 px-8 py-6 flex items-center gap-4">
-                <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
-                  <Car className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">Vehicle Details</h3>
-              </div>
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Car Make</label>
-                  <Select onValueChange={(val) => setFormData({...formData, make: val})}>
-                    <SelectTrigger className="h-12 rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Make" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {carMakes.map(make => (
-                        <SelectItem key={make.id || make.name} value={make.name}>{make.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Car Model</label>
-                  <Select onValueChange={(val) => setFormData({...formData, model: val})}>
-                    <SelectTrigger className="h-12 rounded-xl border-slate-200">
-                      <SelectValue placeholder="Select Model" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {carModels.filter(m => m.make === formData.make).map(model => (
-                        <SelectItem key={model.id || model.name} value={model.name}>{model.name}</SelectItem>
-                      ))}
-                      {carModels.filter(m => m.make === formData.make).length === 0 && (
-                        <SelectItem value="other">Other Model</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Year</label>
-                    <Input 
-                      placeholder="e.g., 2022" 
-                      value={formData.year}
-                      onChange={(e) => setFormData({...formData, year: e.target.value})}
-                      className="h-12 rounded-xl border-slate-200"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fuel Type</label>
-                    <Select onValueChange={(val) => setFormData({...formData, fuelType: val})}>
-                      <SelectTrigger className="h-12 rounded-xl border-slate-200">
-                        <SelectValue placeholder="Fuel" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {fuelTypes.map(fuel => (
-                          <SelectItem key={fuel.id || fuel.name} value={fuel.name}>{fuel.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Service Details */}
-            <Card className="rounded-[2.5rem] border-slate-200 shadow-sm bg-white overflow-hidden">
-              <div className="bg-slate-900 px-8 py-6 flex items-center gap-4">
-                <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
-                  <Wrench className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">Service Details</h3>
-              </div>
-              <CardContent className="p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Problem Description</label>
-                  <Textarea 
-                    placeholder="Describe the issue you're facing with your car..." 
-                    value={formData.problemDescription}
-                    onChange={(e) => setFormData({...formData, problemDescription: e.target.value})}
-                    className="rounded-2xl min-h-[120px] border-slate-200 resize-none"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preferred Date</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input 
-                        type="date"
-                        value={formData.preferredDate}
-                        onChange={(e) => setFormData({...formData, preferredDate: e.target.value})}
-                        className="pl-10 h-12 rounded-xl border-slate-200"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Preferred Time</label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input 
-                        type="time"
-                        value={formData.preferredTime}
-                        onChange={(e) => setFormData({...formData, preferredTime: e.target.value})}
-                        className="pl-10 h-12 rounded-xl border-slate-200"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Location / Address</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input 
-                      placeholder="Your current location or workshop preference" 
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      className="pl-10 h-12 rounded-xl border-slate-200"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 shrink-0">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                By submitting this request, you agree to share your vehicle details and problem description with our network of mechanics.
-              </p>
+    <div className="min-h-screen bg-background pt-32 pb-20">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-12"
+        >
+          <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 mb-2">
+              <Activity className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary">Diagnostic Terminal</span>
             </div>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full md:w-auto h-14 px-12 rounded-2xl bg-slate-900 hover:bg-primary text-white font-bold uppercase tracking-wider transition-all shadow-lg shadow-slate-200"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Request'}
-              <Send className="ml-2 h-4 w-4" />
-            </Button>
+            <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-foreground leading-none">
+              Request <br /><span className="text-primary">Service</span>
+            </h1>
+            <p className="text-muted-foreground font-medium max-w-xl mx-auto">
+              Provide your vehicle parameters and issue description. Our expert mechs will analyze and provide a technical quote.
+            </p>
           </div>
-        </form>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <Card className="border-border bg-card shadow-2xl rounded-[3rem] overflow-hidden">
+                <CardHeader className="bg-accent/30 border-b border-border p-10">
+                  <CardTitle className="flex items-center gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
+                    <Car className="text-primary" />
+                    Vehicle Parameters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-10">
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Manufacturer</label>
+                        <Select onValueChange={(val) => handleSelectChange('make', val)} value={formData.make}>
+                          <SelectTrigger className="h-14 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest">
+                            <SelectValue placeholder="Select Make" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border">
+                            {carMakes.map(make => (
+                              <SelectItem key={make.id} value={make.name} className="font-bold text-xs uppercase tracking-widest">{make.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Model</label>
+                        <Select onValueChange={(val) => handleSelectChange('model', val)} value={formData.model} disabled={!formData.make}>
+                          <SelectTrigger className="h-14 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest">
+                            <SelectValue placeholder="Select Model" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-2xl border-border">
+                            {carModels.filter(m => m.make === formData.make).map(model => (
+                              <SelectItem key={model.id} value={model.name} className="font-bold text-xs uppercase tracking-widest">{model.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Manufacturing Year</label>
+                        <Input 
+                          name="year" 
+                          placeholder="e.g. 2022" 
+                          value={formData.year} 
+                          onChange={handleInputChange}
+                          className="h-14 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Service Location</label>
+                        <div className="flex gap-2">
+                          <Input 
+                            name="location" 
+                            placeholder="Address or Coordinates" 
+                            value={formData.location} 
+                            onChange={handleInputChange}
+                            className="h-14 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest"
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={shareLocation}
+                            className="h-14 w-14 shrink-0 rounded-2xl border-border bg-accent/50 hover:bg-primary/10 hover:text-primary transition-all"
+                            title="Share current location"
+                          >
+                            <MapPin size={20} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Issue Description</label>
+                      <Textarea 
+                        name="problemDescription" 
+                        placeholder="Describe the symptoms, noises, or warnings..." 
+                        value={formData.problemDescription} 
+                        onChange={handleInputChange}
+                        className="min-h-[150px] rounded-3xl bg-accent/50 border-border font-medium p-6 focus:ring-2 focus:ring-primary/20 outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Preferred Date</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
+                          <Input 
+                            name="preferredDate" 
+                            type="date" 
+                            value={formData.preferredDate} 
+                            onChange={handleInputChange}
+                            className="h-14 pl-12 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Preferred Time</label>
+                        <div className="relative">
+                          <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
+                          <Input 
+                            name="preferredTime" 
+                            type="time" 
+                            value={formData.preferredTime} 
+                            onChange={handleInputChange}
+                            className="h-14 pl-12 rounded-2xl bg-accent/50 border-border font-bold text-xs uppercase tracking-widest"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Visual Documentation</label>
+                      <div className="border-2 border-dashed border-border rounded-[2rem] p-12 text-center hover:border-primary/50 transition-all cursor-pointer relative group bg-accent/20">
+                        <input 
+                          type="file" 
+                          multiple 
+                          onChange={handlePhotoUpload} 
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="space-y-4">
+                          <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                            <ImageIcon className="text-primary" size={32} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black uppercase tracking-widest text-foreground">Drop images or click to browse</p>
+                            <p className="text-xs text-muted-foreground font-medium mt-1">Upload photos of the damaged area or warning lights.</p>
+                          </div>
+                        </div>
+                        {photos.length > 0 && (
+                          <div className="mt-8 flex flex-wrap gap-3 justify-center">
+                            {photos.map((photo, i) => (
+                              <div key={i} className="bg-primary/10 text-primary text-[10px] px-4 py-2 rounded-full font-black uppercase tracking-widest border border-primary/20">
+                                {photo.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="w-full h-20 bg-primary hover:bg-primary/90 text-white text-lg font-black uppercase tracking-widest rounded-[2rem] shadow-2xl shadow-primary/20 border-none"
+                    >
+                      {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                        <div className="flex items-center gap-3">
+                          Transmit Request <Send size={20} />
+                        </div>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-8">
+              <Card className="border-border bg-card shadow-xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 pb-4">
+                  <h4 className="text-sm font-black uppercase tracking-widest text-foreground">Guidelines</h4>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-6">
+                  {[
+                    { title: "Clear Photos", desc: "Take photos in good lighting for better diagnosis." },
+                    { title: "Detail Symptoms", desc: "Mention any specific noises or behaviors." },
+                    { title: "Location Accuracy", desc: "Ensure your address is correct for pick-up." }
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="h-8 w-8 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-widest text-foreground mb-1">{item.title}</div>
+                        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-slate-900 dark:bg-slate-950 shadow-xl rounded-[2.5rem] overflow-hidden text-white">
+                <CardContent className="p-8 space-y-6">
+                  <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                    <ShieldCheck className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black uppercase tracking-tighter mb-2">Secure Processing</h4>
+                    <p className="text-xs text-white/60 font-medium leading-relaxed">
+                      Your data is encrypted and handled by certified technical advisors only.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

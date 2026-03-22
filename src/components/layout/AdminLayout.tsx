@@ -24,7 +24,9 @@ import {
   Ticket,
   Star,
   Bell,
-  CheckCircle2
+  CheckCircle2,
+  CheckSquare,
+  Navigation
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +36,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 
 export function AdminLayout() {
-  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings, settings, notifications, updateNotifications } = useData();
+  const { isAdminLoggedIn, logoutAdmin, adminRole, uiSettings, settings, notifications, updateNotifications, navigationItems } = useData();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
@@ -71,55 +73,49 @@ export function AdminLayout() {
 
   if (!isAdminLoggedIn) return null;
 
+  const iconMap: { [key: string]: any } = {
+    "Overview": LayoutDashboard,
+    "Workshop": Activity,
+    "Bookings": Calendar,
+    "Inventory": Package,
+    "Services": Wrench,
+    "Bundles": Package,
+    "Categories": LayoutGrid,
+    "Brands": Shield,
+    "Car DB": Car,
+    "Vehicle Config": Settings,
+    "Smart Diagnostic": Zap,
+    "Customers": UsersRound,
+    "Testimonials": Star,
+    "Reviews": Star,
+    "Coupons": Ticket,
+    "Tasks": CheckSquare,
+    "FAQs": Globe,
+    "Cities": MapPin,
+    "Navigation": Navigation,
+    "Staff": Users,
+    "Interface": Palette,
+    "SEO Engine": Globe,
+    "Integrations": Key,
+    "System": Settings,
+  };
+
+  const dynamicAdminItems = navigationItems
+    .filter(item => item.isActive && item.adminOnly)
+    .sort((a, b) => a.order - b.order)
+    .map(item => ({
+      path: item.path,
+      label: item.label,
+      icon: iconMap[item.label] || LayoutGrid,
+      adminOnly: true // They are already filtered by adminOnly
+    }));
+
   const navGroups = [
     {
-      title: "Operations",
-      items: [
-        { path: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-        { path: "/admin/workshop", label: "Workshop", icon: Activity, adminOnly: true },
-        { path: "/admin/tasks", label: "Tasks", icon: CheckCircle2, adminOnly: true },
-        { path: "/admin/appointments", label: "Bookings", icon: Calendar },
-        { path: "/admin/inventory", label: "Inventory", icon: Package, adminOnly: true },
-      ]
-    },
-    {
-      title: "Catalog",
-      items: [
-        { path: "/admin/services", label: "Services", icon: Wrench, adminOnly: true },
-        { path: "/admin/service-packages", label: "Bundles", icon: Package, adminOnly: true },
-        { path: "/admin/categories", label: "Categories", icon: LayoutGrid, adminOnly: true },
-        { path: "/admin/brands", label: "Brands", icon: Shield, adminOnly: true },
-        { path: "/admin/cars", label: "Car DB", icon: Car, adminOnly: true },
-        { path: "/admin/vehicle-config", label: "Vehicle Config", icon: Settings, adminOnly: true },
-        { path: "/admin/smart-diagnostic", label: "Smart Diagnostic", icon: Zap, adminOnly: true },
-      ]
-    },
-    {
-      title: "CRM & Marketing",
-      items: [
-        { path: "/admin/customers", label: "Customers", icon: UsersRound },
-        { path: "/admin/testimonials", label: "Testimonials", icon: Star, adminOnly: true },
-        { path: "/admin/reviews", label: "Reviews", icon: Star, adminOnly: true },
-        { path: "/admin/coupons", label: "Coupons", icon: Ticket, adminOnly: true },
-        { path: "/faq", label: "FAQs", icon: Globe },
-      ]
-    },
-    {
-      title: "Configuration",
-      items: [
-        { path: "/admin/locations", label: "Cities", icon: MapPin, adminOnly: true },
-        { path: "/admin/navigation", label: "Navigation", icon: LayoutGrid, adminOnly: true },
-        { path: "/admin/users", label: "Staff", icon: Users, adminOnly: true },
-        { path: "/admin/ui-settings", label: "Interface", icon: Palette, adminOnly: true },
-        { path: "/admin/seo", label: "SEO Engine", icon: Globe, adminOnly: true },
-        { path: "/admin/api-keys", label: "Integrations", icon: Key, adminOnly: true },
-        { path: "/admin/settings", label: "System", icon: Settings, adminOnly: true },
-      ]
+      title: "Menu",
+      items: dynamicAdminItems
     }
-  ].map(group => ({
-    ...group,
-    items: group.items.filter(item => !item.adminOnly || adminRole === 'admin')
-  })).filter(group => group.items.length > 0);
+  ].filter(group => group.items.length > 0);
 
   return (
     <div className="min-h-screen bg-background flex relative font-sans text-foreground selection:bg-primary/20">

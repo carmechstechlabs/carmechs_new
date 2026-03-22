@@ -183,6 +183,7 @@ export interface Appointment {
 
 export interface Technician {
   id: string;
+  userId?: string; // Link to User ID
   name: string;
   email?: string;
   phone?: string;
@@ -350,6 +351,7 @@ export interface NavigationItem {
   order: number;
   isActive: boolean;
   isExternal: boolean;
+  adminOnly?: boolean;
 }
 
 export interface UiSettings {
@@ -445,6 +447,8 @@ interface DataContextType {
   updateContactSubmissions: (submissions: ContactSubmission[]) => void;
   updateTestimonials: (testimonials: Testimonial[]) => void;
   updateNavigationItems: (items: NavigationItem[]) => void;
+  addNavigationItem: (item: Omit<NavigationItem, 'id'>) => void;
+  deleteNavigationItem: (id: string) => void;
   updateWorkshops: (workshops: Workshop[]) => void;
   updateWorkshop: (workshopId: string, updates: Partial<Workshop>) => void;
   updateAppointment: (appointmentId: string, updates: Partial<Appointment>) => void;
@@ -452,6 +456,13 @@ interface DataContextType {
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
+  deleteTask: (id: string) => void;
+  addReview: (review: Omit<Review, 'id' | 'createdAt' | 'isPublished'>) => void;
+  deleteReview: (id: string) => void;
+  addBrand: (brand: Omit<Brand, 'id'>) => void;
+  deleteBrand: (id: string) => void;
+  addCoupon: (coupon: Omit<Coupon, 'id' | 'isActive'>) => void;
+  deleteCoupon: (id: string) => void;
   addContactSubmission: (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt'>) => void;
   removeVehicle: (id: string) => void;
@@ -488,8 +499,8 @@ const initialServices: Service[] = [
     estimatedDuration: "90 Mins",
     iconName: "Wrench",
     categoryId: "cat_1",
-    imageUrl: "https://picsum.photos/seed/mechanic-engine/800/600",
-    iconUrl: "https://picsum.photos/seed/mechanic-icon/100/100",
+    imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=100",
     features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection", "Tyre Rotation"],
     checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn", "Suspension Check"],
     commonIssues: ["Low Engine Oil", "Dirty Air Filter", "Coolant Leakage"],
@@ -506,8 +517,8 @@ const initialServices: Service[] = [
     estimatedDuration: "2 Hours",
     iconName: "Zap",
     categoryId: "cat_2",
-    imageUrl: "https://picsum.photos/seed/ac-gauges/800/600",
-    iconUrl: "https://picsum.photos/seed/ac-icon/100/100",
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b354bcadcabc?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1621905252507-b354bcadcabc?q=80&w=100",
     applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
     features: ["AC Gas Refill", "Condenser Cleaning", "Cooling Coil Inspection", "Cabin Filter Cleaning", "Compressor Oil Top-up"],
     checks: ["Vent Temperature", "Gas Pressure", "Compressor Noise", "Leakage Test", "Belt Tension"],
@@ -593,12 +604,32 @@ const initialServices: Service[] = [
     estimatedDuration: "24 Hours",
     iconName: "PaintBucket",
     categoryId: "cat_5",
-    imageUrl: "https://picsum.photos/seed/paint-booth/800/600",
-    iconUrl: "https://picsum.photos/seed/paint-icon/100/100",
+    imageUrl: "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=100",
     features: ["Panel Dent Removal", "Surface Preparation", "Computerized Paint Matching", "Clear Coat Application", "Polishing"],
     checks: ["Surface Uniformity", "Color Match", "Paint Thickness", "Dust Particles"],
     commonIssues: ["Scratches", "Dents", "Paint Fading"],
     recommendedCheckups: ["Accident Repair", "Rust Prevention"]
+  },
+  {
+    id: "ser_8",
+    title: "Engine Diagnostics",
+    description: "Comprehensive electronic system scanning and fault code analysis.",
+    price: "₹999",
+    duration: "1-2 Hours",
+    basePrice: 999,
+    estimatedPrice: 999,
+    estimatedDuration: "1-2 Hours",
+    iconName: "Cpu",
+    categoryId: "cat_1",
+    imageUrl: "https://images.unsplash.com/photo-1504222490345-c075b6008014?q=80&w=2000&auto=format&fit=crop",
+    features: ["ECU Scan", "Sensor Readings", "Fault Code Diagnosis", "Live Data Monitoring"],
+    checks: ["OBD II Port Check", "Battery Voltage Check", "Sensor Input Verification", "Wiring Harness Inspection"],
+    commonIssues: ["Check Engine Light", "Rough Idling", "Poor Acceleration"],
+    recommendedCheckups: ["Every 15,000 KM", "When Check Engine Light Appears"],
+    applicableMakes: ["Toyota", "Honda", "BMW"],
+    applicableModels: ["Corolla", "Civic", "3 Series"],
+    applicableFuelTypes: ["Petrol", "Diesel"]
   }
 ];
 const initialServicePackages: ServicePackage[] = [
@@ -623,64 +654,75 @@ const initialServicePackages: ServicePackage[] = [
     features: ["Brake System Flush", "Tyre Health Report", "Suspension Inspection"],
     isPopular: false,
     imageUrl: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop"
+  },
+  {
+    id: "pkg_3",
+    title: "Premium Maintenance Bundle",
+    description: "Combines essential services for long-term vehicle health.",
+    serviceIds: ["ser_1", "ser_4"],
+    discountPercentage: 15,
+    basePrice: 2500,
+    features: ["Full Synthetic Oil Change", "Wheel Alignment", "Brake System Check"],
+    isPopular: true,
+    imageUrl: "https://example.com/images/premium_bundle.jpg"
   }
 ];
 const initialCarMakes: PricingItem[] = [
-  { name: "Toyota", price: 500 },
-  { name: "Honda", price: 500 },
-  { name: "BMW", price: 2000 },
-  { name: "Mercedes", price: 2500 },
-  { name: "Audi", price: 2000 },
-  { name: "Porsche", price: 5000 },
-  { name: "Jaguar", price: 4000 },
-  { name: "Land Rover", price: 4500 },
-  { name: "Lexus", price: 3500 },
-  { name: "Hyundai", price: 300 },
-  { name: "Tata", price: 200 },
-  { name: "Mahindra", price: 300 },
-  { name: "Volkswagen", price: 600 },
-  { name: "Skoda", price: 600 },
-  { name: "Kia", price: 400 },
-  { name: "MG", price: 500 },
+  { id: "make_1", name: "Toyota", price: 500 },
+  { id: "make_2", name: "Honda", price: 500 },
+  { id: "make_3", name: "BMW", price: 2000 },
+  { id: "make_4", name: "Mercedes", price: 2500 },
+  { id: "make_5", name: "Audi", price: 2000 },
+  { id: "make_6", name: "Porsche", price: 5000 },
+  { id: "make_7", name: "Jaguar", price: 4000 },
+  { id: "make_8", name: "Land Rover", price: 4500 },
+  { id: "make_9", name: "Lexus", price: 3500 },
+  { id: "make_10", name: "Hyundai", price: 300 },
+  { id: "make_11", name: "Tata", price: 200 },
+  { id: "make_12", name: "Mahindra", price: 300 },
+  { id: "make_13", name: "Volkswagen", price: 600 },
+  { id: "make_14", name: "Skoda", price: 600 },
+  { id: "make_15", name: "Kia", price: 400 },
+  { id: "make_16", name: "MG", price: 500 },
 ];
 const initialCarModels: CarModel[] = [
-  { name: "Corolla", make: "Toyota", price: 0 },
-  { name: "Camry", make: "Toyota", price: 500 },
-  { name: "Fortuner", make: "Toyota", price: 1000 },
-  { name: "Civic", make: "Honda", price: 0 },
-  { name: "City", make: "Honda", price: 0 },
-  { name: "Accord", make: "Honda", price: 500 },
-  { name: "3 Series", make: "BMW", price: 0 },
-  { name: "5 Series", make: "BMW", price: 1000 },
-  { name: "7 Series", make: "BMW", price: 2000 },
-  { name: "C-Class", make: "Mercedes", price: 0 },
-  { name: "E-Class", make: "Mercedes", price: 1000 },
-  { name: "S-Class", make: "Mercedes", price: 2000 },
-  { name: "A4", make: "Audi", price: 0 },
-  { name: "A6", make: "Audi", price: 1000 },
-  { name: "Q7", make: "Audi", price: 2000 },
-  { name: "911 Carrera", make: "Porsche", price: 5000 },
-  { name: "Cayenne", make: "Porsche", price: 3000 },
-  { name: "XF", make: "Jaguar", price: 1500 },
-  { name: "F-PACE", make: "Jaguar", price: 2000 },
-  { name: "Range Rover", make: "Land Rover", price: 3000 },
-  { name: "Defender", make: "Land Rover", price: 2500 },
-  { name: "ES", make: "Lexus", price: 1000 },
-  { name: "RX", make: "Lexus", price: 2000 },
-  { name: "Creta", make: "Hyundai", price: 0 },
-  { name: "Verna", make: "Hyundai", price: 0 },
-  { name: "Nexon", make: "Tata", price: 0 },
-  { name: "Harrier", make: "Tata", price: 500 },
-  { name: "Safari", make: "Tata", price: 700 },
-  { name: "Thar", make: "Mahindra", price: 0 },
-  { name: "XUV700", make: "Mahindra", price: 500 },
+  { id: "model_1", name: "Corolla", make: "Toyota", price: 0 },
+  { id: "model_2", name: "Camry", make: "Toyota", price: 500 },
+  { id: "model_3", name: "Fortuner", make: "Toyota", price: 1000 },
+  { id: "model_4", name: "Civic", make: "Honda", price: 0 },
+  { id: "model_5", name: "City", make: "Honda", price: 0 },
+  { id: "model_6", name: "Accord", make: "Honda", price: 500 },
+  { id: "model_7", name: "3 Series", make: "BMW", price: 0 },
+  { id: "model_8", name: "5 Series", make: "BMW", price: 1000 },
+  { id: "model_9", name: "7 Series", make: "BMW", price: 2000 },
+  { id: "model_10", name: "C-Class", make: "Mercedes", price: 0 },
+  { id: "model_11", name: "E-Class", make: "Mercedes", price: 1000 },
+  { id: "model_12", name: "S-Class", make: "Mercedes", price: 2000 },
+  { id: "model_13", name: "A4", make: "Audi", price: 0 },
+  { id: "model_14", name: "A6", make: "Audi", price: 1000 },
+  { id: "model_15", name: "Q7", make: "Audi", price: 2000 },
+  { id: "model_16", name: "911 Carrera", make: "Porsche", price: 5000 },
+  { id: "model_17", name: "Cayenne", make: "Porsche", price: 3000 },
+  { id: "model_18", name: "XF", make: "Jaguar", price: 1500 },
+  { id: "model_19", name: "F-PACE", make: "Jaguar", price: 2000 },
+  { id: "model_20", name: "Range Rover", make: "Land Rover", price: 3000 },
+  { id: "model_21", name: "Defender", make: "Land Rover", price: 2500 },
+  { id: "model_22", name: "ES", make: "Lexus", price: 1000 },
+  { id: "model_23", name: "RX", make: "Lexus", price: 2000 },
+  { id: "model_24", name: "Creta", make: "Hyundai", price: 0 },
+  { id: "model_25", name: "Verna", make: "Hyundai", price: 0 },
+  { id: "model_26", name: "Nexon", make: "Tata", price: 0 },
+  { id: "model_27", name: "Harrier", make: "Tata", price: 500 },
+  { id: "model_28", name: "Safari", make: "Tata", price: 700 },
+  { id: "model_29", name: "Thar", make: "Mahindra", price: 0 },
+  { id: "model_30", name: "XUV700", make: "Mahindra", price: 500 },
 ];
 const initialFuelTypes: PricingItem[] = [
-  { name: "Petrol", price: 0 },
-  { name: "Diesel", price: 300 },
-  { name: "Electric", price: 800 },
-  { name: "CNG", price: 200 },
-  { name: "Hybrid", price: 600 },
+  { id: "fuel_1", name: "Petrol", price: 0 },
+  { id: "fuel_2", name: "Diesel", price: 300 },
+  { id: "fuel_3", name: "Electric", price: 800 },
+  { id: "fuel_4", name: "CNG", price: 200 },
+  { id: "fuel_5", name: "Hybrid", price: 600 },
 ];
 const initialSettings: Settings = {
   logoText: "",
@@ -850,16 +892,86 @@ const initialApiKeys: ApiKeys = {
 const initialNavigationItems: NavigationItem[] = [
   { id: "1", label: "Home", path: "/", order: 1, isActive: true, isExternal: false },
   { id: "2", label: "Services", path: "/services", order: 2, isActive: true, isExternal: false },
-  { id: "3", label: "Brands", path: "/#brands", order: 3, isActive: true, isExternal: false },
-  { id: "4", label: "Locations", path: "/#locations", order: 4, isActive: true, isExternal: false },
-  { id: "5", label: "About", path: "/about", order: 5, isActive: true, isExternal: false },
-  { id: "6", label: "Contact", path: "/contact", order: 6, isActive: true, isExternal: false },
-  { id: "7", label: "FAQs", path: "/faq", order: 7, isActive: true, isExternal: false },
+  { id: "8", label: "Request Service", path: "/request-service", order: 3, isActive: true, isExternal: false },
+  { id: "3", label: "Brands", path: "/#brands", order: 4, isActive: true, isExternal: false },
+  { id: "4", label: "Locations", path: "/#locations", order: 5, isActive: true, isExternal: false },
+  { id: "5", label: "About", path: "/about", order: 6, isActive: true, isExternal: false },
+  { id: "6", label: "Contact", path: "/contact", order: 7, isActive: true, isExternal: false },
+  { id: "7", label: "FAQs", path: "/faq", order: 8, isActive: true, isExternal: false },
+  // Admin Links
+  { id: "admin_1", label: "Overview", path: "/admin/dashboard", order: 100, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_2", label: "Workshop", path: "/admin/workshop", order: 101, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_3", label: "Tasks", path: "/admin/tasks", order: 102, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_4", label: "Bookings", path: "/admin/appointments", order: 103, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_5", label: "Inventory", path: "/admin/inventory", order: 104, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_6", label: "Services", path: "/admin/services", order: 105, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_7", label: "Coupons", path: "/admin/coupons", order: 106, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_8", label: "Reviews", path: "/admin/reviews", order: 107, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_9", label: "Customers", path: "/admin/customers", order: 108, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_10", label: "Staff", path: "/admin/users", order: 109, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_11", label: "Settings", path: "/admin/settings", order: 110, isActive: true, isExternal: false, adminOnly: true },
+];
+
+const initialLocations: Location[] = [
+  {
+    id: "loc_1",
+    name: "Kolkata Hub",
+    address: "Park Street, Kolkata",
+    city: "Kolkata",
+    phone: "+91 98765 43210",
+    email: "kolkata@carmechs.in",
+    latitude: 22.5448,
+    longitude: 88.3516,
+    isPopular: true,
+    workingHours: "09:00 AM - 08:00 PM",
+    googleMapsUrl: "https://goo.gl/maps/example1"
+  },
+  {
+    id: "loc_2",
+    name: "Salt Lake Center",
+    address: "Sector V, Salt Lake",
+    city: "Kolkata",
+    phone: "+91 98765 43211",
+    email: "saltlake@carmechs.in",
+    latitude: 22.5735,
+    longitude: 88.4331,
+    isPopular: false,
+    workingHours: "10:00 AM - 07:00 PM",
+    googleMapsUrl: "https://goo.gl/maps/example2"
+  },
+  {
+    id: "loc_3",
+    name: "Howrah Service Center",
+    address: "123 Auto Road, Howrah",
+    city: "Howrah",
+    phone: "+91-98765-12345",
+    email: "howrah@carmechs.in",
+    latitude: 22.5726,
+    longitude: 88.3045,
+    isPopular: true,
+    workingHours: "09:30 AM - 07:30 PM",
+    googleMapsUrl: "https://goo.gl/maps/example3"
+  }
+];
+
+const initialInventory: InventoryItem[] = [
+  {
+    id: "inv_1",
+    name: "Synthetic Engine Oil 5W-30",
+    sku: "OIL-5W30-SYN",
+    category: "Consumables",
+    quantity: 25,
+    minQuantity: 10,
+    price: 850,
+    status: "in_stock",
+    stock: 25
+  }
 ];
 
 const initialTechnicians: Technician[] = [
   {
     id: "tech_1",
+    userId: "user_tech_1",
     name: "Rajesh Kumar",
     specialty: "Engine Expert",
     experience: "12 Years",
@@ -872,6 +984,7 @@ const initialTechnicians: Technician[] = [
   },
   {
     id: "tech_2",
+    userId: "user_tech_2",
     name: "Amit Singh",
     specialty: "AC & Electrical",
     experience: "8 Years",
@@ -884,6 +997,7 @@ const initialTechnicians: Technician[] = [
   },
   {
     id: "tech_3",
+    userId: "user_tech_3",
     name: "Suresh Das",
     specialty: "Body & Paint",
     experience: "15 Years",
@@ -910,8 +1024,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [uiSettings, setUiSettings] = React.useState<UiSettings>(initialUiSettings);
   const [apiKeys, setApiKeys] = React.useState<ApiKeys>(initialApiKeys);
   const [brands, setBrands] = React.useState<Brand[]>([]);
-  const [locations, setLocations] = React.useState<Location[]>([]);
-  const [inventory, setInventory] = React.useState<InventoryItem[]>([]);
+  const [locations, setLocations] = React.useState<Location[]>(initialLocations);
+  const [inventory, setInventory] = React.useState<InventoryItem[]>(initialInventory);
   const [categories, setCategories] = React.useState<ServiceCategory[]>(initialCategories);
   const [coupons, setCoupons] = React.useState<Coupon[]>([]);
   const [reviews, setReviews] = React.useState<Review[]>([]);
@@ -1049,7 +1163,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           const fetchedUsers = state.users || [];
           const mergedUsers = [...initialUsers];
           fetchedUsers.forEach((u: any) => {
-            if (!mergedUsers.find(iu => iu.email.toLowerCase() === u.email.toLowerCase())) {
+            if (!mergedUsers.find(iu => iu.id === u.id || iu.email.toLowerCase() === u.email.toLowerCase())) {
               mergedUsers.push(u);
             }
           });
@@ -1064,8 +1178,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           }));
           setApiKeys(state.apiKeys);
           setBrands(state.brands || []);
-          setLocations(state.locations || []);
-          setInventory(state.inventory || []);
+          setLocations(state.locations?.length ? state.locations : initialLocations);
+          setInventory(state.inventory?.length ? state.inventory : initialInventory);
           setCategories(state.categories || []);
           setCoupons(state.coupons || []);
           setReviews(state.reviews || []);
@@ -1141,7 +1255,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const fetchedUsers = state.users || [];
       const mergedUsers = [...initialUsers];
       fetchedUsers.forEach((u: any) => {
-        if (!mergedUsers.find(iu => iu.email.toLowerCase() === u.email.toLowerCase())) {
+        if (!mergedUsers.find(iu => iu.id === u.id || iu.email.toLowerCase() === u.email.toLowerCase())) {
           mergedUsers.push(u);
         }
       });
@@ -1330,6 +1444,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteTask = (id: string) => {
+    const updatedTasks = tasks.filter(t => t.id !== id);
+    updateTasks(updatedTasks);
+  };
+
   const updateUsers = (newUsers: User[]) => {
     setUsers(newUsers);
     if (socket?.connected) {
@@ -1374,6 +1493,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } else {
       updateTable('brands', newBrands);
     }
+  };
+
+  const addBrand = (brand: Omit<Brand, 'id'>) => {
+    const newBrand: Brand = {
+      ...brand,
+      id: Math.random().toString(36).substring(2, 9)
+    };
+    const updatedBrands = [...brands, newBrand];
+    updateBrands(updatedBrands);
+  };
+
+  const deleteBrand = (id: string) => {
+    const updatedBrands = brands.filter(b => b.id !== id);
+    updateBrands(updatedBrands);
   };
 
   const addVehicle = async (vehicle: Omit<Vehicle, "id" | "createdAt">) => {
@@ -1447,6 +1580,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addCoupon = (coupon: Omit<Coupon, 'id' | 'isActive'>) => {
+    const newCoupon: Coupon = {
+      ...coupon,
+      id: Math.random().toString(36).substring(2, 9),
+      isActive: true
+    };
+    const updatedCoupons = [newCoupon, ...coupons];
+    updateCoupons(updatedCoupons);
+  };
+
+  const deleteCoupon = (id: string) => {
+    const updatedCoupons = coupons.filter(c => c.id !== id);
+    updateCoupons(updatedCoupons);
+  };
+
   const updateReviews = (newReviews: Review[]) => {
     setReviews(newReviews);
     if (socket?.connected) {
@@ -1454,6 +1602,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } else {
       updateTable('reviews', newReviews);
     }
+  };
+
+  const addReview = (review: Omit<Review, 'id' | 'createdAt' | 'isPublished'>) => {
+    const newReview: Review = {
+      ...review,
+      id: Math.random().toString(36).substring(2, 9),
+      isPublished: false,
+      createdAt: new Date().toISOString()
+    };
+    const updatedReviews = [newReview, ...reviews];
+    updateReviews(updatedReviews);
+  };
+
+  const deleteReview = (id: string) => {
+    const updatedReviews = reviews.filter(r => r.id !== id);
+    updateReviews(updatedReviews);
   };
 
   const updateNotifications = (newNotifications: Notification[]) => {
@@ -1573,6 +1737,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } else {
       updateTable('navigation_items', newItems);
     }
+  };
+
+  const addNavigationItem = (item: Omit<NavigationItem, 'id'>) => {
+    const newItem: NavigationItem = {
+      ...item,
+      id: Math.random().toString(36).substring(2, 9)
+    };
+    const updatedItems = [...navigationItems, newItem].sort((a, b) => a.order - b.order);
+    updateNavigationItems(updatedItems);
+  };
+
+  const deleteNavigationItem = (id: string) => {
+    const updatedItems = navigationItems.filter(item => item.id !== id);
+    updateNavigationItems(updatedItems);
   };
 
   const updateWorkshops = (newWorkshops: Workshop[]) => {
@@ -1790,6 +1968,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateContactSubmissions,
       updateTestimonials,
       updateNavigationItems,
+      addNavigationItem,
+      deleteNavigationItem,
       updateWorkshops,
       updateTechnicians,
       updateTechnicianStatus,
@@ -1800,6 +1980,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       addService,
       addAppointment,
       addTask,
+      deleteTask,
+      addReview,
+      deleteReview,
+      addBrand,
+      deleteBrand,
+      addCoupon,
+      deleteCoupon,
       addContactSubmission,
       addNotification,
       addVehicle,

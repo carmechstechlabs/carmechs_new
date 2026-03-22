@@ -13,8 +13,11 @@ import { toast } from 'sonner';
 const MechanicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { technicians, reviews, currentUser, updateTechnicianStatus } = useData();
+  const { technicians, reviews, currentUser, users, isAdminLoggedIn, updateTechnicianStatus } = useData();
   const tech = technicians.find(t => t.id === id);
+  const userProfile = users.find(u => u.id === currentUser?.uid);
+  const isMechanicOwner = currentUser?.uid === tech?.userId;
+  const canUpdateStatus = isMechanicOwner || isAdminLoggedIn || userProfile?.role === 'admin';
 
   if (!tech) {
     return (
@@ -102,37 +105,39 @@ const MechanicProfile = () => {
                   </div>
                 </div>
 
-                {/* Availability Toggle - Only for the mechanic themselves (simulated) */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-8">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Update My Status</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'available', label: 'Available', color: 'bg-emerald-500' },
-                      { id: 'busy', label: 'Busy', color: 'bg-amber-500' },
-                      { id: 'off', label: 'Offline', color: 'bg-slate-500' }
-                    ].map((status) => (
-                      <button
-                        key={status.id}
-                        onClick={() => {
-                          updateTechnicianStatus(tech.id, status.id as any);
-                          toast.success(`Status updated to ${status.label}`);
-                        }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${
-                          tech.status === status.id 
-                            ? 'border-primary bg-white shadow-md' 
-                            : 'border-transparent hover:bg-white/50'
-                        }`}
-                      >
-                        <div className={`h-2 w-2 rounded-full ${status.color} mb-1`} />
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${
-                          tech.status === status.id ? 'text-primary' : 'text-slate-500'
-                        }`}>
-                          {status.label}
-                        </span>
-                      </button>
-                    ))}
+                {/* Availability Toggle - Only for the mechanic themselves or admin */}
+                {canUpdateStatus && (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-8">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Update My Status</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'available', label: 'Available', color: 'bg-emerald-500' },
+                        { id: 'busy', label: 'Busy', color: 'bg-amber-500' },
+                        { id: 'off', label: 'Offline', color: 'bg-slate-500' }
+                      ].map((status) => (
+                        <button
+                          key={status.id}
+                          onClick={() => {
+                            updateTechnicianStatus(tech.id, status.id as any);
+                            toast.success(`Status updated to ${status.label}`);
+                          }}
+                          className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all ${
+                            tech.status === status.id 
+                              ? 'border-primary bg-white shadow-md' 
+                              : 'border-transparent hover:bg-white/50'
+                          }`}
+                        >
+                          <div className={`h-2 w-2 rounded-full ${status.color} mb-1`} />
+                          <span className={`text-[8px] font-black uppercase tracking-widest ${
+                            tech.status === status.id ? 'text-primary' : 'text-slate-500'
+                          }`}>
+                            {status.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 
                 <div className="flex flex-col gap-3">
                   <Button onClick={handleBookNow} className="w-full h-12 rounded-xl bg-slate-900 hover:bg-primary text-white font-bold uppercase tracking-wider transition-all">
