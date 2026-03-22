@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import { ApiKeys } from "@/context/DataContext";
+import { ApiKeys } from "@/types";
 import firebaseAppletConfig from "../../firebase-applet-config.json";
 
 export const getFirebaseConfig = (apiKeys: ApiKeys) => {

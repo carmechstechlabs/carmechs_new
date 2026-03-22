@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useData, ApiKeys } from "@/context/DataContext";
+import { useData } from "@/context/DataContext";
+import { ApiKeys } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

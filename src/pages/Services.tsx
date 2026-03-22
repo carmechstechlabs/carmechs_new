@@ -64,6 +64,8 @@ export function Services() {
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [selectedCheckups, setSelectedCheckups] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("default");
   const [compareList, setCompareList] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -96,12 +98,26 @@ export function Services() {
     );
   };
 
+  const allCommonIssues = Array.from(new Set(services.flatMap(s => s.commonIssues || [])));
+  const allRecommendedCheckups = Array.from(new Set(services.flatMap(s => s.recommendedCheckups || [])));
+
   const filteredServices = services
     .filter(s => {
       const matchesSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            s.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === "all" || s.categoryId === selectedCategory;
-      return matchesSearch && matchesCategory;
+      
+      const matchesMake = !selectedMake || !s.applicableMakes || s.applicableMakes.length === 0 || s.applicableMakes.includes(selectedMake);
+      const matchesModel = !selectedModel || !s.applicableModels || s.applicableModels.length === 0 || s.applicableModels.includes(selectedModel);
+      const matchesFuel = !selectedFuel || !s.applicableFuelTypes || s.applicableFuelTypes.length === 0 || s.applicableFuelTypes.includes(selectedFuel);
+
+      const matchesIssues = selectedIssues.length === 0 || 
+                           (s.commonIssues && selectedIssues.some(issue => s.commonIssues?.includes(issue)));
+      
+      const matchesCheckups = selectedCheckups.length === 0 || 
+                             (s.recommendedCheckups && selectedCheckups.some(checkup => s.recommendedCheckups?.includes(checkup)));
+
+      return matchesSearch && matchesCategory && matchesMake && matchesModel && matchesFuel && matchesIssues && matchesCheckups;
     })
     .sort((a, b) => {
       if (sortBy === "price_asc") {
@@ -424,22 +440,90 @@ export function Services() {
             />
           </div>
           
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 h-16 shadow-xl shadow-black/5 dark:shadow-black/20">
-              <Package className="h-5 w-5 text-primary" />
-              <select
-                className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-foreground focus:outline-none cursor-pointer pr-4"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 h-16 shadow-xl shadow-black/5 dark:shadow-black/20">
+                <Package className="h-5 w-5 text-primary" />
+                <select
+                  className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-foreground focus:outline-none cursor-pointer pr-4"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 h-16 shadow-xl shadow-black/5 dark:shadow-black/20">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-16 px-6 rounded-2xl border-border bg-card shadow-xl shadow-black/5 dark:shadow-black/20 flex items-center gap-3">
+                    <LucideIcons.AlertTriangle className="h-5 w-5 text-primary" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Common Issues</span>
+                    {selectedIssues.length > 0 && (
+                      <span className="bg-primary text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center">
+                        {selectedIssues.length}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-4 rounded-2xl bg-card border-border shadow-2xl">
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Filter by Issues</h4>
+                    {allCommonIssues.map(issue => (
+                      <label key={issue} className="flex items-center gap-3 p-2 hover:bg-muted rounded-xl cursor-pointer transition-colors">
+                        <input 
+                          type="checkbox" 
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          checked={selectedIssues.includes(issue)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedIssues([...selectedIssues, issue]);
+                            else setSelectedIssues(selectedIssues.filter(i => i !== issue));
+                          }}
+                        />
+                        <span className="text-xs font-bold text-foreground">{issue}</span>
+                      </label>
+                    ))}
+                    {allCommonIssues.length === 0 && <p className="text-[10px] text-muted-foreground italic">No issues found</p>}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-16 px-6 rounded-2xl border-border bg-card shadow-xl shadow-black/5 dark:shadow-black/20 flex items-center gap-3">
+                    <LucideIcons.Stethoscope className="h-5 w-5 text-primary" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Checkups</span>
+                    {selectedCheckups.length > 0 && (
+                      <span className="bg-primary text-white text-[8px] h-4 w-4 rounded-full flex items-center justify-center">
+                        {selectedCheckups.length}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-4 rounded-2xl bg-card border-border shadow-2xl">
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Filter by Checkups</h4>
+                    {allRecommendedCheckups.map(checkup => (
+                      <label key={checkup} className="flex items-center gap-3 p-2 hover:bg-muted rounded-xl cursor-pointer transition-colors">
+                        <input 
+                          type="checkbox" 
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          checked={selectedCheckups.includes(checkup)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedCheckups([...selectedCheckups, checkup]);
+                            else setSelectedCheckups(selectedCheckups.filter(c => c !== checkup));
+                          }}
+                        />
+                        <span className="text-xs font-bold text-foreground">{checkup}</span>
+                      </label>
+                    ))}
+                    {allRecommendedCheckups.length === 0 && <p className="text-[10px] text-muted-foreground italic">No checkups found</p>}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <div className="flex items-center gap-3 bg-card border border-border rounded-2xl px-4 h-16 shadow-xl shadow-black/5 dark:shadow-black/20">
               <ArrowLeftRight className="h-5 w-5 text-primary rotate-90" />
               <select
                 className="bg-transparent text-[10px] font-black uppercase tracking-[0.2em] text-foreground focus:outline-none cursor-pointer pr-4"
@@ -643,7 +727,7 @@ export function Services() {
               <p className="text-muted-foreground font-medium max-w-md mx-auto mb-8">We couldn't find any services matching your current search or filter criteria. Try adjusting your filters or search terms.</p>
               <Button 
                 variant="outline" 
-                onClick={() => { setSearchQuery(""); setSelectedCategory("all"); }}
+                onClick={() => { setSearchQuery(""); setSelectedCategory("all"); setSelectedIssues([]); setSelectedCheckups([]); }}
                 className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs border-border"
               >
                 Reset All Filters

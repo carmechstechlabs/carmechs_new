@@ -198,6 +198,7 @@ export function Booking() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -240,6 +241,11 @@ export function Booking() {
       return;
     }
 
+    setShowConfirmation(true);
+  };
+
+  const confirmSubmit = async () => {
+    setShowConfirmation(false);
     setIsSubmitting(true);
     
     try {
@@ -1358,6 +1364,105 @@ export function Booking() {
                 <p className="text-xs font-bold text-slate-400 mt-10 uppercase tracking-widest">
                   No transmission? <button className="text-primary hover:underline">Resend Code</button>
                 </p>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Confirmation Modal */}
+        <AnimatePresence>
+          {showConfirmation && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-white rounded-[3.5rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100"
+              >
+                <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                      <ShieldCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase tracking-tight">Final Confirmation</h3>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Review your service parameters</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-10 space-y-8">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vehicle</p>
+                        <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{formData.make} {formData.model}</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{formData.fuel} Propulsion</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Service Protocol</p>
+                        <p className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                          {formData.packageId 
+                            ? servicePackages.find(p => p.id === formData.packageId)?.title 
+                            : services.find(s => s.id === formData.service)?.title}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Temporal Coordinates</p>
+                        <p className="text-lg font-black text-slate-900 uppercase tracking-tight">{formData.date}</p>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">@ {formData.time} IST</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Service Center</p>
+                        <p className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                          {workshops.find(w => w.id === formData.workshopId)?.name || "Not Selected"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-8 rounded-3xl bg-slate-50 border border-slate-100">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimated Settlement</p>
+                        <p className="text-4xl font-black text-primary tracking-tighter">
+                          ₹{(() => {
+                            const total = formData.packageId 
+                              ? (servicePackages.find(p => p.id === formData.packageId)?.basePrice || 0)
+                              : (services.find(s => s.id === formData.service) ? calculatePrice(services.find(s => s.id === formData.service)!.basePrice) : 0);
+                            return total.toLocaleString();
+                          })()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Payment Method</p>
+                        <p className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                          {formData.paymentMethod === 'pay_after_service' ? 'Pay After Service' : 
+                           formData.paymentMethod === 'razorpay' ? 'Razorpay Secure' : 'Paytm Wallet'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-xs border-slate-200" 
+                      onClick={() => setShowConfirmation(false)}
+                    >
+                      Go Back
+                    </Button>
+                    <Button 
+                      className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white border-none" 
+                      onClick={confirmSubmit}
+                    >
+                      Initialize Session
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             </div>
           )}

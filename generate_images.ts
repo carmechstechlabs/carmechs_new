@@ -1,48 +1,39 @@
 import { GoogleGenAI } from "@google/genai";
+import fs from "fs";
 
-async function generateServiceImages() {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  
+async function generate() {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY not found");
+    return;
+  }
+  const ai = new GoogleGenAI({ apiKey });
+  const model = "gemini-2.5-flash-image";
+
   const prompts = [
-    {
-      id: 'periodic',
-      text: 'A professional car mechanic performing periodic maintenance on a modern car in a clean, well-lit workshop. High-quality, realistic style, cinematic lighting.'
-    },
-    {
-      id: 'ac',
-      text: 'A car air conditioning system being professionally serviced. Focus on the AC gauges and specialized tools in a modern garage. High-quality, realistic style.'
-    },
-    {
-      id: 'paint',
-      text: 'A car undergoing professional denting and painting service in a clean spray booth. A technician is carefully working on a car panel. High-quality, realistic style.'
-    }
+    { id: "periodic", prompt: "A professional car mechanic working on a car engine in a clean workshop, realistic, high quality" },
+    { id: "ac", prompt: "Automotive AC gauges and tools connected to a car engine, focus on the gauges, realistic, high quality" },
+    { id: "painting", prompt: "A luxury car in a professional paint booth being painted, realistic, high quality" }
   ];
 
-  for (const prompt of prompts) {
+  for (const p of prompts) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: prompt.text }]
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "16:9"
+        model,
+        contents: { parts: [{ text: p.prompt }] }
+      });
+      if (response.candidates && response.candidates[0].content.parts) {
+        for (const part of response.candidates[0].content.parts) {
+          if (part.inlineData) {
+            fs.writeFileSync(`${p.id}.png`, Buffer.from(part.inlineData.data, 'base64'));
+            console.log(`Generated ${p.id}.png`);
           }
         }
-      });
-
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          console.log(`IMAGE_START:${prompt.id}`);
-          console.log(part.inlineData.data);
-          console.log(`IMAGE_END:${prompt.id}`);
-        }
       }
-    } catch (error) {
-      console.error(`Error generating ${prompt.id}:`, error);
+    } catch (e) {
+      console.error(`Error generating ${p.id}:`, e);
     }
   }
 }
 
-generateServiceImages();
+generate();

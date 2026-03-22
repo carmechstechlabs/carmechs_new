@@ -6,10 +6,14 @@ import { Services } from "@/pages/Services";
 import { ServiceDetail } from "@/pages/ServiceDetail";
 import { Booking } from "@/pages/Booking";
 import { Login } from "@/pages/Login";
+import { Signup } from "@/pages/Signup";
 import { Profile } from "@/pages/Profile";
+import Mechanics from "@/pages/Mechanics";
+import MechanicProfile from "@/pages/MechanicProfile";
+import ServiceRequest from "@/pages/ServiceRequest";
 import { DynamicPage } from "@/pages/DynamicPage";
 import { NotFound } from "@/pages/NotFound";
-import { DataProvider, useData } from "@/context/DataContext";
+import { useData } from "./context/DataContext";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnimatePresence } from "motion/react";
@@ -44,6 +48,8 @@ import WorkshopPortal from "@/pages/WorkshopPortal";
 
 import { motion } from "motion/react";
 
+import { DevImages } from "@/pages/DevImages";
+
 function AppRoutes() {
   const { isAdminLoggedIn } = useData();
   const location = useLocation();
@@ -70,12 +76,17 @@ function AppRoutes() {
             <Route path="privacy" element={<DynamicPage slugOverride="privacy" />} />
             <Route path="terms" element={<DynamicPage slugOverride="terms" />} />
             <Route path="faq" element={<DynamicPage slugOverride="faq" />} />
+            <Route path="mechanics" element={<Mechanics />} />
+            <Route path="mechanics/:id" element={<MechanicProfile />} />
+            <Route path="request-service" element={<ServiceRequest />} />
             <Route path="profile" element={<Profile />} />
             <Route path="workshop-portal" element={<WorkshopPortal />} />
+            <Route path="dev/images" element={<DevImages />} />
             <Route path="404" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
           {/* Admin Routes */}
           <Route path="/admin">
@@ -138,13 +149,11 @@ function ThemeInjector() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <DataProvider>
-        <ThemeInjector />
-        <BrowserRouter>
-          <Toaster position="top-center" richColors />
-          <AppRoutes />
-        </BrowserRouter>
-      </DataProvider>
+      <ThemeInjector />
+      <BrowserRouter>
+        <Toaster position="top-center" richColors />
+        <AppRoutes />
+      </BrowserRouter>
     </ErrorBoundary>
   );
 }

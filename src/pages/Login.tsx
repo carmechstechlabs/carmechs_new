@@ -5,7 +5,7 @@ import { Wrench, Loader2, Mail, Phone, ArrowRight, ShieldCheck, Sparkles, KeyRou
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
 import { getFirebaseAuth, googleProvider, facebookProvider, getFirebaseErrorMessage } from "@/lib/firebase";
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup, FacebookAuthProvider } from "firebase/auth";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, signInWithPopup, FacebookAuthProvider, sendPasswordResetEmail } from "firebase/auth";
 import { motion, AnimatePresence } from "motion/react";
 import { Facebook } from "lucide-react";
 
@@ -60,6 +60,22 @@ export function Login() {
       toast.error(getFirebaseErrorMessage(error));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+    
+    try {
+      const auth = getFirebaseAuth(apiKeys);
+      await sendPasswordResetEmail(auth, formData.email);
+      toast.success("Password reset email sent! Check your inbox.");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(getFirebaseErrorMessage(error));
     }
   };
 
@@ -213,9 +229,13 @@ export function Login() {
                       <input type="checkbox" className="w-4 h-4 rounded border-border bg-accent text-primary focus:ring-primary" />
                       <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Remember me</span>
                     </label>
-                    <a href="#" className="text-sm font-bold text-primary hover:opacity-80 transition-colors">
+                    <button 
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-sm font-bold text-primary hover:opacity-80 transition-colors"
+                    >
                       Forgot password?
-                    </a>
+                    </button>
                   </div>
 
                   <Button 

@@ -1,23 +1,25 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { IndianRupee, Clock, CheckCircle2, ShieldCheck, Zap, Activity, Disc, PaintBucket, Sparkles, Wrench } from 'lucide-react';
+import { IndianRupee, Clock, CheckCircle2, ShieldCheck, Zap, Activity, Disc, PaintBucket, Sparkles, Wrench, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/context/DataContext';
+import { Link } from 'react-router-dom';
+import * as LucideIcons from 'lucide-react';
 
 export function ServiceCatalog() {
   const { services, categories } = useData();
 
-  const getIcon = (name: string) => {
-    switch (name) {
-      case 'Wrench': return Wrench;
-      case 'Zap': return Zap;
-      case 'ShieldCheck': return ShieldCheck;
-      case 'Disc': return Disc;
-      case 'PaintBucket': return PaintBucket;
-      case 'Sparkles': return Sparkles;
-      case 'Activity': return Activity;
-      default: return Wrench;
+  const getIcon = (service: any) => {
+    if (service.iconUrl) {
+      return <img src={service.iconUrl} alt={service.title} className="h-8 w-8 object-contain group-hover:scale-110 transition-transform duration-500" />;
     }
+    
+    if (service.iconName) {
+      const Icon = (LucideIcons as any)[service.iconName] || LucideIcons.Wrench;
+      return <Icon className="h-8 w-8 text-primary group-hover:text-white transition-colors" />;
+    }
+
+    return <Wrench className="h-8 w-8 text-primary group-hover:text-white transition-colors" />;
   };
 
   return (
@@ -42,7 +44,6 @@ export function ServiceCatalog() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {services.map((service, index) => {
-            const Icon = getIcon(service.iconName || '');
             return (
               <motion.div
                 key={service.id}
@@ -53,8 +54,8 @@ export function ServiceCatalog() {
                 className="group relative bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 hover:bg-white hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500"
               >
                 <div className="flex justify-between items-start mb-8">
-                  <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-white transition-colors duration-500">
-                    <Icon className="h-8 w-8 text-primary group-hover:text-white transition-colors" />
+                  <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-white transition-colors duration-500 overflow-hidden">
+                    {getIcon(service)}
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Starting From</p>
@@ -83,8 +84,10 @@ export function ServiceCatalog() {
                     <Clock className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">{service.estimatedDuration || service.duration}</span>
                   </div>
-                  <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 rounded-xl">
-                    View Details
+                  <Button asChild variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 rounded-xl">
+                    <Link to={`/services/${service.id}`}>
+                      View Details <ArrowRight className="ml-2 h-3 w-3" />
+                    </Link>
                   </Button>
                 </div>
               </motion.div>

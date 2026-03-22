@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { onAuthStateChanged, signOut, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { getFirebaseAuth, getFirebaseConfig } from '@/lib/firebase';
-import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase } from '@/services/supabaseService';
+import { getFirebaseAuth, getFirebaseConfig } from '../lib/firebase';
+import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase } from '../services/supabaseService';
+import { ApiKeys } from '../types';
 
 // Types
 export interface Service {
@@ -26,6 +27,7 @@ export interface Service {
   applicableFuelTypes?: string[];
   timeEstimate?: string;
   warranty?: string;
+  imageUrl?: string;
 }
 
 export interface ServicePackage {
@@ -84,6 +86,7 @@ export interface Review {
   rating: number;
   comment: string;
   serviceId?: string;
+  technicianId?: string;
   createdAt: string;
   isPublished: boolean;
 }
@@ -181,8 +184,35 @@ export interface Appointment {
 export interface Technician {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
   specialty: string;
+  experience?: string;
+  hourlyRate?: number;
+  certifications?: string[];
+  servicesOffered?: string[];
+  availability?: string;
   status: 'available' | 'busy' | 'off';
+  rating?: number;
+  reviewCount?: number;
+  bio?: string;
+  avatar?: string;
+}
+
+export interface ServiceRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhone: string;
+  make: string;
+  model: string;
+  year: string;
+  problemDescription: string;
+  preferredDate: string;
+  preferredTime: string;
+  location: string;
+  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  createdAt: string;
 }
 
 export interface User {
@@ -345,20 +375,6 @@ export interface UiSettings {
   darkMode: boolean;
 }
 
-export interface ApiKeys {
-  googleClientId: string;
-  firebaseApiKey: string;
-  firebaseAuthDomain: string;
-  firebaseProjectId: string;
-  firebaseStorageBucket: string;
-  firebaseMessagingSenderId: string;
-  firebaseAppId: string;
-  razorpayKeyId?: string;
-  razorpayKeySecret?: string;
-  paytmMid?: string;
-  paytmMerchantKey?: string;
-}
-
 export interface ContactSubmission {
   id: string;
   firstName: string;
@@ -402,6 +418,7 @@ interface DataContextType {
   notifications: Notification[];
   servicePackages: ServicePackage[];
   technicians: Technician[];
+  serviceRequests: ServiceRequest[];
   testimonials: Testimonial[];
   contactSubmissions: ContactSubmission[];
   navigationItems: NavigationItem[];
@@ -440,6 +457,7 @@ interface DataContextType {
   removeVehicle: (id: string) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
   processReferral: (referralCode: string, newUserId: string) => void;
+  updateTechnicianStatus: (technicianId: string, status: 'available' | 'busy' | 'off') => void;
   isAdminLoggedIn: boolean;
   adminRole: 'admin' | 'viewer' | null;
   loginAdmin: (role?: 'admin' | 'viewer') => void;
@@ -448,6 +466,9 @@ interface DataContextType {
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string, name: string, phone: string) => Promise<any>;
   logout: () => Promise<void>;
+  updateTechnicians: (technicians: Technician[]) => void;
+  updateServiceRequests: (requests: ServiceRequest[]) => void;
+  addServiceRequest: (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => void;
   isLoading: boolean;
   missingTables: string[];
 }
@@ -467,6 +488,8 @@ const initialServices: Service[] = [
     estimatedDuration: "90 Mins",
     iconName: "Wrench",
     categoryId: "cat_1",
+    imageUrl: "https://picsum.photos/seed/mechanic-engine/800/600",
+    iconUrl: "https://picsum.photos/seed/mechanic-icon/100/100",
     features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection", "Tyre Rotation"],
     checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn", "Suspension Check"],
     commonIssues: ["Low Engine Oil", "Dirty Air Filter", "Coolant Leakage"],
@@ -483,6 +506,9 @@ const initialServices: Service[] = [
     estimatedDuration: "2 Hours",
     iconName: "Zap",
     categoryId: "cat_2",
+    imageUrl: "https://picsum.photos/seed/ac-gauges/800/600",
+    iconUrl: "https://picsum.photos/seed/ac-icon/100/100",
+    applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
     features: ["AC Gas Refill", "Condenser Cleaning", "Cooling Coil Inspection", "Cabin Filter Cleaning", "Compressor Oil Top-up"],
     checks: ["Vent Temperature", "Gas Pressure", "Compressor Noise", "Leakage Test", "Belt Tension"],
     commonIssues: ["Weak Cooling", "Bad Odor", "Noisy Compressor"],
@@ -499,6 +525,7 @@ const initialServices: Service[] = [
     estimatedDuration: "60 Mins",
     iconName: "ShieldCheck",
     categoryId: "cat_1",
+    imageUrl: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=2000&auto=format&fit=crop",
     features: ["Brake Pad Cleaning", "Disc Resurfacing", "Brake Fluid Top-up", "Caliper Greasing"],
     checks: ["Brake Pad Thickness", "Disc Condition", "Brake Line Integrity", "Pedal Feel"],
     commonIssues: ["Squealing Noise", "Vibration while Braking", "Soft Brake Pedal"],
@@ -507,7 +534,7 @@ const initialServices: Service[] = [
   {
     id: "ser_4",
     title: "Wheel Care",
-    description: "Precision wheel alignment and balancing for a smoother, safer ride.",
+    description: "3D wheel alignment and balancing for a smoother, safer ride.",
     price: "₹699",
     duration: "45 Mins",
     basePrice: 699,
@@ -515,8 +542,11 @@ const initialServices: Service[] = [
     estimatedDuration: "45 Mins",
     iconName: "Disc",
     categoryId: "cat_4",
+    imageUrl: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=2000&auto=format&fit=crop",
     features: ["3D Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Nitrogen Inflation"],
-    checks: ["Alignment Angles", "Wheel Runout", "Tyre Tread Depth", "Suspension Play"]
+    checks: ["Alignment Angles", "Wheel Runout", "Tyre Tread Depth", "Suspension Play"],
+    commonIssues: ["Vehicle Pulling", "Uneven Tyre Wear", "Steering Vibration"],
+    recommendedCheckups: ["Every 5,000 KM", "New Tyre Installation"]
   },
   {
     id: "ser_5",
@@ -529,8 +559,11 @@ const initialServices: Service[] = [
     estimatedDuration: "2 Days",
     iconName: "Sparkles",
     categoryId: "cat_5",
+    imageUrl: "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=2000&auto=format&fit=crop",
     features: ["Surface Decontamination", "Multi-stage Paint Correction", "9H Ceramic Application", "Interior Protection", "Glass Coating"],
-    checks: ["Paint Thickness", "Surface Smoothness", "Hydrophobic Effect", "Gloss Level"]
+    checks: ["Paint Thickness", "Surface Smoothness", "Hydrophobic Effect", "Gloss Level"],
+    commonIssues: ["Swirl Marks", "Dull Paint", "Water Spots"],
+    recommendedCheckups: ["New Car Purchase", "Post-Paint Correction"]
   },
   {
     id: "ser_6",
@@ -543,11 +576,55 @@ const initialServices: Service[] = [
     estimatedDuration: "7 Days",
     iconName: "Settings",
     categoryId: "cat_1",
+    imageUrl: "https://images.unsplash.com/photo-1504222490345-c075b6008014?q=80&w=2000&auto=format&fit=crop",
     features: ["Engine Block Honing", "Piston Ring Replacement", "Bearing Replacement", "Gasket Set Renewal", "Timing Chain/Belt Replacement"],
-    checks: ["Compression Test", "Oil Pressure", "Cooling System Pressure", "Leakage Test"]
+    checks: ["Compression Test", "Oil Pressure", "Cooling System Pressure", "Leakage Test"],
+    commonIssues: ["Engine Overheating", "Excessive Smoke", "Low Compression"],
+    recommendedCheckups: ["High Mileage (>100k KM)", "Engine Knocking"]
+  },
+  {
+    id: "ser_7",
+    title: "Denting & Painting",
+    description: "Professional dent removal and high-quality paint matching in a controlled environment.",
+    price: "₹2,499",
+    duration: "24 Hours",
+    basePrice: 2499,
+    estimatedPrice: 2499,
+    estimatedDuration: "24 Hours",
+    iconName: "PaintBucket",
+    categoryId: "cat_5",
+    imageUrl: "https://picsum.photos/seed/paint-booth/800/600",
+    iconUrl: "https://picsum.photos/seed/paint-icon/100/100",
+    features: ["Panel Dent Removal", "Surface Preparation", "Computerized Paint Matching", "Clear Coat Application", "Polishing"],
+    checks: ["Surface Uniformity", "Color Match", "Paint Thickness", "Dust Particles"],
+    commonIssues: ["Scratches", "Dents", "Paint Fading"],
+    recommendedCheckups: ["Accident Repair", "Rust Prevention"]
   }
 ];
-const initialServicePackages: ServicePackage[] = [];
+const initialServicePackages: ServicePackage[] = [
+  {
+    id: "pkg_1",
+    title: "Complete Care Bundle",
+    description: "Our most popular bundle covering periodic maintenance, wheel care, and AC checkup.",
+    serviceIds: ["ser_1", "ser_4", "ser_2"],
+    discountPercentage: 15,
+    basePrice: 3500,
+    features: ["Full Vehicle Scan", "Priority Service", "Free Pick & Drop", "Interior Sanitization"],
+    isPopular: true,
+    imageUrl: "https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?q=80&w=2000&auto=format&fit=crop"
+  },
+  {
+    id: "pkg_2",
+    title: "Safety First Bundle",
+    description: "Ensure your safety with brake maintenance and wheel care services.",
+    serviceIds: ["ser_3", "ser_4"],
+    discountPercentage: 10,
+    basePrice: 1400,
+    features: ["Brake System Flush", "Tyre Health Report", "Suspension Inspection"],
+    isPopular: false,
+    imageUrl: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop"
+  }
+];
 const initialCarMakes: PricingItem[] = [
   { name: "Toyota", price: 500 },
   { name: "Honda", price: 500 },
@@ -780,51 +857,86 @@ const initialNavigationItems: NavigationItem[] = [
   { id: "7", label: "FAQs", path: "/faq", order: 7, isActive: true, isExternal: false },
 ];
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [services, setServices] = useState<Service[]>(initialServices);
-  const [carMakes, setCarMakes] = useState<PricingItem[]>(initialCarMakes);
-  const [carModels, setCarModels] = useState<CarModel[]>(initialCarModels);
-  const [fuelTypes, setFuelTypes] = useState<PricingItem[]>(initialFuelTypes);
-  const [settings, setSettings] = useState<Settings>(initialSettings);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [uiSettings, setUiSettings] = useState<UiSettings>(initialUiSettings);
-  const [apiKeys, setApiKeys] = useState<ApiKeys>(initialApiKeys);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [categories, setCategories] = useState<ServiceCategory[]>(initialCategories);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [servicePackages, setServicePackages] = useState<ServicePackage[]>(initialServicePackages);
-  const [technicians, setTechnicians] = useState<Technician[]>([
-    { id: 'tech1', name: 'Rajesh Kumar', specialty: 'Engine Specialist', status: 'available' },
-    { id: 'tech2', name: 'Amit Singh', specialty: 'Electrical Expert', status: 'busy' },
-    { id: 'tech3', name: 'Suresh Raina', specialty: 'Body & Paint', status: 'available' },
-    { id: 'tech4', name: 'Vijay Verma', specialty: 'AC Specialist', status: 'off' },
-  ]);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
-  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(initialNavigationItems);
-  const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [missingTables, setMissingTables] = useState<string[]>([]);
+const initialTechnicians: Technician[] = [
+  {
+    id: "tech_1",
+    name: "Rajesh Kumar",
+    specialty: "Engine Expert",
+    experience: "12 Years",
+    status: "available",
+    rating: 4.9,
+    reviewCount: 124,
+    avatar: "https://i.pravatar.cc/150?u=tech1",
+    servicesOffered: ["ser_1", "ser_6"],
+    bio: "Master technician with expertise in high-performance engines and complex overhauls."
+  },
+  {
+    id: "tech_2",
+    name: "Amit Singh",
+    specialty: "AC & Electrical",
+    experience: "8 Years",
+    status: "busy",
+    rating: 4.7,
+    reviewCount: 89,
+    avatar: "https://i.pravatar.cc/150?u=tech2",
+    servicesOffered: ["ser_2"],
+    bio: "Specialist in automotive climate control and advanced electrical diagnostics."
+  },
+  {
+    id: "tech_3",
+    name: "Suresh Das",
+    specialty: "Body & Paint",
+    experience: "15 Years",
+    status: "available",
+    rating: 4.8,
+    reviewCount: 210,
+    avatar: "https://i.pravatar.cc/150?u=tech3",
+    servicesOffered: ["ser_7", "ser_5"],
+    bio: "Expert in precision denting and high-quality paint finishing."
+  }
+];
 
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+export function DataProvider({ children }: { children: ReactNode }) {
+  const [socket, setSocket] = React.useState<Socket | null>(null);
+  const [services, setServices] = React.useState<Service[]>(initialServices);
+  const [carMakes, setCarMakes] = React.useState<PricingItem[]>(initialCarMakes);
+  const [carModels, setCarModels] = React.useState<CarModel[]>(initialCarModels);
+  const [fuelTypes, setFuelTypes] = React.useState<PricingItem[]>(initialFuelTypes);
+  const [settings, setSettings] = React.useState<Settings>(initialSettings);
+  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [users, setUsers] = React.useState<User[]>(initialUsers);
+  const [vehicles, setVehicles] = React.useState<Vehicle[]>([]);
+  const [uiSettings, setUiSettings] = React.useState<UiSettings>(initialUiSettings);
+  const [apiKeys, setApiKeys] = React.useState<ApiKeys>(initialApiKeys);
+  const [brands, setBrands] = React.useState<Brand[]>([]);
+  const [locations, setLocations] = React.useState<Location[]>([]);
+  const [inventory, setInventory] = React.useState<InventoryItem[]>([]);
+  const [categories, setCategories] = React.useState<ServiceCategory[]>(initialCategories);
+  const [coupons, setCoupons] = React.useState<Coupon[]>([]);
+  const [reviews, setReviews] = React.useState<Review[]>([]);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [servicePackages, setServicePackages] = React.useState<ServicePackage[]>(initialServicePackages);
+  const [technicians, setTechnicians] = React.useState<Technician[]>([]);
+  const [serviceRequests, setServiceRequests] = React.useState<ServiceRequest[]>([]);
+  const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
+  const [contactSubmissions, setContactSubmissions] = React.useState<ContactSubmission[]>([]);
+  const [navigationItems, setNavigationItems] = React.useState<NavigationItem[]>(initialNavigationItems);
+  const [workshops, setWorkshops] = React.useState<Workshop[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [missingTables, setMissingTables] = React.useState<string[]>([]);
+
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
   });
 
-  const [adminRole, setAdminRole] = useState<'admin' | 'viewer' | null>(() => {
+  const [adminRole, setAdminRole] = React.useState<'admin' | 'viewer' | null>(() => {
     return (localStorage.getItem('adminRole') as 'admin' | 'viewer' | null) || null;
   });
 
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+  const [currentUser, setCurrentUser] = React.useState<FirebaseUser | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const config = getFirebaseConfig(apiKeys);
     if (config.apiKey && config.projectId) {
       try {
@@ -919,7 +1031,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     // 1. Initial Fetch from Supabase (Directly from Frontend)
     const fetchInitialData = async () => {
       try {
@@ -960,7 +1072,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setNotifications(state.notifications || []);
           setServicePackages(state.servicePackages || []);
           setContactSubmissions(state.contactSubmissions || []);
-          setTechnicians(state.technicians || []);
+          setTechnicians(state.technicians?.length ? state.technicians : initialTechnicians);
           setTestimonials(state.testimonials || []);
           setNavigationItems(state.navigationItems || initialNavigationItems);
           setWorkshops(state.workshops || []);
@@ -1060,6 +1172,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setServicePackages(state.servicePackages || []);
       setContactSubmissions(state.contactSubmissions || []);
       setWorkshops(state.workshops || []);
+      setTechnicians(state.technicians?.length ? state.technicians : initialTechnicians);
+      setServiceRequests(state.serviceRequests || []);
       setIsLoading(false);
     });
 
@@ -1084,6 +1198,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('service_packages_updated', (newPackages) => setServicePackages(newPackages));
     newSocket.on('contact_submissions_updated', (newSubmissions) => setContactSubmissions(newSubmissions));
     newSocket.on('workshops_updated', (newWorkshops) => setWorkshops(newWorkshops));
+    newSocket.on('technicians_updated', (newTechnicians) => setTechnicians(newTechnicians));
+    newSocket.on('service_requests_updated', (newRequests) => setServiceRequests(newRequests));
 
     return () => {
       newSocket.disconnect();
@@ -1092,7 +1208,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Monitor inventory for low stock alerts
-  useEffect(() => {
+  React.useEffect(() => {
     if (inventory.length === 0) return;
     
     const lowStockItems = inventory.filter(item => item.stock <= (item.minStock || 5) && item.stock > 0);
@@ -1123,11 +1239,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   }, [inventory]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     localStorage.setItem('isAdminLoggedIn', String(isAdminLoggedIn));
   }, [isAdminLoggedIn]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (adminRole) {
       localStorage.setItem('adminRole', adminRole);
     } else {
@@ -1468,6 +1584,50 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateTechnicians = (newTechnicians: Technician[]) => {
+    setTechnicians(newTechnicians);
+    if (socket?.connected) {
+      socket.emit('update_technicians', newTechnicians);
+    } else {
+      updateTable('technicians', newTechnicians);
+    }
+  };
+
+  const updateTechnicianStatus = (technicianId: string, status: 'available' | 'busy' | 'off') => {
+    const updatedTechnicians = technicians.map(t => t.id === technicianId ? { ...t, status } : t);
+    setTechnicians(updatedTechnicians);
+    if (socket?.connected) {
+      socket.emit('update_technicians', updatedTechnicians);
+    } else {
+      updateTable('technicians', updatedTechnicians);
+    }
+  };
+
+  const updateServiceRequests = (newRequests: ServiceRequest[]) => {
+    setServiceRequests(newRequests);
+    if (socket?.connected) {
+      socket.emit('update_service_requests', newRequests);
+    } else {
+      updateTable('service_requests', newRequests);
+    }
+  };
+
+  const addServiceRequest = (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => {
+    const newRequest: ServiceRequest = {
+      ...request,
+      id: Math.random().toString(36).substring(2, 9),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    const updatedRequests = [newRequest, ...serviceRequests];
+    setServiceRequests(updatedRequests);
+    if (socket?.connected) {
+      socket.emit('update_service_requests', updatedRequests);
+    } else {
+      updateTable('service_requests', updatedRequests);
+    }
+  };
+
   const updateWorkshop = (workshopId: string, updates: Partial<Workshop>) => {
     const updatedWorkshops = workshops.map(w => w.id === workshopId ? { ...w, ...updates } : w);
     setWorkshops(updatedWorkshops);
@@ -1602,6 +1762,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       notifications,
       servicePackages,
       technicians,
+      serviceRequests,
       vehicles,
       testimonials,
       contactSubmissions,
@@ -1630,6 +1791,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateTestimonials,
       updateNavigationItems,
       updateWorkshops,
+      updateTechnicians,
+      updateTechnicianStatus,
+      updateServiceRequests,
+      addServiceRequest,
       updateWorkshop,
       updateAppointment,
       addService,

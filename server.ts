@@ -402,8 +402,58 @@ let state = {
   reviews: initialReviews,
   notifications: [] as any[],
   servicePackages: initialServicePackages,
+  technicians: [
+    { 
+      id: 'tech1', 
+      name: 'Rajesh Kumar', 
+      specialty: 'Engine Specialist', 
+      experience: '12 Years',
+      hourlyRate: 800,
+      certifications: ['Certified Master Technician', 'Engine Repair Specialist'],
+      servicesOffered: ['Engine Overhaul', 'Diagnostics', 'Oil Change'],
+      availability: 'Mon-Sat 10AM-7PM',
+      status: 'available',
+      rating: 4.8,
+      reviewCount: 124,
+      bio: 'Expert in luxury car engines with over a decade of experience.',
+      avatar: 'https://picsum.photos/seed/tech1/200'
+    },
+    { 
+      id: 'tech2', 
+      name: 'Amit Singh', 
+      specialty: 'Electrical Expert', 
+      experience: '8 Years',
+      hourlyRate: 600,
+      certifications: ['Automotive Electrical Systems'],
+      servicesOffered: ['Battery Service', 'Wiring Repair', 'ECU Tuning'],
+      availability: 'Mon-Fri 9AM-6PM',
+      status: 'busy',
+      rating: 4.6,
+      reviewCount: 89,
+      bio: 'Specialist in complex electrical systems and modern car electronics.',
+      avatar: 'https://picsum.photos/seed/tech2/200'
+    },
+    { 
+      id: 'tech3', 
+      name: 'Suresh Raina', 
+      specialty: 'Body & Paint', 
+      experience: '15 Years',
+      hourlyRate: 500,
+      certifications: ['Master Painter', 'Body Work Specialist'],
+      servicesOffered: ['Dent Repair', 'Full Body Paint', 'Polishing'],
+      availability: 'Mon-Sat 10AM-8PM',
+      status: 'available',
+      rating: 4.9,
+      reviewCount: 210,
+      bio: 'Passionate about restoring cars to their original glory.',
+      avatar: 'https://picsum.photos/seed/tech3/200'
+    }
+  ],
+  serviceRequests: [],
   tasks: [] as any[],
   missingTables: [] as string[],
+  workshops: [] as any[],
+  testimonials: [] as any[],
 };
 
 const DATA_FILE = path.join(process.cwd(), "data.json");
@@ -513,6 +563,8 @@ async function startServer() {
           { name: 'locations', data: state.locations, dbData: dbState.locations },
           { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
           { name: 'categories', data: state.categories, dbData: dbState.categories },
+          { name: 'technicians', data: state.technicians, dbData: dbState.technicians },
+          { name: 'service_requests', data: state.serviceRequests, dbData: dbState.serviceRequests },
         ];
 
         for (const table of tablesToSeed) {
@@ -703,6 +755,27 @@ async function startServer() {
       saveLocalState(currentState);
       socket.broadcast.emit("service_packages_updated", packages);
       await updateTable('service_packages', packages);
+    });
+
+    socket.on("update_workshops", async (workshops) => {
+      currentState.workshops = workshops;
+      saveLocalState(currentState);
+      socket.broadcast.emit("workshops_updated", workshops);
+      await updateTable('workshops', workshops);
+    });
+
+    socket.on("update_technicians", async (technicians) => {
+      currentState.technicians = technicians;
+      saveLocalState(currentState);
+      socket.broadcast.emit("technicians_updated", technicians);
+      await updateTable('technicians', technicians);
+    });
+
+    socket.on("update_service_requests", async (requests) => {
+      currentState.serviceRequests = requests;
+      saveLocalState(currentState);
+      socket.broadcast.emit("service_requests_updated", requests);
+      await updateTable('service_requests', requests);
     });
 
     socket.on("disconnect", () => {

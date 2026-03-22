@@ -48,6 +48,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 
 import { SEO } from "@/components/SEO";
+import * as LucideIcons from "lucide-react";
 import { GallerySection } from "@/components/sections/GallerySection";
 import { CoreServicesSection } from "@/components/sections/CoreServicesSection";
 import { LocationSection } from "@/components/sections/LocationSection";
@@ -415,7 +416,7 @@ const ComparisonModal = ({ isOpen, onClose, services }: { isOpen: boolean, onClo
 };
 
 export function Home() {
-  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading, settings, carMakes, carModels, fuelTypes } = useData();
+  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading, settings, carMakes, carModels, fuelTypes, servicePackages } = useData();
   const [selectedService, setSelectedService] = useState<any>(null);
   const [bookingService, setBookingService] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -506,6 +507,12 @@ export function Home() {
     if ('iconUrl' in service && service.iconUrl) {
       return <img src={service.iconUrl} alt={service.title} className="max-h-10 max-w-10 object-contain" />;
     }
+    
+    if (service.iconName) {
+      const Icon = (LucideIcons as any)[service.iconName] || LucideIcons.Wrench;
+      return <Icon className="h-8 w-8 text-primary" />;
+    }
+
     return 'icon' in service ? service.icon : <Wrench className="h-8 w-8 text-primary" />;
   };
 
@@ -1000,6 +1007,93 @@ export function Home() {
                 <ChevronRight className="h-6 w-6" />
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Service Packages Section */}
+      <section className="py-40 bg-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full -mr-96 -mt-96" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-[0.3em] mb-6"
+            >
+              Exclusive Bundles
+            </motion.div>
+            <h2 className="text-5xl md:text-7xl font-bold text-slate-900 uppercase tracking-tighter leading-none mb-8">
+              Premium <span className="text-primary">Service Packages</span>
+            </h2>
+            <p className="text-slate-500 text-lg font-medium">
+              Curated maintenance protocols designed for maximum performance and cost efficiency.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {servicePackages.map((pkg, index) => (
+              <motion.div
+                key={pkg.id}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="group relative"
+              >
+                <div className="bg-slate-50 rounded-[3.5rem] p-2 border border-slate-100 group-hover:border-primary/20 transition-all duration-500">
+                  <div className="bg-white rounded-[3rem] overflow-hidden shadow-xl border border-slate-100 flex flex-col md:flex-row h-full">
+                    <div className="md:w-2/5 relative overflow-hidden">
+                      <img 
+                        src={pkg.imageUrl || "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2000&auto=format&fit=crop"} 
+                        alt={pkg.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                      <div className="absolute bottom-6 left-6">
+                        <div className="px-3 py-1 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-widest mb-2">
+                          Save {pkg.discountPercentage}%
+                        </div>
+                        <div className="text-2xl font-black text-white">₹{pkg.basePrice.toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <div className="md:w-3/5 p-10 flex flex-col">
+                      <div className="flex justify-between items-start mb-6">
+                        <h3 className="text-2xl font-bold uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors">{pkg.title}</h3>
+                        {pkg.isPopular && (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-500 uppercase tracking-widest">
+                            <Star className="h-3 w-3 fill-current" /> Popular
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-500 mb-8 text-sm font-medium leading-relaxed">{pkg.description}</p>
+                      
+                      <div className="space-y-3 mb-10 flex-1">
+                        {pkg.features.slice(0, 4).map((feature, i) => (
+                          <div key={i} className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                            <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <CheckCircle2 className="h-3 w-3 text-primary" />
+                            </div>
+                            {feature}
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button 
+                        onClick={() => {
+                          const firstService = dynamicServices.find(s => s.id === pkg.serviceIds[0]);
+                          setBookingService(firstService || dynamicServices[0]);
+                        }}
+                        className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs bg-slate-900 hover:bg-primary text-white border-none transition-all shadow-lg shadow-slate-900/10"
+                      >
+                        Book Package <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

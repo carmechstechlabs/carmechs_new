@@ -41,6 +41,9 @@ export function ServiceDetail() {
   }
 
   const category = categories.find(c => c.id === service.categoryId);
+  const relatedServices = services
+    .filter(s => s.categoryId === service.categoryId && s.id !== service.id)
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
@@ -52,7 +55,7 @@ export function ServiceDetail() {
         <div className="container mx-auto px-4 lg:px-8 relative z-20">
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/services")}
             className="mb-12 text-slate-400 hover:text-primary font-bold uppercase tracking-widest text-[10px] group"
           >
             <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Back to Services
@@ -97,7 +100,7 @@ export function ServiceDetail() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Starting From</p>
-                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">₹{service.basePrice || service.price}</p>
+                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">₹{(service.basePrice || service.price).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -105,7 +108,7 @@ export function ServiceDetail() {
               <div className="pt-8">
                 <Button 
                   size="lg"
-                  onClick={() => navigate(`/booking?serviceId=${service.id}`)}
+                  onClick={() => navigate(`/book?serviceId=${service.id}`)}
                   className="h-16 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-2xl shadow-primary/20 group"
                 >
                   Initiate Booking <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -123,6 +126,7 @@ export function ServiceDetail() {
                   src={service.imageUrl || `https://picsum.photos/seed/${service.id}/800/800`} 
                   alt={service.title}
                   className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
               </div>
               <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 max-w-xs hidden md:block">
@@ -185,11 +189,59 @@ export function ServiceDetail() {
                 </div>
               </div>
             </section>
+
+            {relatedServices.length > 0 && (
+              <section className="space-y-8">
+                <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Related Services</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {relatedServices.map((rs: any) => (
+                    <div 
+                      key={rs.id}
+                      onClick={() => {
+                        navigate(`/services/${rs.id}`);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="group cursor-pointer bg-white p-6 rounded-[2rem] border border-slate-100 hover:border-primary/20 transition-all shadow-sm"
+                    >
+                      <div className="aspect-video rounded-2xl overflow-hidden mb-4">
+                        <img 
+                          src={rs.imageUrl || `https://picsum.photos/seed/${rs.id}/400/300`} 
+                          alt={rs.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <h4 className="text-sm font-black uppercase tracking-tight text-slate-900 group-hover:text-primary transition-colors mb-2">{rs.title}</h4>
+                      <p className="text-[10px] font-black text-primary">₹{rs.price}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           <div className="space-y-8">
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8 sticky top-32">
               <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">Base Price</span>
+                  <span className="text-lg font-black text-slate-900">₹{(service.basePrice || service.price).toLocaleString()}</span>
+                </div>
+                <div className="space-y-2 pb-6 border-b border-slate-100">
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Labor Charges</span>
+                    <span>Included</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Consumables</span>
+                    <span>Included</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Taxes (GST)</span>
+                    <span>Extra</span>
+                  </div>
+                </div>
+                
                 <Button 
                   onClick={() => navigate(`/book?serviceId=${service.id}`)}
                   className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 group"
