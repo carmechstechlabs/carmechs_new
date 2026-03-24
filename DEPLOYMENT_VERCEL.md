@@ -18,6 +18,11 @@ In your Vercel Project Settings -> Environment Variables, add the following:
 ## 2. Supabase Setup
 Ensure you have run the `supabase_migration.sql` script in your Supabase SQL Editor. This creates the necessary tables and seeds the initial admin user.
 
+### Storage Bucket Setup
+1. In your Supabase Dashboard, go to **Storage**.
+2. Create a new bucket named `uploads`.
+3. Set the bucket to **Public** (or configure appropriate RLS policies for public read).
+
 ### Enable Public Read Access (Optional but Recommended for Vercel)
 If you are using the frontend to fetch data directly (which we've enabled as a fallback), you may need to disable RLS or add policies for public read access on your tables:
 

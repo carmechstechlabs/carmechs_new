@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { uploadImage } from "@/services/supabaseService";
 
 interface ImageUploadProps {
   value?: string;
@@ -37,33 +38,22 @@ export function ImageUpload({ value, onChange, onUpload, maxFiles = 1, label, cl
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("image", file);
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const data = await response.json();
+      const url = await uploadImage(file);
       
       if (onUpload) {
-        const newUrls = [...urls, data.url];
+        const newUrls = [...urls, url];
         setUrls(newUrls);
         onUpload(newUrls);
       } else if (onChange) {
-        onChange(data.url);
+        onChange(url);
       }
       
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload image");
+      toast.error("Failed to upload image. Make sure Supabase Storage is configured.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

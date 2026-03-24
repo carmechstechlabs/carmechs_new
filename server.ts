@@ -988,6 +988,15 @@ async function startServer() {
     });
   }
 
+  // Global Error Handler
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("Unhandled Error:", err);
+    res.status(err.status || 500).json({
+      error: process.env.NODE_ENV === "production" ? "Internal Server Error" : err.message,
+      status: err.status || 500
+    });
+  });
+
   httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

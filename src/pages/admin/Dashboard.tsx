@@ -427,9 +427,9 @@ export function Dashboard() {
                 { label: "Smart AI", icon: Zap, path: "/admin/smart-diagnostic", color: "bg-amber-500/10 text-amber-600" },
                 { label: "Workshop", icon: Cpu, path: "/admin/workshop", color: "bg-purple-500/10 text-purple-600" },
                 { label: "System Logs", icon: Activity, path: "/admin/dashboard", color: "bg-cyan-500/10 text-cyan-600" },
-              ].map((action) => (
+              ].map((action, idx) => (
                 <Link 
-                  key={action.label} 
+                  key={`${action.label}-${idx}`} 
                   to={action.path}
                   className="flex flex-col items-center justify-center p-6 rounded-2xl bg-accent/50 border border-border hover:border-primary/30 hover:bg-accent transition-all group"
                 >
@@ -456,8 +456,8 @@ export function Dashboard() {
                 { label: "Database Tables", status: missingTables.length === 0 ? "Synced" : `${missingTables.length} Missing`, active: missingTables.length === 0 },
                 { label: "Socket.io Server", status: "Active", active: true },
                 { label: "Mail Protocol", status: "Ready", active: true },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+              ].map((item, idx) => (
+                <div key={`${item.label}-${idx}`} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{item.label}</span>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-[9px] font-bold uppercase", item.active ? "text-emerald-400" : "text-primary")}>{item.status}</span>
@@ -475,9 +475,9 @@ export function Dashboard() {
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
+        {stats.map((stat, idx) => (
           <motion.div
-            key={stat.title}
+            key={`${stat.title}-${idx}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -622,8 +622,8 @@ export function Dashboard() {
                     dataKey="value"
                     stroke="none"
                   >
-                    {statusData.map((entry) => (
-                      <Cell key={`cell-${entry.name}`} fill={entry.color} fillOpacity={0.8} />
+                    {statusData.map((entry, idx) => (
+                      <Cell key={`cell-${entry.name}-${idx}`} fill={entry.color} fillOpacity={0.8} />
                     ))}
                   </Pie>
                   <RechartsTooltip 
@@ -749,8 +749,8 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((bay) => (
-                <div key={bay} className={cn(
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((bay, idx) => (
+                <div key={`bay-${bay}-${idx}`} className={cn(
                   "p-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all group",
                   bay <= 6 ? "bg-blue-500/10 border-blue-500/20 text-blue-600" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
                 )}>
@@ -773,8 +773,8 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {inventory.filter(i => i.status === 'low_stock' || i.status === 'out_of_stock').slice(0, 5).map((item) => (
-                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-accent transition-colors">
+              {inventory.filter(i => i.status === 'low_stock' || i.status === 'out_of_stock').slice(0, 5).map((item, idx) => (
+                <div key={`${item.id}-${idx}`} className="p-4 flex items-center justify-between hover:bg-accent transition-colors">
                   <div className="flex flex-col">
                     <span className="text-[11px] font-black text-foreground uppercase tracking-tight">{item.name}</span>
                     <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">SKU: {item.sku}</span>
@@ -829,8 +829,8 @@ export function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {recentAppointments.map((apt) => (
-                      <tr key={apt.id} className="hover:bg-accent transition-colors group">
+                    {recentAppointments.map((apt, idx) => (
+                      <tr key={`${apt.id}-${idx}`} className="hover:bg-accent transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className="font-bold text-foreground group-hover:text-primary transition-colors">{apt.name}</span>
@@ -877,8 +877,8 @@ export function Dashboard() {
             <CardContent className="pt-6">
               {recentActivity.length > 0 ? (
                 <div className="space-y-6">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-4 group">
+                  {recentActivity.map((activity, idx) => (
+                    <div key={`${activity.id}-${idx}`} className="flex items-start gap-4 group">
                       <div className={cn("mt-1 h-10 w-10 rounded-2xl flex items-center justify-center shrink-0 border border-border group-hover:border-primary/50 transition-all shadow-sm", activity.bgColor.replace('bg-blue-500/10', 'bg-blue-500/10').replace('bg-indigo-500/10', 'bg-indigo-500/10'))}>
                         <activity.icon className={cn("h-4 w-4", activity.color.replace('text-blue-400', 'text-blue-600').replace('text-indigo-400', 'text-indigo-600'))} />
                       </div>
@@ -910,8 +910,8 @@ export function Dashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border">
-                {reviews.slice(0, 3).map((review) => (
-                  <div key={review.id} className="p-4 space-y-2 hover:bg-accent transition-colors">
+                {reviews.slice(0, 3).map((review, idx) => (
+                  <div key={`${review.id}-${idx}`} className="p-4 space-y-2 hover:bg-accent transition-colors">
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{review.userName}</span>
                       <div className="flex gap-0.5">

@@ -271,3 +271,25 @@ export async function addAppointment(appointment: any) {
     console.error('Unexpected error adding appointment:', error.message || error);
   }
 }
+
+export async function uploadImage(file: File) {
+  if (!supabase) throw new Error("Supabase not configured");
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random()}.${fileExt}`;
+  const filePath = `${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('uploads')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('uploads')
+    .getPublicUrl(filePath);
+
+  return publicUrl;
+}
