@@ -15,12 +15,13 @@ import { cn } from "@/lib/utils";
 
 export function Profile() {
   const { 
-    currentUser, users, appointments, vehicles, addVehicle, removeVehicle, settings, processReferral, services,
+    currentUser, users, appointments, vehicles, addVehicle, removeVehicle, updateVehicle, settings, processReferral, services,
     carMakes, carModels, fuelTypes, tasks
   } = useData();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [referralInput, setReferralInput] = useState("");
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
   const [newVehicle, setNewVehicle] = useState({
     make: "",
     model: "",
@@ -85,22 +86,40 @@ export function Profile() {
     if (!user) return;
     
     try {
-      addVehicle({
-        userId: user.id,
-        ...newVehicle
-      });
+      if (editingVehicleId) {
+        await updateVehicle(editingVehicleId, newVehicle);
+        toast.success("Vehicle updated successfully!");
+      } else {
+        await addVehicle({
+          userId: user.id,
+          ...newVehicle
+        });
+        toast.success("Vehicle added successfully!");
+      }
       setIsAddingVehicle(false);
+      setEditingVehicleId(null);
       setNewVehicle({
         make: "",
         model: "",
-        year: "",
+        year: new Date().getFullYear().toString(),
         fuelType: "Petrol",
         licensePlate: "",
       });
-      toast.success("Vehicle added successfully!");
     } catch (error) {
-      toast.error("Failed to add vehicle");
+      toast.error(editingVehicleId ? "Failed to update vehicle" : "Failed to add vehicle");
     }
+  };
+
+  const handleEditVehicle = (vehicle: any) => {
+    setEditingVehicleId(vehicle.id);
+    setNewVehicle({
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      fuelType: vehicle.fuelType,
+      licensePlate: vehicle.licensePlate || "",
+    });
+    setIsAddingVehicle(true);
   };
 
   const handleRemoveVehicle = async (id: string) => {
@@ -195,7 +214,10 @@ export function Profile() {
                     size="sm" 
                     variant="outline" 
                     className="rounded-xl border-primary/20 text-primary hover:bg-primary/5"
-                    onClick={() => setIsAddingVehicle(!isAddingVehicle)}
+                    onClick={() => {
+                      setIsAddingVehicle(!isAddingVehicle);
+                      if (isAddingVehicle) setEditingVehicleId(null);
+                    }}
                   >
                     {isAddingVehicle ? <XCircle className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                     {isAddingVehicle ? "Cancel" : "Add Vehicle"}
@@ -277,7 +299,7 @@ export function Profile() {
                           />
                         </div>
                         <Button type="submit" className="md:col-span-2 h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-bold text-lg shadow-lg shadow-primary/20">
-                          Register Vehicle
+                          {editingVehicleId ? "Update Vehicle" : "Register Vehicle"}
                         </Button>
                       </form>
                     </motion.div>
@@ -299,12 +321,20 @@ export function Profile() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h4 className="text-lg font-bold text-slate-900">{vehicle.make} {vehicle.model}</h4>
-                          <button 
-                            onClick={() => handleRemoveVehicle(vehicle.id)}
-                            className="text-slate-300 hover:text-primary transition-colors p-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => handleEditVehicle(vehicle)}
+                              className="text-slate-300 hover:text-primary transition-colors p-1"
+                            >
+                              <Wrench className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleRemoveVehicle(vehicle.id)}
+                              className="text-slate-300 hover:text-primary transition-colors p-1"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                         <div className="flex gap-2 mt-2">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 px-2 py-0.5 rounded-lg">

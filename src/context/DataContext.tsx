@@ -465,6 +465,7 @@ interface DataContextType {
   deleteCoupon: (id: string) => void;
   addContactSubmission: (submission: Omit<ContactSubmission, 'id' | 'createdAt' | 'status'>) => void;
   addVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt'>) => void;
+  updateVehicle: (vehicleId: string, updates: Partial<Vehicle>) => void;
   removeVehicle: (id: string) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
   processReferral: (referralCode: string, newUserId: string) => void;
@@ -905,11 +906,23 @@ const initialNavigationItems: NavigationItem[] = [
   { id: "admin_4", label: "Bookings", path: "/admin/appointments", order: 103, isActive: true, isExternal: false, adminOnly: true },
   { id: "admin_5", label: "Inventory", path: "/admin/inventory", order: 104, isActive: true, isExternal: false, adminOnly: true },
   { id: "admin_6", label: "Services", path: "/admin/services", order: 105, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_7", label: "Coupons", path: "/admin/coupons", order: 106, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_8", label: "Reviews", path: "/admin/reviews", order: 107, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_9", label: "Customers", path: "/admin/customers", order: 108, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_10", label: "Staff", path: "/admin/users", order: 109, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_11", label: "Settings", path: "/admin/settings", order: 110, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_12", label: "Bundles", path: "/admin/service-packages", order: 106, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_13", label: "Brands", path: "/admin/brands", order: 107, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_14", label: "Cities", path: "/admin/locations", order: 108, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_15", label: "Navigation", path: "/admin/navigation", order: 109, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_16", label: "Categories", path: "/admin/categories", order: 110, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_7", label: "Coupons", path: "/admin/coupons", order: 111, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_8", label: "Reviews", path: "/admin/reviews", order: 112, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_17", label: "Testimonials", path: "/admin/testimonials", order: 113, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_18", label: "Car DB", path: "/admin/cars", order: 114, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_19", label: "Vehicle Config", path: "/admin/vehicle-config", order: 115, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_20", label: "Smart Diagnostic", path: "/admin/smart-diagnostic", order: 116, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_9", label: "Customers", path: "/admin/customers", order: 117, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_10", label: "Staff", path: "/admin/users", order: 118, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_21", label: "Interface", path: "/admin/ui-settings", order: 119, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_22", label: "SEO Engine", path: "/admin/seo", order: 120, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_23", label: "Integrations", path: "/admin/api-keys", order: 121, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_11", label: "System", path: "/admin/settings", order: 122, isActive: true, isExternal: false, adminOnly: true },
 ];
 
 const initialLocations: Location[] = [
@@ -1188,7 +1201,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setContactSubmissions(state.contactSubmissions || []);
           setTechnicians(state.technicians?.length ? state.technicians : initialTechnicians);
           setTestimonials(state.testimonials || []);
-          setNavigationItems(state.navigationItems || initialNavigationItems);
+          setNavigationItems(state.navigationItems?.length ? state.navigationItems : initialNavigationItems);
           setWorkshops(state.workshops || []);
         }
       } catch (error) {
@@ -1288,6 +1301,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setWorkshops(state.workshops || []);
       setTechnicians(state.technicians?.length ? state.technicians : initialTechnicians);
       setServiceRequests(state.serviceRequests || []);
+      setNavigationItems(state.navigationItems?.length ? state.navigationItems : initialNavigationItems);
       setIsLoading(false);
     });
 
@@ -1314,6 +1328,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     newSocket.on('workshops_updated', (newWorkshops) => setWorkshops(newWorkshops));
     newSocket.on('technicians_updated', (newTechnicians) => setTechnicians(newTechnicians));
     newSocket.on('service_requests_updated', (newRequests) => setServiceRequests(newRequests));
+    newSocket.on('navigation_items_updated', (newItems) => setNavigationItems(newItems));
 
     return () => {
       newSocket.disconnect();
@@ -1540,6 +1555,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setVehicles(prev => prev.filter(v => v.id !== id));
     } catch (error) {
       console.error("Error removing vehicle:", error);
+      throw error;
+    }
+  };
+
+  const updateVehicle = async (id: string, updates: Partial<Vehicle>) => {
+    try {
+      const dbUpdates: any = {};
+      if (updates.make) dbUpdates.make = updates.make;
+      if (updates.model) dbUpdates.model = updates.model;
+      if (updates.year) dbUpdates.year = updates.year;
+      if (updates.fuelType) dbUpdates.fuel_type = updates.fuelType;
+      if (updates.licensePlate) dbUpdates.license_plate = updates.licensePlate;
+      if (updates.vin) dbUpdates.vin = updates.vin;
+      if (updates.lastServiceDate) dbUpdates.last_service_date = updates.lastServiceDate;
+
+      const { error } = await supabase.from('vehicles').update(dbUpdates).eq('id', id);
+      if (error) throw error;
+      setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+    } catch (error) {
+      console.error("Error updating vehicle:", error);
       throw error;
     }
   };
@@ -1991,6 +2026,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       addNotification,
       addVehicle,
       removeVehicle,
+      updateVehicle,
       updateWalletBalance,
       processReferral,
       isAdminLoggedIn,

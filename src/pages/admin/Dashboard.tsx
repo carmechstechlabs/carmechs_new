@@ -427,9 +427,9 @@ export function Dashboard() {
                 { label: "Smart AI", icon: Zap, path: "/admin/smart-diagnostic", color: "bg-amber-500/10 text-amber-600" },
                 { label: "Workshop", icon: Cpu, path: "/admin/workshop", color: "bg-purple-500/10 text-purple-600" },
                 { label: "System Logs", icon: Activity, path: "/admin/dashboard", color: "bg-cyan-500/10 text-cyan-600" },
-              ].map((action, i) => (
+              ].map((action) => (
                 <Link 
-                  key={i} 
+                  key={action.label} 
                   to={action.path}
                   className="flex flex-col items-center justify-center p-6 rounded-2xl bg-accent/50 border border-border hover:border-primary/30 hover:bg-accent transition-all group"
                 >
@@ -456,8 +456,8 @@ export function Dashboard() {
                 { label: "Database Tables", status: missingTables.length === 0 ? "Synced" : `${missingTables.length} Missing`, active: missingTables.length === 0 },
                 { label: "Socket.io Server", status: "Active", active: true },
                 { label: "Mail Protocol", status: "Ready", active: true },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{item.label}</span>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-[9px] font-bold uppercase", item.active ? "text-emerald-400" : "text-primary")}>{item.status}</span>
@@ -475,12 +475,11 @@ export function Dashboard() {
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <motion.div
-            key={index}
+            key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
           >
             <Card className="bg-card border-border shadow-2xl shadow-black/5 hover:border-primary/30 transition-all duration-500 group relative overflow-hidden">
               <div className={cn("absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors")} />
@@ -582,8 +581,8 @@ export function Dashboard() {
                   dataKey="value"
                   stroke="none"
                 >
-                  {acquisitionData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                  {acquisitionData.map((entry) => (
+                    <Cell key={`cell-${entry.name}`} fill={entry.color} fillOpacity={0.8} />
                   ))}
                 </Pie>
                 <RechartsTooltip 
@@ -623,8 +622,8 @@ export function Dashboard() {
                     dataKey="value"
                     stroke="none"
                   >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                    {statusData.map((entry) => (
+                      <Cell key={`cell-${entry.name}`} fill={entry.color} fillOpacity={0.8} />
                     ))}
                   </Pie>
                   <RechartsTooltip 
@@ -917,7 +916,7 @@ export function Dashboard() {
                       <span className="text-[10px] font-black text-foreground uppercase tracking-widest">{review.userName}</span>
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={cn("h-2 w-2", i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/20")} />
+                          <Star key={`star-${review.id}-${i}`} className={cn("h-2 w-2", i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/20")} />
                         ))}
                       </div>
                     </div>

@@ -1,7 +1,5 @@
--- CarMechs Tech Labs - Full Schema
-
--- Enable RLS
--- Create tables
+-- 20260324000000_initial_schema.sql
+-- CarMechs Tech Labs - Initial Migration
 
 -- categories
 CREATE TABLE IF NOT EXISTS categories (
@@ -363,95 +361,50 @@ ALTER TABLE workshops ENABLE ROW LEVEL SECURITY;
 ALTER TABLE service_requests ENABLE ROW LEVEL SECURITY;
 
 -- Create basic policies (Allow public read for most, admin write for all)
--- Services
 CREATE POLICY "Allow public read on services" ON services FOR SELECT USING (true);
 CREATE POLICY "Allow public write on services" ON services FOR ALL USING (true);
-
--- Car Makes
 CREATE POLICY "Allow public read on car_makes" ON car_makes FOR SELECT USING (true);
 CREATE POLICY "Allow public write on car_makes" ON car_makes FOR ALL USING (true);
-
--- Car Models
 CREATE POLICY "Allow public read on car_models" ON car_models FOR SELECT USING (true);
 CREATE POLICY "Allow public write on car_models" ON car_models FOR ALL USING (true);
-
--- Fuel Types
 CREATE POLICY "Allow public read on fuel_types" ON fuel_types FOR SELECT USING (true);
 CREATE POLICY "Allow public write on fuel_types" ON fuel_types FOR ALL USING (true);
-
--- Brands
 CREATE POLICY "Allow public read on brands" ON brands FOR SELECT USING (true);
 CREATE POLICY "Allow public write on brands" ON brands FOR ALL USING (true);
-
--- Locations
 CREATE POLICY "Allow public read on locations" ON locations FOR SELECT USING (true);
 CREATE POLICY "Allow public write on locations" ON locations FOR ALL USING (true);
-
--- Inventory
 CREATE POLICY "Allow public read on inventory" ON inventory FOR SELECT USING (true);
 CREATE POLICY "Allow public write on inventory" ON inventory FOR ALL USING (true);
-
--- Categories
 CREATE POLICY "Allow public read on categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Allow public write on categories" ON categories FOR ALL USING (true);
-
--- Coupons
 CREATE POLICY "Allow public read on coupons" ON coupons FOR SELECT USING (true);
 CREATE POLICY "Allow public write on coupons" ON coupons FOR ALL USING (true);
-
--- Reviews
 CREATE POLICY "Allow public read on reviews" ON reviews FOR SELECT USING (true);
 CREATE POLICY "Allow public write on reviews" ON reviews FOR ALL USING (true);
-
--- Notifications
 CREATE POLICY "Allow public read on notifications" ON notifications FOR SELECT USING (true);
 CREATE POLICY "Allow public write on notifications" ON notifications FOR ALL USING (true);
-
--- Service Packages
 CREATE POLICY "Allow public read on service_packages" ON service_packages FOR SELECT USING (true);
 CREATE POLICY "Allow public write on service_packages" ON service_packages FOR ALL USING (true);
-
--- Vehicles
 CREATE POLICY "Allow public read on vehicles" ON vehicles FOR SELECT USING (true);
 CREATE POLICY "Allow public write on vehicles" ON vehicles FOR ALL USING (true);
-
--- Users
 CREATE POLICY "Allow public read on users" ON users FOR SELECT USING (true);
 CREATE POLICY "Allow public write on users" ON users FOR ALL USING (true);
-
--- Appointments
 CREATE POLICY "Allow public read on appointments" ON appointments FOR SELECT USING (true);
 CREATE POLICY "Allow public write on appointments" ON appointments FOR ALL USING (true);
-
--- Tasks
 CREATE POLICY "Allow public read on tasks" ON tasks FOR SELECT USING (true);
 CREATE POLICY "Allow public write on tasks" ON tasks FOR ALL USING (true);
-
--- Site Config
 CREATE POLICY "Allow public read on site_config" ON site_config FOR SELECT USING (true);
 CREATE POLICY "Allow public write on site_config" ON site_config FOR ALL USING (true);
-
--- Contact Submissions
 CREATE POLICY "Allow public read on contact_submissions" ON contact_submissions FOR SELECT USING (true);
 CREATE POLICY "Allow public write on contact_submissions" ON contact_submissions FOR ALL USING (true);
-
--- Technicians
 CREATE POLICY "Allow public read on technicians" ON technicians FOR SELECT USING (true);
 CREATE POLICY "Allow public write on technicians" ON technicians FOR ALL USING (true);
-
--- Testimonials
 CREATE POLICY "Allow public read on testimonials" ON testimonials FOR SELECT USING (true);
 CREATE POLICY "Allow public write on testimonials" ON testimonials FOR ALL USING (true);
-
--- Navigation Items
 CREATE POLICY "Allow public read on navigation_items" ON navigation_items FOR SELECT USING (true);
 CREATE POLICY "Allow public write on navigation_items" ON navigation_items FOR ALL USING (true);
-
--- Workshops
 CREATE POLICY "Allow public read on workshops" ON workshops FOR SELECT USING (true);
 CREATE POLICY "Allow public write on workshops" ON workshops FOR ALL USING (true);
-
--- Service Requests
 CREATE POLICY "Allow public read on service_requests" ON service_requests FOR SELECT USING (true);
 CREATE POLICY "Allow public write on service_requests" ON service_requests FOR ALL USING (true);
 

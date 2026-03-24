@@ -55,6 +55,9 @@ export function Services() {
   const [formData, setFormData] = useState<Partial<Service>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedMake, setSelectedMake] = useState<string>("all");
+  const [selectedModel, setSelectedModel] = useState<string>("all");
+  const [selectedFuelType, setSelectedFuelType] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("title");
   const [activeTab, setActiveTab] = useState<string>("services");
   const [iconSearch, setIconSearch] = useState("");
@@ -274,12 +277,31 @@ export function Services() {
     }
   };
 
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setSelectedMake("all");
+    setSelectedModel("all");
+    setSelectedFuelType("all");
+    setSortBy("title");
+  };
+
   const filteredServices = services
     .filter(service => {
       const matchesSearch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           service.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === "all" || service.categoryId === selectedCategory;
-      return matchesSearch && matchesCategory;
+      
+      const matchesMake = selectedMake === "all" || 
+                        (service.applicableMakes && service.applicableMakes.includes(selectedMake));
+      
+      const matchesModel = selectedModel === "all" || 
+                         (service.applicableModels && service.applicableModels.includes(selectedModel));
+      
+      const matchesFuel = selectedFuelType === "all" || 
+                        (service.applicableFuelTypes && service.applicableFuelTypes.includes(selectedFuelType));
+
+      return matchesSearch && matchesCategory && matchesMake && matchesModel && matchesFuel;
     })
     .sort((a, b) => {
       if (sortBy === "price_asc") return a.basePrice - b.basePrice;
@@ -336,38 +358,130 @@ export function Services() {
 
         <TabsContent value="services" className="space-y-8 mt-0 outline-none">
           {/* Search and Filter Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Search services..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest"
-              />
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input 
+                  placeholder="Search services..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-12 pl-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest"
+                />
+              </div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className={cn(
+                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
+                  selectedCategory !== "all" && "border-primary/50 bg-primary/5"
+                )}>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200">
+                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Categories</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold uppercase tracking-widest">{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel("all"); }}>
+                <SelectTrigger className={cn(
+                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
+                  selectedMake !== "all" && "border-primary/50 bg-primary/5"
+                )}>
+                  <SelectValue placeholder="All Makes" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200">
+                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Makes</SelectItem>
+                  {carMakes.map(make => (
+                    <SelectItem key={make.id} value={make.name} className="text-xs font-bold uppercase tracking-widest">{make.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className={cn(
+                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
+                  selectedModel !== "all" && "border-primary/50 bg-primary/5"
+                )}>
+                  <SelectValue placeholder="All Models" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200">
+                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Models</SelectItem>
+                  {carModels
+                    .filter(m => selectedMake === "all" || m.make === selectedMake)
+                    .map(model => (
+                      <SelectItem key={model.id} value={model.name} className="text-xs font-bold uppercase tracking-widest">{model.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
+                <SelectTrigger className={cn(
+                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
+                  selectedFuelType !== "all" && "border-primary/50 bg-primary/5"
+                )}>
+                  <SelectValue placeholder="All Fuel Types" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200">
+                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Fuel Types</SelectItem>
+                  {fuelTypes.map(fuel => (
+                    <SelectItem key={fuel.id} value={fuel.name} className="text-xs font-bold uppercase tracking-widest">{fuel.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-slate-200">
+                  <SelectItem value="title" className="text-xs font-bold uppercase tracking-widest">Title (A-Z)</SelectItem>
+                  <SelectItem value="price_asc" className="text-xs font-bold uppercase tracking-widest">Price (Low to High)</SelectItem>
+                  <SelectItem value="price_desc" className="text-xs font-bold uppercase tracking-widest">Price (High to Low)</SelectItem>
+                  <SelectItem value="duration" className="text-xs font-bold uppercase tracking-widest">Duration</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button 
+                variant="outline" 
+                onClick={resetFilters}
+                className="h-12 border-slate-200 text-slate-500 font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-50"
+              >
+                <X className="h-3 w-3 mr-2" /> Reset Filters
+              </Button>
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-200">
-                <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Categories</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold uppercase tracking-widest">{cat.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-slate-200">
-                <SelectItem value="title" className="text-xs font-bold uppercase tracking-widest">Title (A-Z)</SelectItem>
-                <SelectItem value="price_asc" className="text-xs font-bold uppercase tracking-widest">Price (Low to High)</SelectItem>
-                <SelectItem value="price_desc" className="text-xs font-bold uppercase tracking-widest">Price (High to Low)</SelectItem>
-                <SelectItem value="duration" className="text-xs font-bold uppercase tracking-widest">Duration</SelectItem>
-              </SelectContent>
-            </Select>
+            
+            {(searchTerm || selectedCategory !== "all" || selectedMake !== "all" || selectedModel !== "all" || selectedFuelType !== "all") && (
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-50">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center mr-2">Active Filters:</span>
+                {searchTerm && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-bold uppercase tracking-widest">
+                    Search: {searchTerm} <X className="h-2 w-2 cursor-pointer" onClick={() => setSearchTerm("")} />
+                  </div>
+                )}
+                {selectedCategory !== "all" && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-bold uppercase tracking-widest">
+                    Category: {categories.find(c => c.id === selectedCategory)?.name} <X className="h-2 w-2 cursor-pointer" onClick={() => setSelectedCategory("all")} />
+                  </div>
+                )}
+                {selectedMake !== "all" && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-bold uppercase tracking-widest">
+                    Make: {selectedMake} <X className="h-2 w-2 cursor-pointer" onClick={() => setSelectedMake("all")} />
+                  </div>
+                )}
+                {selectedModel !== "all" && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-bold uppercase tracking-widest">
+                    Model: {selectedModel} <X className="h-2 w-2 cursor-pointer" onClick={() => setSelectedModel("all")} />
+                  </div>
+                )}
+                {selectedFuelType !== "all" && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-bold uppercase tracking-widest">
+                    Fuel: {selectedFuelType} <X className="h-2 w-2 cursor-pointer" onClick={() => setSelectedFuelType("all")} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <AnimatePresence mode="wait">
@@ -435,21 +549,21 @@ export function Services() {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Estimated Price (Numeric)</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Base Price (Numeric)</label>
                                 <Input 
                                   placeholder="14999" 
                                   type="number"
-                                  value={formData.estimatedPrice || formData.basePrice || ""} 
-                                  onChange={e => setFormData({...formData, estimatedPrice: Number(e.target.value), basePrice: Number(e.target.value)})}
+                                  value={formData.basePrice || ""} 
+                                  onChange={e => setFormData({...formData, basePrice: Number(e.target.value), estimatedPrice: Number(e.target.value)})}
                                   className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                                 />
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Estimated Duration</label>
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Estimated Duration (Display)</label>
                               <Input 
                                 placeholder="e.g. 4-6 Hours" 
-                                value={formData.estimatedDuration || formData.duration || ""} 
+                                value={formData.estimatedDuration || ""} 
                                 onChange={e => setFormData({...formData, estimatedDuration: e.target.value, duration: e.target.value})}
                                 className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
                               />
@@ -775,15 +889,31 @@ export function Services() {
                           <div className="pt-4 flex flex-wrap justify-center lg:justify-start gap-6">
                             <div className="flex items-center gap-2">
                               <IndianRupee className="h-4 w-4 text-primary" />
-                              <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.price}</span>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Display Price</span>
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.price}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Tag className="h-4 w-4 text-primary" />
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Base Price</span>
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">₹{service.basePrice || 0}</span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-primary" />
-                              <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.duration}</span>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Est. Duration</span>
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.estimatedDuration || service.duration}</span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Shield className="h-4 w-4 text-primary" />
-                              <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.features.length} Features</span>
+                              <div className="flex flex-col">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Features</span>
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{service.features.length} Items</span>
+                              </div>
                             </div>
                           </div>
                         </div>
