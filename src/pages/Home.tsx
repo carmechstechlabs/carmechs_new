@@ -316,24 +316,19 @@ const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: 
 
 const features = [
   {
-    icon: <ShieldCheck className="h-6 w-6 text-primary" />,
-    title: "Genuine Parts",
-    description: "We use only 100% genuine OEM/OES spare parts.",
+    icon: <Wrench className="h-6 w-6 text-primary" />,
+    title: "Certified Technicians",
+    description: "Highly trained and certified master mechanics for your vehicle.",
   },
   {
-    icon: <Clock className="h-6 w-6 text-primary" />,
-    title: "Timely Delivery",
-    description: "We value your time and ensure on-time delivery.",
+    icon: <ShieldCheck className="h-6 w-6 text-primary" />,
+    title: "Genuine Parts",
+    description: "We use only 100% genuine OEM/OES spare parts for every service.",
   },
   {
     icon: <IndianRupee className="h-6 w-6 text-primary" />,
     title: "Transparent Pricing",
-    description: "Upfront pricing with no hidden charges.",
-  },
-  {
-    icon: <Wrench className="h-6 w-6 text-primary" />,
-    title: "Expert Mechanics",
-    description: "Highly trained and certified mechanics.",
+    description: "Upfront pricing with no hidden charges or surprise costs.",
   },
 ];
 
@@ -1202,102 +1197,43 @@ export function Home() {
       </section>
 
       {/* Why Choose Us - Bento Style */}
-      <section className="py-40 bg-white text-slate-900 overflow-hidden relative">
+      <section id="why-choose-us" className="py-40 bg-white text-slate-900 overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* Main Content */}
-            <div className="lg:col-span-5 space-y-16">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className="inline-block px-4 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8"
-                >
-                  The CarMechs Advantage
-                </motion.div>
-                <h2 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-[0.85] mb-10">
-                  Built <br />For <span className="text-primary">Trust.</span>
-                </h2>
-                <p className="text-slate-500 max-w-md font-medium text-xl leading-relaxed">
-                  {uiSettings.whyChooseDescription || "We've redefined the automotive service lifecycle with a focus on radical transparency and technical excellence."}
-                </p>
-              </div>
+          <div className="max-w-4xl mx-auto text-center mb-24">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-block px-4 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8"
+            >
+              The CarMechs Advantage
+            </motion.div>
+            <h2 className="text-6xl md:text-8xl font-bold uppercase tracking-tighter leading-[0.85] mb-10">
+              Built <br />For <span className="text-primary">Trust.</span>
+            </h2>
+            <p className="text-slate-500 max-w-2xl mx-auto font-medium text-xl leading-relaxed">
+              {uiSettings.whyChooseDescription || "We've redefined the automotive service lifecycle with a focus on radical transparency and technical excellence."}
+            </p>
+          </div>
 
-              <div className="space-y-8">
-                {(uiSettings.features || features).map((feature, index) => (
-                  <motion.div 
-                    key={index} 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-8 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
-                  >
-                    <div className="bg-primary/10 p-5 rounded-2xl group-hover:scale-110 transition-transform">
-                      {'iconName' in feature ? getLucideIcon(feature.iconName) : (feature as any).icon}
-                    </div>
-                    <div>
-                      <h4 className="font-bold uppercase tracking-tight text-xl mb-2">{feature.title}</h4>
-                      <p className="text-sm text-slate-500 font-medium leading-relaxed">{feature.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visual Bento Grid */}
-            <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(uiSettings.features || features).slice(0, 3).map((feature, index) => (
               <motion.div 
-                whileHover={{ scale: 0.98 }}
-                className="md:col-span-2 rounded-[4rem] overflow-hidden relative aspect-video shadow-2xl border border-slate-100"
+                key={index} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="flex flex-col items-center text-center p-12 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
               >
-                <img 
-                  src={uiSettings.whyChooseImage || "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"} 
-                  alt="Mechanic working" 
-                  className="w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
-                <div className="absolute bottom-12 left-12">
-                  <div className="flex items-center gap-6">
-                    <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center shadow-2xl shadow-primary/40">
-                      <Star className="h-8 w-8 text-white fill-current" />
-                    </div>
-                    <div>
-                      <div className="text-4xl font-bold tracking-tighter text-slate-900">{uiSettings.testimonialRating || 4.9}</div>
-                      <div className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold mt-1">User Satisfaction</div>
-                    </div>
-                  </div>
+                <div className="bg-primary/10 p-8 rounded-3xl group-hover:scale-110 transition-transform mb-8">
+                  {'iconName' in feature ? getLucideIcon(feature.iconName) : (feature as any).icon}
                 </div>
+                <h4 className="font-bold uppercase tracking-tight text-2xl mb-4">{feature.title}</h4>
+                <p className="text-base text-slate-500 font-medium leading-relaxed">{feature.description}</p>
               </motion.div>
-
-              <div className="bg-primary rounded-[3.5rem] p-12 flex flex-col justify-between group cursor-pointer overflow-hidden relative shadow-2xl shadow-primary/10">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-bl-[12rem] group-hover:scale-150 transition-transform duration-700" />
-                <div className="relative z-10">
-                  <h3 className="text-4xl font-bold uppercase tracking-tighter leading-none mb-6 text-white">Live <br />Tracking</h3>
-                  <p className="text-white/80 text-base font-medium leading-relaxed">Monitor every stage of your service through our live dashboard.</p>
-                </div>
-                <div className="mt-12 relative z-10">
-                  <div className="h-16 w-16 rounded-3xl bg-white flex items-center justify-center shadow-2xl">
-                    <Clock className="h-8 w-8 text-primary" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-[3.5rem] p-12 flex flex-col justify-between group cursor-pointer overflow-hidden relative border border-slate-100 hover:bg-slate-100 transition-colors shadow-xl">
-                <div className="absolute bottom-0 right-0 w-48 h-48 bg-primary/5 rounded-tl-[12rem] group-hover:scale-150 transition-transform duration-700" />
-                <div className="relative z-10">
-                  <h3 className="text-4xl font-bold uppercase tracking-tighter leading-none mb-6 text-slate-900">Expert <br />Network</h3>
-                  <p className="text-slate-500 text-base font-medium leading-relaxed">Access our network of 250+ certified master mechanics.</p>
-                </div>
-                <div className="mt-12 relative z-10">
-                  <div className="h-16 w-16 rounded-3xl bg-white flex items-center justify-center shadow-2xl border border-slate-100">
-                    <Wrench className="h-8 w-8 text-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

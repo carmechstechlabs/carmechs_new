@@ -40,8 +40,11 @@ const initialServices = [
     features: ["Engine Oil Change", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Check", "Battery Water Top-up"],
     price: "₹1,999",
     basePrice: 1999,
+    estimatedPrice: 1999,
     duration: "3-4 Hours",
+    estimatedDuration: "3-4 Hours",
     iconName: "Wrench",
+    applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
     checks: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Spark Plug Cleaning", "Brake Pad Cleaning", "Exterior Wash", "Interior Vacuuming"]
   },
   {
@@ -51,8 +54,11 @@ const initialServices = [
     features: ["Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Puncture Repair", "Rim Inspection", "Nitrogen Inflation"],
     price: "₹999",
     basePrice: 999,
+    estimatedPrice: 999,
     duration: "1-2 Hours",
+    estimatedDuration: "1-2 Hours",
     iconName: "Disc",
+    applicableMakes: ["Toyota", "Honda", "Hyundai", "Kia"],
     checks: ["Automated Wheel Balancing", "Laser Wheel Alignment", "Tyre Rotation (4 Wheels)", "Tyre Health Inspection", "Air Pressure Check", "Steering Adjustment", "Suspension Check"]
   },
   {
@@ -62,8 +68,11 @@ const initialServices = [
     features: ["Battery Testing", "Charging System Check", "Terminal Cleaning", "Replacement", "Voltage Analysis", "Alternator Test"],
     price: "₹3,499",
     basePrice: 3499,
+    estimatedPrice: 3499,
     duration: "30-60 Minutes",
+    estimatedDuration: "30-60 Minutes",
     iconName: "Battery",
+    applicableModels: ["Corolla", "City", "Creta", "Seltos"],
     checks: ["Battery Voltage Check", "Alternator Charging Check", "Terminal Cleaning & Greasing", "Distilled Water Top-up", "Battery Health Report", "Old Battery Buyback", "Warranty Registration"]
   },
   {
@@ -73,7 +82,9 @@ const initialServices = [
     features: ["Scratch Removal", "Dent Repair", "Full Body Paint", "Polishing", "Color Matching", "Clear Coat Protection"],
     price: "Custom",
     basePrice: 4999,
+    estimatedPrice: 4999,
     duration: "2-5 Days",
+    estimatedDuration: "2-5 Days",
     iconName: "Sparkles",
     checks: ["Grade A Primer Application", "Premium Paint Matching", "3-Layer Painting Process", "Clear Coat Application", "Rubbing & Polishing", "Panel Dent Removal", "Rust Protection Coating"]
   },
@@ -84,8 +95,11 @@ const initialServices = [
     features: ["Gas Refill", "Cooling Coil Cleaning", "Compressor Check", "Leak Test", "Vent Disinfection", "Filter Replacement"],
     price: "₹1,499",
     basePrice: 1499,
+    estimatedPrice: 1499,
     duration: "2-3 Hours",
+    estimatedDuration: "2-3 Hours",
     iconName: "Wind",
+    applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
     checks: ["AC Gas Refill (up to 400g)", "Cooling Coil Cleaning", "Condenser Cleaning", "AC Vent Cleaning", "Compressor Oil Check", "Leakage Inspection", "Cabin Filter Cleaning"]
   },
   {
@@ -95,7 +109,9 @@ const initialServices = [
     features: ["Interior Detailing", "Exterior Wash", "Waxing", "Upholstery Cleaning", "Dashboard Polishing", "Engine Bay Cleaning"],
     price: "₹1,199",
     basePrice: 1199,
+    estimatedPrice: 1199,
     duration: "3-4 Hours",
+    estimatedDuration: "3-4 Hours",
     iconName: "Droplets",
     checks: ["Complete Interior Vacuuming", "Dashboard Cleaning & Polishing", "Seats Dry Cleaning", "Roof & Floor Cleaning", "Exterior Foam Wash", "Tyre Dressing", "Glass Cleaning"]
   },
@@ -190,8 +206,8 @@ const initialUsers = [
 const initialUiSettings = {
   heroTitle: "Precision <br /><span class=\"text-primary\">Car Care</span>",
   heroSubtitle: "Experience the next generation of car maintenance with our expert door-step service and transparent digital tracking.",
-  heroBgImage: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=2000&auto=format&fit=crop",
-  heroBgOpacity: 0.6,
+  heroBgImage: "https://images.unsplash.com/photo-1632823471565-1ec2c63db745?q=80&w=2000&auto=format&fit=crop",
+  heroBgOpacity: 0.4,
   heroVideoUrl: "https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4",
   primaryColor: "#0f172a", // slate-900
   whyChooseTitle: "Why Choose CarMechs?",

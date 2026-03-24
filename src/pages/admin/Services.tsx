@@ -384,52 +384,82 @@ export function Services() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel("all"); }}>
-                <SelectTrigger className={cn(
-                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
-                  selectedMake !== "all" && "border-primary/50 bg-primary/5"
-                )}>
-                  <SelectValue placeholder="All Makes" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Makes</SelectItem>
-                  {carMakes.map(make => (
-                    <SelectItem key={make.id} value={make.name} className="text-xs font-bold uppercase tracking-widest">{make.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className={cn(
-                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
-                  selectedModel !== "all" && "border-primary/50 bg-primary/5"
-                )}>
-                  <SelectValue placeholder="All Models" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Models</SelectItem>
-                  {carModels
-                    .filter(m => selectedMake === "all" || m.make === selectedMake)
-                    .map(model => (
-                      <SelectItem key={model.id} value={model.name} className="text-xs font-bold uppercase tracking-widest">{model.name}</SelectItem>
+              <div className="relative group">
+                <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel("all"); }}>
+                  <SelectTrigger className={cn(
+                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                    selectedMake !== "all" && "border-primary/50 bg-primary/5"
+                  )}>
+                    <SelectValue placeholder="All Makes" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Makes</SelectItem>
+                    {carMakes.map(make => (
+                      <SelectItem key={make.id} value={make.name} className="text-xs font-bold uppercase tracking-widest">{make.name}</SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
+                  </SelectContent>
+                </Select>
+                {selectedMake !== "all" && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSelectedMake("all"); setSelectedModel("all"); }}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
 
-              <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
-                <SelectTrigger className={cn(
-                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
-                  selectedFuelType !== "all" && "border-primary/50 bg-primary/5"
-                )}>
-                  <SelectValue placeholder="All Fuel Types" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Fuel Types</SelectItem>
-                  {fuelTypes.map(fuel => (
-                    <SelectItem key={fuel.id} value={fuel.name} className="text-xs font-bold uppercase tracking-widest">{fuel.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative group">
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className={cn(
+                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                    selectedModel !== "all" && "border-primary/50 bg-primary/5"
+                  )}>
+                    <SelectValue placeholder="All Models" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Models</SelectItem>
+                    {carModels
+                      .filter(m => selectedMake === "all" || m.make === selectedMake)
+                      .map(model => (
+                        <SelectItem key={model.id} value={model.name} className="text-xs font-bold uppercase tracking-widest">{model.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {selectedModel !== "all" && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSelectedModel("all"); }}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+
+              <div className="relative group">
+                <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
+                  <SelectTrigger className={cn(
+                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                    selectedFuelType !== "all" && "border-primary/50 bg-primary/5"
+                  )}>
+                    <SelectValue placeholder="All Fuel Types" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Fuel Types</SelectItem>
+                    {fuelTypes.map(fuel => (
+                      <SelectItem key={fuel.id} value={fuel.name} className="text-xs font-bold uppercase tracking-widest">{fuel.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedFuelType !== "all" && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSelectedFuelType("all"); }}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
 
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Wrench, 
   Car, 
@@ -61,6 +61,7 @@ const getIcon = (service: any) => {
 
 export function Services() {
   const { services, servicePackages, carMakes, carModels, fuelTypes, categories } = useData();
+  const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -367,46 +368,85 @@ export function Services() {
             </div>
             
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-2 relative group">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Manufacturer</label>
-                <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel(""); setSelectedFuel(""); }}>
-                  <SelectTrigger className="h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground">
-                    <SelectValue placeholder="Select Make" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl bg-card border-border text-foreground">
-                    {carMakes.map((make) => (
-                      <SelectItem key={make.name} value={make.name}>{make.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel(""); setSelectedFuel(""); }}>
+                    <SelectTrigger className={cn(
+                      "h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground transition-all",
+                      selectedMake && "border-primary/50 bg-primary/5"
+                    )}>
+                      <SelectValue placeholder="Select Make" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl bg-card border-border text-foreground">
+                      {carMakes.map((make) => (
+                        <SelectItem key={make.name} value={make.name}>{make.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedMake && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}
+                      className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative group">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Model</label>
-                <Select value={selectedModel} onValueChange={(val) => { setSelectedModel(val); setSelectedFuel(""); }} disabled={!selectedMake}>
-                  <SelectTrigger className="h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground">
-                    <SelectValue placeholder="Select Model" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl bg-card border-border text-foreground">
-                    {carModels.filter(m => m.make === selectedMake).map((model) => (
-                      <SelectItem key={model.name} value={model.name}>{model.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select value={selectedModel} onValueChange={(val) => { setSelectedModel(val); setSelectedFuel(""); }} disabled={!selectedMake}>
+                    <SelectTrigger className={cn(
+                      "h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground transition-all",
+                      selectedModel && "border-primary/50 bg-primary/5"
+                    )}>
+                      <SelectValue placeholder="Select Model" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl bg-card border-border text-foreground">
+                      {carModels.filter(m => m.make === selectedMake).map((model) => (
+                        <SelectItem key={model.name} value={model.name}>{model.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedModel && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedModel(""); setSelectedFuel(""); }}
+                      className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 relative group">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Fuel Type</label>
-                <Select value={selectedFuel} onValueChange={setSelectedFuel} disabled={!selectedModel}>
-                  <SelectTrigger className="h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground">
-                    <SelectValue placeholder="Select Fuel" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-2xl bg-card border-border text-foreground">
-                    {fuelTypes.map((fuel) => (
-                      <SelectItem key={fuel.name} value={fuel.name}>{fuel.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Select value={selectedFuel} onValueChange={setSelectedFuel} disabled={!selectedModel}>
+                    <SelectTrigger className={cn(
+                      "h-14 rounded-2xl border-border bg-muted/50 font-bold text-foreground transition-all",
+                      selectedFuel && "border-primary/50 bg-primary/5"
+                    )}>
+                      <SelectValue placeholder="Select Fuel" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl bg-card border-border text-foreground">
+                      {fuelTypes.map((fuel) => (
+                        <SelectItem key={fuel.name} value={fuel.name}>{fuel.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedFuel && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedFuel(""); }}
+                      className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -544,7 +584,7 @@ export function Services() {
 
             {(selectedIssues.length > 0 || selectedCheckups.length > 0 || selectedCategory !== "all" || searchQuery || selectedMake || selectedModel || selectedFuel) && (
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => {
                   setSelectedIssues([]);
                   setSelectedCheckups([]);
@@ -554,7 +594,7 @@ export function Services() {
                   setSelectedModel("");
                   setSelectedFuel("");
                 }}
-                className="h-16 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                className="h-16 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 border-red-100 bg-red-50/30 hover:bg-red-50 hover:text-red-600 transition-all"
               >
                 <X className="h-4 w-4 mr-2" />
                 Clear All
@@ -570,44 +610,69 @@ export function Services() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex flex-wrap gap-2 mb-8"
+              className="flex flex-wrap items-center gap-3 mb-10 p-6 bg-slate-50/50 rounded-3xl border border-slate-100"
             >
+              <div className="flex items-center gap-2 mr-4">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Active Filters:</span>
+              </div>
+
               {selectedMake && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
-                  <span>Make: {selectedMake}</span>
-                  <button onClick={() => { setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-700 hover:border-primary transition-colors">
+                  <span className="text-slate-400">Make:</span>
+                  <span>{selectedMake}</span>
+                  <button 
+                    onClick={() => { setSelectedMake(""); setSelectedModel(""); setSelectedFuel(""); }}
+                    className="ml-1 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               )}
               {selectedModel && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
-                  <span>Model: {selectedModel}</span>
-                  <button onClick={() => { setSelectedModel(""); setSelectedFuel(""); }}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-700 hover:border-primary transition-colors">
+                  <span className="text-slate-400">Model:</span>
+                  <span>{selectedModel}</span>
+                  <button 
+                    onClick={() => { setSelectedModel(""); setSelectedFuel(""); }}
+                    className="ml-1 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               )}
               {selectedFuel && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold text-blue-600">
-                  <span>Fuel: {selectedFuel}</span>
-                  <button onClick={() => setSelectedFuel("")}>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-700 hover:border-primary transition-colors">
+                  <span className="text-slate-400">Fuel:</span>
+                  <span>{selectedFuel}</span>
+                  <button 
+                    onClick={() => setSelectedFuel("")}
+                    className="ml-1 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               )}
               {selectedIssues.map(issue => (
-                <div key={issue} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-bold text-primary">
-                  <span>Issue: {issue}</span>
-                  <button onClick={() => setSelectedIssues(selectedIssues.filter(i => i !== issue))}>
+                <div key={issue} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-700 hover:border-primary transition-colors">
+                  <span className="text-slate-400">Issue:</span>
+                  <span>{issue}</span>
+                  <button 
+                    onClick={() => setSelectedIssues(selectedIssues.filter(i => i !== issue))}
+                    className="ml-1 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
               ))}
               {selectedCheckups.map(checkup => (
-                <div key={checkup} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-bold text-emerald-600">
-                  <span>Checkup: {checkup}</span>
-                  <button onClick={() => setSelectedCheckups(selectedCheckups.filter(c => c !== checkup))}>
+                <div key={checkup} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[10px] font-bold text-slate-700 hover:border-primary transition-colors">
+                  <span className="text-slate-400">Checkup:</span>
+                  <span>{checkup}</span>
+                  <button 
+                    onClick={() => setSelectedCheckups(selectedCheckups.filter(c => c !== checkup))}
+                    className="ml-1 p-0.5 rounded-full hover:bg-slate-100 transition-colors"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -625,7 +690,7 @@ export function Services() {
                   key={service.id}
                   service={service}
                   onViewDetail={(id) => setSelectedService(services.find(s => s.id === id))}
-                  onBook={(s) => setSelectedService(s)} // Or navigate to booking
+                  onBook={(s) => navigate('/book', { state: { serviceId: s.id } })}
                 />
               ))}
             </div>
