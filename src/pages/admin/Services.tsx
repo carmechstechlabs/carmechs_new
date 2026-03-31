@@ -1,11 +1,12 @@
 import { useState, ChangeEvent, useMemo } from "react";
 import { useData, Service, ServiceCategory } from "@/context/DataContext";
 import { GoogleGenAI } from "@google/genai";
+import { generateServiceImage } from "@/services/aiService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Plus, Trash2, Edit2, Save, X, ImageIcon, Activity, Zap, Wrench, Clock, IndianRupee, ArrowRight, Layers, Shield, Car, Battery, Disc, Droplets, Wind, Sparkles, Search, CheckCircle2, ChevronDown, ChevronUp, Tag, Info, ListChecks, Settings2 } from "lucide-react";
+import { Plus, Trash2, Edit2, Save, X, ImageIcon, Activity, Zap, Wrench, Clock, IndianRupee, ArrowRight, Layers, Shield, Car, Battery, Disc, Droplets, Wind, Sparkles, Search, CheckCircle2, ChevronDown, ChevronUp, Tag, Info, ListChecks, Settings2, Loader2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ImageUpload";
@@ -62,6 +63,83 @@ export function Services() {
   const [activeTab, setActiveTab] = useState<string>("services");
   const [iconSearch, setIconSearch] = useState("");
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [isGeneratingSingleImage, setIsGeneratingSingleImage] = useState(false);
+
+  const handleGenerateSingleImage = async () => {
+    if (!formData.title) {
+      toast.error("Please enter a service title first.");
+      return;
+    }
+
+    setIsGeneratingSingleImage(true);
+    const toastId = toast.loading(`Generating image for ${formData.title}...`);
+
+    try {
+      const imageUrl = await generateServiceImage(formData.title, formData.description || "");
+      if (imageUrl) {
+        setFormData({ ...formData, iconUrl: imageUrl });
+        toast.success("Image generated successfully!", { id: toastId });
+      } else {
+        toast.error("Failed to generate image.", { id: toastId });
+      }
+    } catch (error) {
+      console.error("Single Image Generation Error:", error);
+      toast.error("An error occurred during image generation.", { id: toastId });
+    } finally {
+      setIsGeneratingSingleImage(false);
+    }
+  };
+
+  const [isGeneratingSingle, setIsGeneratingSingle] = useState(false);
+
+  const generateSingleAiImage = async () => {
+    if (adminRole !== 'admin') {
+      toast.error("Only admins can generate AI images.");
+      return;
+    }
+
+    if (!formData.title || !formData.description) {
+      toast.error("Title and description are required to generate an image.");
+      return;
+    }
+
+    setIsGeneratingSingle(true);
+    const toastId = toast.loading(`Generating AI image for ${formData.title}...`);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+      const model = "gemini-2.5-flash-image";
+
+      const prompt = `A high-quality, professional photo for an automotive service titled "${formData.title}". Description: ${formData.description}. Clean, professional, cinematic lighting, 4k, realistic automotive photography.`;
+
+      const response = await ai.models.generateContent({
+        model: model,
+        contents: {
+          parts: [{ text: prompt }]
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "16:9"
+          }
+        }
+      });
+
+      const imagePart = response.candidates[0].content.parts.find(p => p.inlineData);
+      if (imagePart?.inlineData) {
+        const base64 = imagePart.inlineData.data;
+        const imageUrl = `data:image/png;base64,${base64}`;
+        setFormData({ ...formData, iconUrl: imageUrl });
+        toast.success("AI image generated successfully!", { id: toastId });
+      } else {
+        toast.error("Failed to generate image. No image data returned.", { id: toastId });
+      }
+    } catch (err) {
+      console.error("Failed to generate single AI image:", err);
+      toast.error("Error generating AI image. Please check your API key.", { id: toastId });
+    } finally {
+      setIsGeneratingSingle(false);
+    }
+  };
 
   const generateAiImages = async () => {
     if (adminRole !== 'admin') {
@@ -220,6 +298,12 @@ export function Services() {
       checks: Array.isArray(formData.checks) 
         ? formData.checks 
         : (formData.checks as string || "").split(',').map(s => s.trim()).filter(Boolean),
+      commonIssues: Array.isArray(formData.commonIssues)
+        ? formData.commonIssues
+        : (formData.commonIssues as string || "").split(',').map(s => s.trim()).filter(Boolean),
+      recommendedCheckups: Array.isArray(formData.recommendedCheckups)
+        ? formData.recommendedCheckups
+        : (formData.recommendedCheckups as string || "").split(',').map(s => s.trim()).filter(Boolean),
       applicableMakes: formData.applicableMakes || [],
       applicableModels: formData.applicableModels || [],
       applicableFuelTypes: formData.applicableFuelTypes || [],
@@ -358,129 +442,109 @@ export function Services() {
 
         <TabsContent value="services" className="space-y-8 mt-0 outline-none">
           {/* Search and Filter Bar */}
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input 
-                  placeholder="Search services..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-12 pl-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest"
-                />
-              </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className={cn(
-                  "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest",
-                  selectedCategory !== "all" && "border-primary/50 bg-primary/5"
-                )}>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Categories</SelectItem>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold uppercase tracking-widest">{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <div className="relative group">
-                <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel("all"); }}>
-                  <SelectTrigger className={cn(
-                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                    selectedMake !== "all" && "border-primary/50 bg-primary/5"
-                  )}>
-                    <SelectValue placeholder="All Makes" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
-                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Makes</SelectItem>
-                    {carMakes.map(make => (
-                      <SelectItem key={make.id} value={make.name} className="text-xs font-bold uppercase tracking-widest">{make.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedMake !== "all" && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedMake("all"); setSelectedModel("all"); }}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-
-              <div className="relative group">
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className={cn(
-                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                    selectedModel !== "all" && "border-primary/50 bg-primary/5"
-                  )}>
-                    <SelectValue placeholder="All Models" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
-                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Models</SelectItem>
-                    {carModels
-                      .filter(m => selectedMake === "all" || m.make === selectedMake)
-                      .map(model => (
-                        <SelectItem key={model.id} value={model.name} className="text-xs font-bold uppercase tracking-widest">{model.name}</SelectItem>
+              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Search className="h-4 w-4 text-primary" />
+                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Advanced Filtering</span>
+                  </div>
+                  {(searchTerm || selectedCategory !== "all" || selectedMake !== "all" || selectedModel !== "all" || selectedFuelType !== "all") && (
+                    <Button 
+                      variant="ghost" 
+                      onClick={resetFilters}
+                      className="h-8 px-4 text-rose-500 hover:text-rose-600 hover:bg-rose-50 font-black uppercase tracking-widest text-[9px] rounded-lg"
+                    >
+                      <X className="h-3 w-3 mr-2" /> Reset All Filters
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input 
+                      placeholder="Search services..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={cn(
+                        "h-12 pl-11 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                        searchTerm && "border-primary/50 bg-primary/5 ring-1 ring-primary/10"
+                      )}
+                    />
+                  </div>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className={cn(
+                      "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                      selectedCategory !== "all" && "border-primary/50 bg-primary/5 ring-1 ring-primary/10"
+                    )}>
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Categories</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold uppercase tracking-widest">{cat.name}</SelectItem>
                       ))}
-                  </SelectContent>
-                </Select>
-                {selectedModel !== "all" && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedModel("all"); }}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
+                    </SelectContent>
+                  </Select>
 
-              <div className="relative group">
-                <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
-                  <SelectTrigger className={cn(
-                    "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
-                    selectedFuelType !== "all" && "border-primary/50 bg-primary/5"
-                  )}>
-                    <SelectValue placeholder="All Fuel Types" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
-                    <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Fuel Types</SelectItem>
-                    {fuelTypes.map(fuel => (
-                      <SelectItem key={fuel.id} value={fuel.name} className="text-xs font-bold uppercase tracking-widest">{fuel.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedFuelType !== "all" && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedFuelType("all"); }}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-1 hover:bg-primary/10 rounded-full text-primary transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
+                  <Select value={selectedMake} onValueChange={(val) => { setSelectedMake(val); setSelectedModel("all"); }}>
+                    <SelectTrigger className={cn(
+                      "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                      selectedMake !== "all" && "border-primary/50 bg-primary/5 ring-1 ring-primary/10"
+                    )}>
+                      <SelectValue placeholder="All Makes" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Makes</SelectItem>
+                      {carMakes.map(make => (
+                        <SelectItem key={make.id} value={make.name} className="text-xs font-bold uppercase tracking-widest">{make.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  <SelectItem value="title" className="text-xs font-bold uppercase tracking-widest">Title (A-Z)</SelectItem>
-                  <SelectItem value="price_asc" className="text-xs font-bold uppercase tracking-widest">Price (Low to High)</SelectItem>
-                  <SelectItem value="price_desc" className="text-xs font-bold uppercase tracking-widest">Price (High to Low)</SelectItem>
-                  <SelectItem value="duration" className="text-xs font-bold uppercase tracking-widest">Duration</SelectItem>
-                </SelectContent>
-              </Select>
+                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <SelectTrigger className={cn(
+                      "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                      selectedModel !== "all" && "border-primary/50 bg-primary/5 ring-1 ring-primary/10"
+                    )}>
+                      <SelectValue placeholder="All Models" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Models</SelectItem>
+                      {carModels
+                        .filter(m => selectedMake === "all" || m.make === selectedMake)
+                        .map(model => (
+                          <SelectItem key={model.id} value={model.name} className="text-xs font-bold uppercase tracking-widest">{model.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
 
-              <Button 
-                variant="outline" 
-                onClick={resetFilters}
-                className="h-12 border-slate-200 text-slate-500 font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-slate-50"
-              >
-                <X className="h-3 w-3 mr-2" /> Reset Filters
-              </Button>
-            </div>
+                  <Select value={selectedFuelType} onValueChange={setSelectedFuelType}>
+                    <SelectTrigger className={cn(
+                      "h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                      selectedFuelType !== "all" && "border-primary/50 bg-primary/5 ring-1 ring-primary/10"
+                    )}>
+                      <SelectValue placeholder="All Fuel Types" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="all" className="text-xs font-bold uppercase tracking-widest">All Fuel Types</SelectItem>
+                      {fuelTypes.map(fuel => (
+                        <SelectItem key={fuel.id} value={fuel.name} className="text-xs font-bold uppercase tracking-widest">{fuel.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="title" className="text-xs font-bold uppercase tracking-widest">Title (A-Z)</SelectItem>
+                      <SelectItem value="price_asc" className="text-xs font-bold uppercase tracking-widest">Price (Low to High)</SelectItem>
+                      <SelectItem value="price_desc" className="text-xs font-bold uppercase tracking-widest">Price (High to Low)</SelectItem>
+                      <SelectItem value="duration" className="text-xs font-bold uppercase tracking-widest">Duration</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
             
             {(searchTerm || selectedCategory !== "all" || selectedMake !== "all" || selectedModel !== "all" || selectedFuelType !== "all") && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-50">
@@ -677,6 +741,50 @@ export function Services() {
                               </div>
                             </AccordionContent>
                           </AccordionItem>
+
+                          <AccordionItem value="commonIssues" className="border border-slate-100 rounded-2xl bg-slate-50 px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <Activity className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-900">Common Issues</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pb-6">
+                              <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Enter common issues separated by commas. Use "Title: Description" format for brief descriptions.</p>
+                                <Textarea 
+                                  placeholder="Engine Noise: Loud grinding sounds from engine bay, AC Not Cooling: Airflow is not cold enough..." 
+                                  value={Array.isArray(formData.commonIssues) ? formData.commonIssues.join(", ") : (formData.commonIssues || "")} 
+                                  onChange={e => setFormData({...formData, commonIssues: e.target.value as any})}
+                                  className="min-h-[120px] bg-white border-slate-200 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                                />
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+
+                          <AccordionItem value="recommendedCheckups" className="border border-slate-100 rounded-2xl bg-slate-50 px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                  <ListChecks className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-900">Recommended Checkups</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pb-6">
+                              <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Enter recommended checkups separated by commas. Use "Title: Description" format for brief descriptions.</p>
+                                <Textarea 
+                                  placeholder="Brake Pad Check: Inspection of wear indicators, Fluid Levels: Checking oil and coolant..." 
+                                  value={Array.isArray(formData.recommendedCheckups) ? formData.recommendedCheckups.join(", ") : (formData.recommendedCheckups || "")} 
+                                  onChange={e => setFormData({...formData, recommendedCheckups: e.target.value as any})}
+                                  className="min-h-[120px] bg-white border-slate-200 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                                />
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
                       </TabsContent>
 
@@ -689,6 +797,50 @@ export function Services() {
                                 value={formData.iconUrl || ""}
                                 onChange={(url) => setFormData({ ...formData, iconUrl: url })}
                               />
+                              <div className="mt-4 flex flex-col gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isGeneratingSingle || !formData.title || !formData.description}
+                                  onClick={generateSingleAiImage}
+                                  className="w-full h-10 rounded-xl border-primary/20 bg-primary/5 text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-all"
+                                >
+                                  {isGeneratingSingle ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Zap className="mr-2 h-3 w-3" />
+                                      Generate AI Image
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleGenerateSingleImage}
+                                  disabled={isGeneratingSingleImage || !formData.title}
+                                  className="w-full h-10 bg-white border-primary/20 text-primary hover:bg-primary hover:text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all"
+                                >
+                                  {isGeneratingSingleImage ? (
+                                    <>
+                                      <Sparkles className="h-3 w-3 mr-2 animate-pulse" />
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="h-3 w-3 mr-2" />
+                                      Generate AI Image
+                                    </>
+                                  )}
+                                </Button>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                                  Uses Gemini AI to create a custom image based on the title
+                                </p>
+                              </div>
                             </div>
                           </div>
 
@@ -775,7 +927,17 @@ export function Services() {
                       <TabsContent value="applicability" className="space-y-8 mt-0 outline-none">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Makes</label>
+                            <div className="flex items-center justify-between px-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Applicable Makes</label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 text-[8px] font-black uppercase tracking-widest"
+                                onClick={() => setFormData({ ...formData, applicableMakes: carMakes.map(m => m.name) })}
+                              >
+                                Select All
+                              </Button>
+                            </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
                               {carMakes.map(make => (
                                 <div key={make.name} className="flex items-center gap-2">
@@ -800,7 +962,17 @@ export function Services() {
                           </div>
 
                           <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Models</label>
+                            <div className="flex items-center justify-between px-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Applicable Models</label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 text-[8px] font-black uppercase tracking-widest"
+                                onClick={() => setFormData({ ...formData, applicableModels: carModels.map(m => m.name) })}
+                              >
+                                Select All
+                              </Button>
+                            </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
                               {carModels.map(model => (
                                 <div key={`${model.make}-${model.name}`} className="flex items-center gap-2">
@@ -827,7 +999,17 @@ export function Services() {
                           </div>
 
                           <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Applicable Fuel Types</label>
+                            <div className="flex items-center justify-between px-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Applicable Fuel Types</label>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 text-[8px] font-black uppercase tracking-widest"
+                                onClick={() => setFormData({ ...formData, applicableFuelTypes: fuelTypes.map(f => f.name) })}
+                              >
+                                Select All
+                              </Button>
+                            </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 max-h-[300px] overflow-y-auto">
                               {fuelTypes.map(fuel => (
                                 <div key={fuel.name} className="flex items-center gap-2">
@@ -907,6 +1089,9 @@ export function Services() {
                             <div className="flex items-center justify-center lg:justify-start gap-2">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Active</span>
+                              <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                                <Clock className="h-2.5 w-2.5" /> {service.estimatedDuration || service.duration}
+                              </span>
                               {service.categoryId && (
                                 <span className="ml-2 px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8px] font-bold uppercase tracking-widest">
                                   {categories.find(c => c.id === service.categoryId)?.name}

@@ -11,7 +11,7 @@ interface SeoProps {
 }
 
 export function SEO({ title, description, keywords, ogImage, noIndex, slug }: SeoProps) {
-  const { uiSettings } = useData();
+  const { uiSettings, settings } = useData();
   const defaults = uiSettings.seo;
 
   const seoTitle = title || defaults.metaTitle;
@@ -20,7 +20,8 @@ export function SEO({ title, description, keywords, ogImage, noIndex, slug }: Se
   const seoOgImage = ogImage || defaults.ogImage;
   const shouldIndex = noIndex !== undefined ? !noIndex : defaults.enableIndexing;
 
-  const url = `https://carmechs.run.app${slug ? (slug === 'home' ? '' : '/' + slug) : ''}`;
+  const domain = settings.domainName || "carmechs.in";
+  const url = `https://${domain}${slug ? (slug === 'home' ? '' : '/' + slug) : ''}`;
 
   return (
     <Helmet>

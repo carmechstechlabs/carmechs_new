@@ -7,7 +7,7 @@ import {
   User, Mail, Phone, Shield, Wallet, Gift, 
   Calendar, Clock, CheckCircle2, XCircle, 
   Copy, ArrowRight, Car, Plus, Trash2,
-  Wrench, Fuel, Hash, Info, ChevronRight, Zap, Building2
+  Wrench, Fuel, Hash, Info, ChevronRight, Zap, Building2, MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
@@ -41,14 +41,15 @@ export function Profile() {
     referralCode: "N/A",
     referralsCount: 0,
     verified: !!currentUser?.emailVerified,
-    role: 'user' as const
+    role: 'user' as const,
+    referredBy: undefined
   };
 
   const userAppointments = appointments.filter(a => a.email === currentUser?.email || a.phone === user.phone)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   
   const userVehicles = vehicles.filter(v => v.userId === user?.id);
-  const userTasks = tasks.filter(t => t.assignedTo === user?.id && !t.completed)
+  const userTasks = tasks.filter(t => t.assignedTo === user?.id && t.status !== 'completed')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const getServiceTitle = (serviceId: string) => {
@@ -75,9 +76,13 @@ export function Profile() {
   const handleApplyReferral = () => {
     if (!referralInput.trim()) return;
     if (user) {
-      processReferral(referralInput, user.id);
-      setReferralInput("");
-      toast.success("Referral code applied!");
+      const result = processReferral(referralInput, user.id);
+      if (result.success) {
+        setReferralInput("");
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
     }
   };
 
@@ -380,9 +385,21 @@ export function Profile() {
                 <h3 className="text-xl font-bold text-slate-900">Refer & Earn</h3>
               </div>
               
-              <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                Invite friends to join CarMechs. You'll both get <span className="text-emerald-600 font-bold">₹{settings.referralRewardAmount}</span> when they sign up!
+              <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                Invite friends to join CarMechs. You'll get <span className="text-emerald-600 font-bold">₹{settings.referralRewardAmount}</span> and they'll get <span className="text-emerald-600 font-bold">₹{settings.referralSignupBonus}</span>!
               </p>
+
+              <div className="flex items-center justify-between mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="text-center flex-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total Referrals</p>
+                  <p className="text-2xl font-bold text-slate-900">{user.referralsCount || 0}</p>
+                </div>
+                <div className="w-px h-8 bg-slate-200" />
+                <div className="text-center flex-1">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Earnings</p>
+                  <p className="text-2xl font-bold text-emerald-600">₹{(user.referralsCount || 0) * settings.referralRewardAmount}</p>
+                </div>
+              </div>
 
               <div className="space-y-6 mt-auto">
                 <div className="space-y-2">
@@ -403,20 +420,27 @@ export function Profile() {
 
                 <div className="space-y-2">
                   <label className="text-xs text-slate-400 uppercase font-bold tracking-widest ml-1">Apply Code</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="CODE" 
-                      value={referralInput}
-                      onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
-                      className="h-12 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-sm tracking-widest"
-                    />
-                    <Button 
-                      className="h-12 bg-slate-900 rounded-2xl px-6 font-bold text-white"
-                      onClick={handleApplyReferral}
-                    >
-                      Apply
-                    </Button>
-                  </div>
+                  {user.referredBy ? (
+                    <div className="h-12 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2 text-emerald-600 font-bold text-sm">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Referral Code Applied
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder="CODE" 
+                        value={referralInput}
+                        onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+                        className="h-12 bg-slate-50 border-slate-200 rounded-2xl text-center font-mono text-sm tracking-widest"
+                      />
+                      <Button 
+                        className="h-12 bg-slate-900 rounded-2xl px-6 font-bold text-white"
+                        onClick={handleApplyReferral}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -444,13 +468,23 @@ export function Profile() {
                   <Card key={task.id} className="bg-white border-slate-200 rounded-3xl overflow-hidden shadow-lg shadow-slate-200/30 hover:border-primary/30 transition-all group">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
-                        <div className={cn(
-                          "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border",
-                          task.priority === 'high' ? 'text-rose-600 bg-rose-50 border-rose-100' :
-                          task.priority === 'medium' ? 'text-amber-600 bg-amber-50 border-amber-100' :
-                          'text-emerald-600 bg-emerald-50 border-emerald-100'
-                        )}>
-                          {task.priority} Priority
+                        <div className="flex flex-col gap-2">
+                          <div className={cn(
+                            "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border w-fit",
+                            task.priority === 'high' ? 'text-rose-600 bg-rose-50 border-rose-100' :
+                            task.priority === 'medium' ? 'text-amber-600 bg-amber-50 border-amber-100' :
+                            'text-emerald-600 bg-emerald-50 border-emerald-100'
+                          )}>
+                            {task.priority} Priority
+                          </div>
+                          <div className={cn(
+                            "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border w-fit",
+                            task.status === 'completed' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' :
+                            task.status === 'in-progress' ? 'text-blue-600 bg-blue-50 border-blue-100' :
+                            'text-slate-600 bg-slate-50 border-slate-100'
+                          )}>
+                            {task.status.replace('-', ' ')}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           <Clock className="h-3 w-3" />
@@ -495,6 +529,19 @@ export function Profile() {
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Phone Number</p>
                   <p className="text-lg font-semibold text-slate-900">{user.phone || "Not provided"}</p>
                 </div>
+                {user.role === 'mechanic' && (
+                  <div className="pt-4 border-t border-slate-100">
+                    <Button 
+                      className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold uppercase tracking-widest text-xs"
+                      asChild
+                    >
+                      <a href="/mechanic-dashboard">
+                        <Wrench className="h-4 w-4 mr-2" />
+                        Mechanic Dashboard
+                      </a>
+                    </Button>
+                  </div>
+                )}
                 <div className="pt-4 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Account Status</p>
@@ -563,6 +610,19 @@ export function Profile() {
                                       ({app.paymentStatus})
                                     </span>
                                   </div>
+                                )}
+                                {(app.status === 'accepted' || app.status === 'in-progress') && app.technicianId && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="rounded-xl border-primary/20 text-primary hover:bg-primary/5 h-8 text-[10px] font-black uppercase tracking-widest"
+                                    asChild
+                                  >
+                                    <a href={`/track-mechanic/${app.technicianId}/${app.id}`}>
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      Track Mechanic
+                                    </a>
+                                  </Button>
                                 )}
                               </div>
                             </div>

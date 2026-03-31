@@ -79,7 +79,7 @@ const MapUpdater = ({ center }: { center: [number, number] }) => {
 };
 
 const ServiceRequest: React.FC = () => {
-  const { carMakes, carModels, services, technicians, addServiceRequest, currentUser, vehicles } = useData();
+  const { carMakes, carModels, services, technicians, addServiceRequest, currentUser, vehicles, serviceRequests } = useData();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -96,7 +96,7 @@ const ServiceRequest: React.FC = () => {
   const [photos, setPhotos] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [matchingMechanics, setMatchingMechanics] = useState(false);
-  const [foundMechanics, setFoundMechanics] = useState<any[]>([]);
+  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [selectedMechanic, setSelectedMechanic] = useState<any>(null);
   const [matchingStep, setMatchingStep] = useState(0);
   
@@ -114,7 +114,19 @@ const ServiceRequest: React.FC = () => {
     "Finalizing connection protocol..."
   ];
 
-  const currentStep = selectedMechanic ? 'confirmed' : (matchingMechanics || foundMechanics.length > 0) ? 'matching' : 'request';
+  // Watch for request status updates from the backend
+  React.useEffect(() => {
+    if (currentRequestId) {
+      const myRequest = serviceRequests.find(r => r.id === currentRequestId || (r.userId === currentUser?.uid && r.status === 'accepted'));
+      if (myRequest && myRequest.status === 'accepted' && myRequest.assignedTechnician) {
+        setMatchingMechanics(false);
+        setSelectedMechanic(myRequest.assignedTechnician);
+        toast.success(`Mechanic ${myRequest.assignedTechnician.name} has been assigned!`);
+      }
+    }
+  }, [serviceRequests, currentRequestId, currentUser]);
+
+  const currentStep = selectedMechanic ? 'confirmed' : matchingMechanics ? 'matching' : 'request';
 
   // Simulate mechanic movement
   React.useEffect(() => {
@@ -190,6 +202,9 @@ const ServiceRequest: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      const tempId = Math.random().toString(36).substring(2, 9);
+      setCurrentRequestId(tempId);
+
       addServiceRequest({
         userId: currentUser.uid,
         userName: currentUser.displayName || 'User',
@@ -206,25 +221,13 @@ const ServiceRequest: React.FC = () => {
       setIsSubmitting(false);
       setMatchingMechanics(true);
       
-      // Simulate matching steps
+      // Simulate matching steps UI
       let step = 0;
       const stepInterval = setInterval(() => {
         step++;
         setMatchingStep(step);
         if (step >= matchingSteps.length - 1) clearInterval(stepInterval);
-      }, 800);
-
-      // Simulate finding nearby mechanics
-      setTimeout(() => {
-        const nearby = technicians.slice(0, 3).map(t => ({
-          ...t,
-          distance: (Math.random() * 5 + 1).toFixed(1) + ' km away',
-          eta: Math.floor(Math.random() * 15 + 5) + ' mins'
-        }));
-        setFoundMechanics(nearby);
-        setMatchingMechanics(false);
-        clearInterval(stepInterval);
-      }, 4000);
+      }, 1000);
 
     } catch (error) {
       toast.error('Failed to submit request. Please try again.');
@@ -521,93 +524,6 @@ const ServiceRequest: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ) : foundMechanics.length > 0 ? (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-4">
-                  <div className="h-10 w-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                    <Wrench className="h-6 w-6 text-primary" />
-                  </div>
-                  Available Mechanics
-                </h2>
-                <Badge className="bg-emerald-500 text-white font-black px-4 py-1.5 rounded-full uppercase tracking-widest text-[10px]">
-                  {foundMechanics.length} Matches Found
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-6">
-                {foundMechanics.map((tech, idx) => (
-                  <motion.div
-                    key={tech.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-8 group hover:border-primary/30 transition-all"
-                  >
-                    <div className="flex items-center gap-8 w-full lg:w-auto">
-                      <div className="relative shrink-0">
-                        <img 
-                          src={tech.avatar || `https://picsum.photos/seed/${tech.id}/120/120`} 
-                          alt={tech.name}
-                          className="h-28 w-28 rounded-[2rem] object-cover shadow-2xl group-hover:scale-105 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute -bottom-2 -right-2 bg-emerald-500 h-8 w-8 rounded-full border-4 border-white shadow-lg" />
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{tech.name}</h3>
-                        <p className="text-primary font-black text-xs uppercase tracking-widest mt-1">{tech.specialty}</p>
-                        <div className="flex flex-wrap items-center gap-6 mt-4">
-                          <div className="flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full">
-                            <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                            <span className="text-sm font-black text-amber-700">{tech.rating || 5.0}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-slate-500">
-                            <MapPin className="h-4 w-4 text-primary" />
-                            <span className="text-xs font-black uppercase tracking-widest">{tech.distance}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-slate-500">
-                            <Clock className="h-4 w-4 text-primary" />
-                            <span className="text-xs font-black uppercase tracking-widest">ETA: {tech.eta}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 w-full lg:w-auto">
-                      <Link to={`/mechanics/${tech.id}`} className="flex-1 lg:flex-none">
-                        <Button variant="outline" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200">
-                          Profile
-                        </Button>
-                      </Link>
-                      <Button 
-                        className="flex-1 lg:flex-none h-14 px-8 rounded-2xl bg-slate-900 hover:bg-primary text-white font-black uppercase tracking-widest text-[10px] transition-all shadow-xl shadow-slate-200"
-                        onClick={() => handleAcceptMechanic(tech)}
-                      >
-                        Accept Request
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-              
-              <div className="flex justify-center pt-8">
-                <Button 
-                  variant="ghost" 
-                  className="text-slate-400 hover:text-primary font-black uppercase tracking-widest text-[10px]"
-                  onClick={() => {
-                    setFoundMechanics([]);
-                    setMatchingMechanics(false);
-                  }}
-                >
-                  Cancel and Edit Request
-                </Button>
               </div>
             </motion.div>
           ) : (

@@ -33,6 +33,8 @@ export function Signup() {
     email: "",
     password: "",
     phone: "",
+    role: "user" as "user" | "mechanic",
+    referralCode: "",
   });
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function Signup() {
 
     try {
       if (formData.name && formData.email && formData.password.length >= 6 && formData.phone) {
-        await signup(formData.email, formData.password, formData.name, formData.phone);
+        await signup(formData.email, formData.password, formData.name, formData.phone, formData.role, formData.referralCode);
         toast.success("Successfully signed up!");
         navigate("/");
       } else {
@@ -186,6 +188,21 @@ export function Signup() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
+                <div className="flex p-1 bg-accent/50 rounded-2xl mb-8">
+                  <button
+                    onClick={() => setFormData({ ...formData, role: 'user' })}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${formData.role === 'user' ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Car Owner
+                  </button>
+                  <button
+                    onClick={() => setFormData({ ...formData, role: 'mechanic' })}
+                    className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${formData.role === 'mechanic' ? 'bg-primary text-white shadow-lg' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Mechanic
+                  </button>
+                </div>
+
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="space-y-4">
                     <div className="relative group">
@@ -230,6 +247,16 @@ export function Signup() {
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         placeholder="Create Password"
+                      />
+                    </div>
+                    <div className="relative group">
+                      <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <input
+                        type="text"
+                        value={formData.referralCode}
+                        onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                        className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        placeholder="Referral Code (Optional)"
                       />
                     </div>
                   </div>

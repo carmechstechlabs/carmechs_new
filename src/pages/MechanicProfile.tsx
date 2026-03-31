@@ -8,16 +8,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 const MechanicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { technicians, reviews, currentUser, users, isAdminLoggedIn, updateTechnicianStatus } = useData();
+  const { technicians, reviews, currentUser, users, isAdminLoggedIn, updateTechnicianStatus, addReview } = useData();
   const tech = technicians.find(t => t.id === id);
   const userProfile = users.find(u => u.id === currentUser?.uid);
   const isMechanicOwner = currentUser?.uid === tech?.userId;
   const canUpdateStatus = isMechanicOwner || isAdminLoggedIn || userProfile?.role === 'admin';
+
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!tech) {
     return (
@@ -37,6 +42,44 @@ const MechanicProfile = () => {
 
   const handleBookNow = () => {
     navigate(`/booking?techId=${tech.id}`);
+  };
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) {
+      toast.error("Please login to leave a review");
+      return;
+    }
+    if (!comment.trim()) {
+      toast.error("Please enter a comment");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      addReview({
+        userId: currentUser.uid,
+        userName: currentUser.displayName || userProfile?.name || 'Anonymous',
+        rating,
+        comment,
+        technicianId: tech.id
+      });
+      toast.success("Review submitted for approval!");
+      setComment('');
+      setRating(5);
+    } catch (error) {
+      toast.error("Failed to submit review");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTrackOnMap = () => {
+    if (tech.latitude && tech.longitude) {
+      window.open(`https://www.google.com/maps?q=${tech.latitude},${tech.longitude}`, '_blank');
+    } else {
+      toast.error("Location not available for this technician");
+    }
   };
 
   return (
@@ -143,6 +186,16 @@ const MechanicProfile = () => {
                   <Button onClick={handleBookNow} className="w-full h-12 rounded-xl bg-slate-900 hover:bg-primary text-white font-bold uppercase tracking-wider transition-all">
                     Book Appointment
                   </Button>
+                  {tech.latitude && tech.longitude && (
+                    <Button 
+                      onClick={handleTrackOnMap}
+                      variant="secondary"
+                      className="w-full h-12 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold uppercase tracking-wider border border-emerald-100"
+                    >
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Track Live Location
+                    </Button>
+                  )}
                   <Button variant="outline" className="w-full h-12 rounded-xl border-slate-200 font-bold uppercase tracking-wider">
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Message Mechanic
@@ -275,6 +328,41 @@ const MechanicProfile = () => {
                   </div>
                   
                   <div className="space-y-8">
+                    {/* Review Form */}
+                    {currentUser && !isMechanicOwner && (
+                      <Card className="p-6 rounded-2xl border-slate-100 bg-slate-50">
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">Leave a Review</h4>
+                        <form onSubmit={handleSubmitReview} className="space-y-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setRating(s)}
+                                className="focus:outline-none"
+                              >
+                                <Star className={`h-6 w-6 ${s <= rating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}`} />
+                              </button>
+                            ))}
+                          </div>
+                          <Textarea 
+                            placeholder="Share your experience with this mechanic..."
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            className="rounded-xl border-slate-200 focus:ring-primary"
+                            rows={3}
+                          />
+                          <Button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="rounded-xl bg-primary text-white font-bold px-8"
+                          >
+                            {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                          </Button>
+                        </form>
+                      </Card>
+                    )}
+
                     {techReviews.length > 0 ? techReviews.map((review) => (
                       <div key={review.id} className="border-b border-slate-100 pb-8 last:border-0 last:pb-0">
                         <div className="flex justify-between items-start mb-4">

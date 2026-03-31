@@ -94,6 +94,17 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Domain Name</label>
+                  <Input 
+                    value={formData.domainName} 
+                    onChange={(e) => setFormData({...formData, domainName: e.target.value})}
+                    placeholder="carmechs.in"
+                    className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-sm uppercase tracking-widest"
+                  />
+                  <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">The primary domain for your website.</p>
+                </div>
+
+                <div className="space-y-3">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Logo Image</label>
                   <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-4">
                     <ImageUpload 
@@ -335,6 +346,23 @@ export function SettingsPage() {
               />
               <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
                 Amount credited to referrer's wallet upon successful user sign-up.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                <Gift className="h-3 w-3 text-amber-600" />
+                Sign-up Bonus (₹)
+              </label>
+              <Input 
+                type="number"
+                value={formData.referralSignupBonus} 
+                onChange={(e) => setFormData({...formData, referralSignupBonus: Number(e.target.value)})}
+                placeholder="200"
+                className="h-14 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl focus:ring-primary/20 focus:border-primary/50 font-black text-xl uppercase tracking-widest"
+              />
+              <p className="text-[9px] text-slate-400 px-1 font-bold uppercase tracking-widest">
+                Welcome bonus credited to the new user's wallet when they use a referral code.
               </p>
             </div>
           </CardContent>

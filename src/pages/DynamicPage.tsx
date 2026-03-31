@@ -540,6 +540,75 @@ function SectionRenderer({ section, uiSettings, primaryColor, heroBgOpacity, ser
         </section>
       );
 
+    case 'service-packages':
+      const { servicePackages } = useData();
+      return (
+        <section className="py-24 bg-slate-50">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-20">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-4"
+              >
+                Exclusive Bundles
+              </motion.div>
+              <h2 className="text-4xl md:text-6xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-6">
+                {section.title || "Service Packages"}
+              </h2>
+              <p className="text-slate-500 font-medium">{section.subtitle || "Save more with our curated service bundles designed for your vehicle's longevity."}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {servicePackages.map((pkg, i) => (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-xl shadow-slate-200/50 flex flex-col group hover:border-primary/20 transition-all"
+                >
+                  <div className="h-48 relative overflow-hidden">
+                    <img src={pkg.imageUrl || "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1000"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={pkg.title} />
+                    {pkg.isPopular && (
+                      <div className="absolute top-4 right-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                        Popular
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-6">
+                      <div className="text-white font-black text-2xl uppercase tracking-tight">₹{pkg.basePrice}</div>
+                      <div className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Starting Price</div>
+                    </div>
+                  </div>
+                  <div className="p-8 flex-1 flex flex-col">
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-3">{pkg.title}</h3>
+                    <p className="text-slate-500 text-xs font-medium leading-relaxed mb-6 flex-1">{pkg.description}</p>
+                    
+                    <div className="space-y-3 mb-8">
+                      {pkg.features.slice(0, 4).map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-slate-600">
+                          <CheckCircle2 className="h-3 w-3 text-primary" />
+                          <span className="text-[10px] font-bold uppercase tracking-tight">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button 
+                      onClick={() => navigate(`/book?packageId=${pkg.id}`)}
+                      className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+                    >
+                      Book Package <ChevronRight className="h-3 w-3 ml-2" />
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+
     case 'faq-list':
       return <FaqSection section={section} />;
 

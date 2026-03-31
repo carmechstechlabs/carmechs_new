@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export function Footer() {
-  const { settings } = useData();
+  const { settings, uiSettings } = useData();
 
   return (
     <footer className="bg-background text-muted-foreground pt-24 pb-12 relative overflow-hidden border-t border-border">
@@ -35,14 +35,14 @@ export function Footer() {
             </Link>
             
             <p className="text-sm leading-relaxed max-w-sm font-medium text-muted-foreground">
-              {settings.footerDescription || "Expert doorstep car care with transparent pricing and genuine parts. Your trusted partner for automotive excellence."}
+              {uiSettings.footerDescription || settings.footerDescription || "Expert doorstep car care with transparent pricing and genuine parts. Your trusted partner for automotive excellence."}
             </p>
 
             <div className="flex gap-3">
               {[
-                { icon: Facebook, href: settings.facebook },
-                { icon: Twitter, href: settings.twitter },
-                { icon: Instagram, href: settings.instagram },
+                { icon: Facebook, href: uiSettings.facebookUrl || settings.facebook },
+                { icon: Twitter, href: uiSettings.twitterUrl || settings.twitter },
+                { icon: Instagram, href: uiSettings.instagramUrl || settings.instagram },
                 { icon: Linkedin, href: settings.linkedin }
               ].filter(s => s.href).map((social, i) => (
                 <motion.a 

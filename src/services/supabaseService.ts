@@ -4,22 +4,30 @@ const isServer = typeof window === 'undefined';
 
 const supabaseUrl = (
   (isServer ? process.env.SUPABASE_URL : import.meta.env.VITE_SUPABASE_URL) || ''
-).replace(/^["']|["']$/g, '');
+).replace(/^["']|["']$/g, '').trim();
 
 const supabaseKey = (
   (isServer ? process.env.SUPABASE_SERVICE_ROLE_KEY : import.meta.env.VITE_SUPABASE_ANON_KEY) || ''
-).replace(/^["']|["']$/g, '');
+).replace(/^["']|["']$/g, '').trim();
 
-if (!isServer && (!supabaseUrl || !supabaseKey)) {
-  console.warn("Supabase configuration missing! Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.");
+if (!isServer && (!supabaseUrl || !supabaseKey || supabaseUrl === 'undefined' || supabaseKey === 'undefined')) {
+  console.warn("Supabase configuration missing or invalid! Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.");
+} else if (!isServer) {
+  console.log("Supabase client initialized with URL:", supabaseUrl);
 }
 
-export const supabase = (supabaseUrl && supabaseKey) 
-  ? createClient(supabaseUrl, supabaseKey)
+export const supabase = (supabaseUrl && supabaseKey && supabaseUrl !== 'undefined' && supabaseKey !== 'undefined') 
+  ? createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: !isServer,
+        autoRefreshToken: !isServer,
+        detectSessionInUrl: !isServer
+      }
+    })
   : null;
 
 // Helper to map camelCase to snake_case for DB
-const toSnakeCase = (obj: any) => {
+export const toSnakeCase = (obj: any) => {
   if (!obj) return obj;
   const newObj: any = {};
   for (const key in obj) {
@@ -43,37 +51,55 @@ const toCamelCase = (obj: any) => {
 export async function getInitialState() {
   if (!supabase) return null;
   try {
-    const results = await Promise.all([
-      supabase.from('services').select('*'),
-      supabase.from('car_makes').select('*'),
-      supabase.from('car_models').select('*'),
-      supabase.from('fuel_types').select('*'),
-      supabase.from('brands').select('*'),
-      supabase.from('locations').select('*'),
-      supabase.from('inventory').select('*'),
-      supabase.from('categories').select('*'),
-      supabase.from('coupons').select('*'),
-      supabase.from('reviews').select('*'),
-      supabase.from('notifications').select('*'),
-      supabase.from('service_packages').select('*'),
-      supabase.from('vehicles').select('*'),
-      supabase.from('users').select('*'),
-      supabase.from('appointments').select('*').order('created_at', { ascending: false }),
-      supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-      supabase.from('site_config').select('*'),
-      supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
-      supabase.from('technicians').select('*'),
-      supabase.from('testimonials').select('*'),
-      supabase.from('navigation_items').select('*').order('order', { ascending: true }),
-      supabase.from('workshops').select('*'),
-      supabase.from('service_requests').select('*').order('created_at', { ascending: false })
-    ]);
-
     const tableNames = [
       'services', 'car_makes', 'car_models', 'fuel_types', 'brands', 'locations',
       'inventory', 'categories', 'coupons', 'reviews', 'notifications',
       'service_packages', 'vehicles', 'users', 'appointments', 'tasks', 'site_config', 'contact_submissions', 'technicians', 'testimonials', 'navigation_items', 'workshops', 'service_requests'
     ];
+
+    // Fetch in batches to avoid network issues or browser limits
+    const batchSize = 5;
+    const results: any[] = [];
+    
+    for (let i = 0; i < tableNames.length; i += batchSize) {
+      const batch = tableNames.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (name) => {
+        let retries = 2;
+        while (retries >= 0) {
+          try {
+            let query = supabase!.from(name).select('*');
+            if (name === 'appointments' || name === 'tasks' || name === 'contact_submissions' || name === 'service_requests') {
+              query = query.order('created_at', { ascending: false });
+            } else if (name === 'navigation_items') {
+              query = query.order('order', { ascending: true });
+            }
+            const res = await query;
+            if (res.error && (res.error.message?.includes('Failed to fetch') || res.error.message?.includes('network')) && retries > 0) {
+              retries--;
+              await new Promise(resolve => setTimeout(resolve, 500));
+              continue;
+            }
+            return res;
+          } catch (err: any) {
+            if ((err.message?.includes('Failed to fetch') || err.message?.includes('network')) && retries > 0) {
+              retries--;
+              await new Promise(resolve => setTimeout(resolve, 500));
+              continue;
+            }
+            return { data: null, error: err };
+          }
+        }
+        return { data: null, error: new Error('Max retries reached') };
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+      
+      // Small delay between batches to avoid overwhelming the connection
+      if (i + batchSize < tableNames.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
 
     const missingTables: string[] = [];
     results.forEach((res, index) => {
@@ -88,7 +114,7 @@ export async function getInitialState() {
           console.warn(`Supabase Table Missing: "${tableNames[index]}" does not exist. Please create it in your Supabase dashboard.`);
           missingTables.push(tableNames[index]);
         } else {
-          console.error(`Error fetching table "${tableNames[index]}":`, res.error.message);
+          console.error(`Error fetching table "${tableNames[index]}":`, res.error.message || res.error);
         }
       }
     });

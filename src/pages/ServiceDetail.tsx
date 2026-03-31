@@ -1,23 +1,55 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
   ArrowLeft, Clock, ShieldCheck, CheckCircle2, 
   ArrowRight, IndianRupee, Wrench, Zap, Sparkles, 
-  Shield, Disc, PaintBucket, Star
+  Shield, Disc, PaintBucket, Star, Car, Fuel, Info, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 export function ServiceDetail() {
   const { id } = useParams();
-  const { services, categories, reviews, addReview, currentUser } = useData();
+  const { services, categories, reviews, addReview, currentUser, carMakes, carModels, fuelTypes } = useData();
   const navigate = useNavigate();
   const [service, setService] = useState<any>(null);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Vehicle Selection State
+  const [selectedMake, setSelectedMake] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedFuel, setSelectedFuel] = useState("");
+
+  const filteredModels = useMemo(() => {
+    if (!selectedMake) return [];
+    return carModels.filter(m => m.make === selectedMake);
+  }, [selectedMake, carModels]);
+
+  const pricing = useMemo(() => {
+    if (!service) return null;
+    
+    const basePrice = service.basePrice || service.price || 0;
+    const makeAdj = carMakes.find(m => m.name === selectedMake)?.price || 0;
+    const modelAdj = carModels.find(m => m.name === selectedModel && m.make === selectedMake)?.price || 0;
+    const fuelAdj = fuelTypes.find(f => f.name === selectedFuel)?.price || 0;
+    
+    // If fuelAdj is treated as a percentage in some places, but here it looks like a fixed amount in initialData
+    // Actually in DataContext.tsx: fuel_2 (Diesel) price: 300. So it's a fixed amount.
+    
+    const total = basePrice + makeAdj + modelAdj + fuelAdj;
+    
+    return {
+      basePrice,
+      makeAdj,
+      modelAdj,
+      fuelAdj,
+      total
+    };
+  }, [service, selectedMake, selectedModel, selectedFuel, carMakes, carModels, fuelTypes]);
 
   const handleSubmitReview = async () => {
     if (!currentUser) {
@@ -222,6 +254,56 @@ export function ServiceDetail() {
               </div>
             </section>
 
+            {service.commonIssues && service.commonIssues.length > 0 && (
+              <section className="space-y-8">
+                <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Common Issues Resolved</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {service.commonIssues.map((issueStr: string, i: number) => {
+                    const [title, ...descParts] = issueStr.includes(':') ? issueStr.split(':') : [issueStr, "Professional resolution guaranteed"];
+                    const description = descParts.join(':').trim() || "Professional resolution guaranteed";
+                    
+                    return (
+                      <div key={i} className="flex items-center gap-4 p-6 bg-red-50/30 rounded-3xl border border-red-100 group hover:bg-red-50 transition-all">
+                        <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <Info className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900 uppercase tracking-tight text-sm">{title.trim()}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {service.recommendedCheckups && service.recommendedCheckups.length > 0 && (
+              <section className="space-y-8">
+                <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Recommended Checkups</h2>
+                <div className="bg-primary/5 rounded-[3rem] p-10 border border-primary/10 relative overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                    {service.recommendedCheckups.map((checkupStr: string, i: number) => {
+                      const [title, ...descParts] = checkupStr.includes(':') ? checkupStr.split(':') : [checkupStr, "Preventive maintenance recommended"];
+                      const description = descParts.join(':').trim() || "Preventive maintenance recommended";
+
+                      return (
+                        <div key={i} className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-black uppercase tracking-widest text-slate-700">{title.trim()}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{description}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {relatedServices.length > 0 && (
               <section className="space-y-8">
                 <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">Related Services</h2>
@@ -253,34 +335,118 @@ export function ServiceDetail() {
           </div>
 
           <div className="space-y-8">
+            {/* Price Breakdown Card */}
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8 sticky top-32">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">Base Price</span>
-                  <span className="text-lg font-black text-slate-900">₹{(service.basePrice || service.price).toLocaleString()}</span>
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <IndianRupee className="h-4 w-4 text-primary" />
+                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Price Breakdown</span>
                 </div>
-                <div className="space-y-2 pb-6 border-b border-slate-100">
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Labor Charges</span>
-                    <span>Included</span>
+
+                {/* Vehicle Selection */}
+                <div className="space-y-4 pb-6 border-b border-slate-100">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Car Make</label>
+                    <select 
+                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                      value={selectedMake}
+                      onChange={(e) => {
+                        setSelectedMake(e.target.value);
+                        setSelectedModel("");
+                      }}
+                    >
+                      <option value="">Choose Make...</option>
+                      {carMakes.map(make => (
+                        <option key={make.id} value={make.name}>{make.name}</option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Consumables</span>
-                    <span>Included</span>
+
+                  <AnimatePresence mode="wait">
+                    {selectedMake && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-2"
+                      >
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Model</label>
+                        <select 
+                          className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                          value={selectedModel}
+                          onChange={(e) => setSelectedModel(e.target.value)}
+                        >
+                          <option value="">Choose Model...</option>
+                          {filteredModels.map(model => (
+                            <option key={model.id} value={model.name}>{model.name}</option>
+                          ))}
+                        </select>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Fuel Type</label>
+                    <select 
+                      className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-primary/20"
+                      value={selectedFuel}
+                      onChange={(e) => setSelectedFuel(e.target.value)}
+                    >
+                      <option value="">Choose Fuel...</option>
+                      {fuelTypes.map(fuel => (
+                        <option key={fuel.id} value={fuel.name}>{fuel.name}</option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>Taxes (GST)</span>
-                    <span>Extra</span>
+                </div>
+
+                {/* Breakdown Details */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Base Service Price</span>
+                    <span className="text-sm font-black text-slate-900">₹{pricing?.basePrice.toLocaleString()}</span>
+                  </div>
+                  
+                  {pricing && pricing.makeAdj > 0 && (
+                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Make Adjustment ({selectedMake})</span>
+                      <span className="text-xs font-black text-emerald-600">+ ₹{pricing.makeAdj.toLocaleString()}</span>
+                    </motion.div>
+                  )}
+
+                  {pricing && pricing.modelAdj > 0 && (
+                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model Premium ({selectedModel})</span>
+                      <span className="text-xs font-black text-emerald-600">+ ₹{pricing.modelAdj.toLocaleString()}</span>
+                    </motion.div>
+                  )}
+
+                  {pricing && pricing.fuelAdj > 0 && (
+                    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fuel Surcharge ({selectedFuel})</span>
+                      <span className="text-xs font-black text-emerald-600">+ ₹{pricing.fuelAdj.toLocaleString()}</span>
+                    </motion.div>
+                  )}
+
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Estimated Total</span>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">*Excluding GST</p>
+                    </div>
+                    <span className="text-3xl font-black text-slate-900 tracking-tighter">₹{pricing?.total.toLocaleString()}</span>
                   </div>
                 </div>
                 
                 <Button 
-                  onClick={() => navigate(`/book?serviceId=${service.id}`)}
+                  onClick={() => navigate(`/book?serviceId=${service.id}&make=${selectedMake}&model=${selectedModel}&fuel=${selectedFuel}`)}
                   className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/20 group"
                 >
                   Book This Service <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <p className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-widest">Instant Confirmation Available</p>
+                <div className="flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Secure Booking Guarantee</p>
+                </div>
               </div>
 
               <div className="pt-8 border-t border-slate-100">

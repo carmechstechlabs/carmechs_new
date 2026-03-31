@@ -32,7 +32,7 @@ import {
 export function TaskManager() {
   const { tasks, updateTasks, addTask, users, adminRole, addNotification } = useData();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "pending">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "todo" | "in-progress" | "completed">("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"alphabetical" | "dueDate" | "priority">("dueDate");
@@ -46,6 +46,7 @@ export function TaskManager() {
     description: "",
     dueDate: "",
     priority: "medium" as Task["priority"],
+    status: "todo" as Task["status"],
     assignedTo: ""
   });
 
@@ -56,7 +57,7 @@ export function TaskManager() {
       const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
       
       tasks.forEach(task => {
-        if (!task.completed) {
+        if (task.status !== 'completed') {
           const dueDate = new Date(task.dueDate);
           if (dueDate > now && dueDate <= tomorrow) {
             // Show toast for upcoming deadline
@@ -94,7 +95,7 @@ export function TaskManager() {
     }
 
     addTask(newTask);
-    setNewTask({ title: "", description: "", dueDate: "", priority: "medium", assignedTo: "" });
+    setNewTask({ title: "", description: "", dueDate: "", priority: "medium", status: "todo", assignedTo: "" });
     setIsAddModalOpen(false);
   };
 
@@ -124,19 +125,36 @@ export function TaskManager() {
     toast.success("Task updated successfully");
   };
 
-  const toggleTask = (id: string) => {
+  const updateTaskStatus = (id: string, status: Task["status"]) => {
     if (adminRole !== 'admin') {
       toast.error("You don't have permission to modify tasks.");
       return;
     }
     const updated = tasks.map(t => 
-      t.id === id ? { ...t, completed: !t.completed } : t
+      t.id === id ? { ...t, status } : t
     );
     updateTasks(updated);
-    const task = tasks.find(t => t.id === id);
-    if (task && !task.completed) {
+    if (status === 'completed') {
       toast.success("Task completed!");
+    } else {
+      toast.success(`Task moved to ${status.replace('-', ' ')}`);
     }
+  };
+
+  const toggleTask = (id: string) => {
+    if (adminRole !== 'admin') {
+      toast.error("You don't have permission to modify tasks.");
+      return;
+    }
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    let nextStatus: Task["status"] = 'todo';
+    if (task.status === 'todo') nextStatus = 'in-progress';
+    else if (task.status === 'in-progress') nextStatus = 'completed';
+    else if (task.status === 'completed') nextStatus = 'todo';
+
+    updateTaskStatus(id, nextStatus);
   };
 
   const deleteTask = (id: string) => {
@@ -154,7 +172,7 @@ export function TaskManager() {
       toast.error("You don't have permission to clear tasks.");
       return;
     }
-    const updated = tasks.filter(t => !t.completed);
+    const updated = tasks.filter(t => t.status !== 'completed');
     updateTasks(updated);
     setIsClearConfirmOpen(false);
     toast.success("Cleared all completed tasks");
@@ -163,8 +181,7 @@ export function TaskManager() {
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          task.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "completed" ? task.completed : !task.completed);
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
     const matchesAssignee = assigneeFilter === "all" || task.assignedTo === assigneeFilter;
     
@@ -179,6 +196,14 @@ export function TaskManager() {
     return 0;
   });
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+      case 'in-progress': return 'text-blue-600 bg-blue-50 border-blue-100';
+      case 'todo': return 'text-slate-600 bg-slate-50 border-slate-100';
+      default: return 'text-slate-400 bg-slate-50 border-slate-100';
+    }
+  };
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'text-rose-600 bg-rose-50 border-rose-100';
@@ -210,7 +235,7 @@ export function TaskManager() {
           <Button 
             variant="outline"
             onClick={() => setIsClearConfirmOpen(true)}
-            disabled={!tasks.some(t => t.completed)}
+            disabled={!tasks.some(t => t.status === 'completed')}
             className="rounded-2xl px-6 h-12 font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all"
           >
             <Trash2 className="mr-2 h-4 w-4" /> Clear Completed
@@ -238,7 +263,8 @@ export function TaskManager() {
             onChange={(e) => setStatusFilter(e.target.value as any)}
           >
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
           </select>
         </div>
@@ -308,8 +334,8 @@ export function TaskManager() {
             </motion.div>
           ) : (
             filteredTasks.map((task, index) => {
-              const isOverdue = new Date(task.dueDate) < new Date() && !task.completed;
-              const isUpcoming = !task.completed && new Date(task.dueDate).getTime() - new Date().getTime() < 24 * 60 * 60 * 1000;
+              const isOverdue = new Date(task.dueDate) < new Date() && task.status !== 'completed';
+              const isUpcoming = task.status !== 'completed' && new Date(task.dueDate).getTime() - new Date().getTime() < 24 * 60 * 60 * 1000;
 
               return (
                 <motion.div
@@ -321,29 +347,40 @@ export function TaskManager() {
                 >
                   <Card className={cn(
                     "bg-white border-slate-200 shadow-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden",
-                    task.completed && "opacity-60 grayscale-[0.5]"
+                    task.status === 'completed' && "opacity-60 grayscale-[0.5]"
                   )}>
                     <CardContent className="p-6 flex items-center gap-6">
-                      <button 
-                        onClick={() => toggleTask(task.id)}
-                        className={cn(
-                          "h-10 w-10 rounded-xl flex items-center justify-center border transition-all shrink-0",
-                          task.completed 
-                            ? "bg-emerald-500 border-emerald-500 text-white" 
-                            : "bg-slate-50 border-slate-200 text-slate-300 hover:border-primary hover:text-primary"
-                        )}
-                      >
-                        {task.completed ? <CheckCircle className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
-                      </button>
+                      <div className="flex flex-col items-center gap-2">
+                        <button 
+                          onClick={() => toggleTask(task.id)}
+                          className={cn(
+                            "h-10 w-10 rounded-xl flex items-center justify-center border transition-all shrink-0",
+                            task.status === 'completed' 
+                              ? "bg-emerald-500 border-emerald-500 text-white" 
+                              : task.status === 'in-progress'
+                                ? "bg-blue-500 border-blue-500 text-white"
+                                : "bg-slate-50 border-slate-200 text-slate-300 hover:border-primary hover:text-primary"
+                          )}
+                        >
+                          {task.status === 'completed' ? <CheckCircle className="h-6 w-6" /> : task.status === 'in-progress' ? <Clock className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                        </button>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Cycle</span>
+                      </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
                           <h3 className={cn(
                             "text-lg font-black uppercase tracking-tight truncate",
-                            task.completed ? "text-slate-400 line-through" : "text-slate-900"
+                            task.status === 'completed' ? "text-slate-400 line-through" : "text-slate-900"
                           )}>
                             {task.title}
                           </h3>
+                          <span className={cn(
+                            "px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border",
+                            getStatusColor(task.status)
+                          )}>
+                            {task.status.replace('-', ' ')}
+                          </span>
                           <span className={cn(
                             "px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border",
                             getPriorityColor(task.priority)
@@ -455,6 +492,25 @@ export function TaskManager() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                  <Select 
+                    value={editingTask.status} 
+                    onValueChange={(val) => setEditingTask({...editingTask, status: val as Task["status"]})}
+                  >
+                    <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      <SelectItem value="todo">To Do</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
                   <Select 
                     value={editingTask.priority} 
@@ -470,23 +526,22 @@ export function TaskManager() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign To</label>
-                <Select 
-                  value={editingTask.assignedTo || ""} 
-                  onValueChange={(val) => setEditingTask({...editingTask, assignedTo: val})}
-                >
-                  <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
-                    <SelectValue placeholder="Select Staff" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
-                    {users.filter(u => u.role !== 'user').map(user => (
-                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign To</label>
+                  <Select 
+                    value={editingTask.assignedTo || ""} 
+                    onValueChange={(val) => setEditingTask({...editingTask, assignedTo: val})}
+                  >
+                    <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                      <SelectValue placeholder="Select Staff" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-slate-200">
+                      {users.filter(u => u.role !== 'user').map(user => (
+                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
@@ -547,6 +602,25 @@ export function TaskManager() {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                <Select 
+                  value={newTask.status} 
+                  onValueChange={(val) => setNewTask({...newTask, status: val as Task["status"]})}
+                >
+                  <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="todo">To Do</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
                 <Select 
                   value={newTask.priority} 
@@ -562,23 +636,22 @@ export function TaskManager() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign To</label>
-              <Select 
-                value={newTask.assignedTo} 
-                onValueChange={(val) => setNewTask({...newTask, assignedTo: val})}
-              >
-                <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
-                  <SelectValue placeholder="Select Staff" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  {users.filter(u => u.role !== 'user').map(user => (
-                    <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign To</label>
+                <Select 
+                  value={newTask.assignedTo} 
+                  onValueChange={(val) => setNewTask({...newTask, assignedTo: val})}
+                >
+                  <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-2xl font-bold text-xs">
+                    <SelectValue placeholder="Select Staff" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    {users.filter(u => u.role !== 'user').map(user => (
+                      <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

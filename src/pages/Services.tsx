@@ -689,7 +689,7 @@ export function Services() {
                 <ServiceCard 
                   key={service.id}
                   service={service}
-                  onViewDetail={(id) => setSelectedService(services.find(s => s.id === id))}
+                  onViewDetail={(id) => navigate(`/services/${id}`)}
                   onBook={(s) => navigate('/book', { state: { serviceId: s.id } })}
                 />
               ))}

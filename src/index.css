@@ -10,7 +10,7 @@
 @theme {
   --color-primary: var(--primary, #e31e24);
   --color-primary-foreground: #ffffff;
-  --color-secondary: #1e293b;
+  --color-secondary: var(--secondary, #1e293b);
   --color-secondary-foreground: #f8fafc;
   --color-accent: #0f172a;
   --color-accent-foreground: #3b82f6;

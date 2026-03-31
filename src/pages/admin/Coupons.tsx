@@ -17,6 +17,8 @@ export function Coupons() {
   const { coupons, addCoupon, deleteCoupon, updateCoupons, adminRole } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [newCoupon, setNewCoupon] = useState<Omit<Coupon, 'id' | 'isActive'>>({
     code: "",
     discountType: "percentage",
@@ -46,6 +48,18 @@ export function Coupons() {
       expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     });
     toast.success("Coupon created successfully");
+  };
+
+  const handleEditCoupon = () => {
+    if (!editingCoupon || !editingCoupon.code) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    const updated = coupons.map(c => c.id === editingCoupon.id ? editingCoupon : c);
+    updateCoupons(updated);
+    setIsEditing(false);
+    setEditingCoupon(null);
+    toast.success("Coupon updated successfully");
   };
 
   const handleToggleActive = (coupon: Coupon) => {
@@ -127,6 +141,17 @@ export function Coupons() {
                       </h3>
                     </div>
                     <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => {
+                          setEditingCoupon(coupon);
+                          setIsEditing(true);
+                        }}
+                        className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-sm"
+                      >
+                        <Edit2 className="h-4 w-4 text-slate-400" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -287,6 +312,117 @@ export function Coupons() {
                   onClick={handleAddCoupon}
                 >
                   Deploy Coupon
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Coupon Modal */}
+      <AnimatePresence>
+        {isEditing && editingCoupon && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-slate-200"
+            >
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/10">
+                    <Edit2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Edit Coupon</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Update discount parameters</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)} className="h-10 w-10 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200">
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Coupon Code</label>
+                  <Input 
+                    placeholder="E.G. SUMMER20"
+                    value={editingCoupon.code}
+                    onChange={(e) => setEditingCoupon({...editingCoupon, code: e.target.value.toUpperCase()})}
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-black tracking-[0.2em] text-center"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Type</label>
+                    <select 
+                      value={editingCoupon.discountType}
+                      onChange={(e) => setEditingCoupon({...editingCoupon, discountType: e.target.value as any})}
+                      className="w-full h-12 bg-slate-50 border border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest px-4 outline-none"
+                    >
+                      <option value="percentage">Percentage</option>
+                      <option value="fixed">Fixed Amount</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Value</label>
+                    <Input 
+                      type="number"
+                      value={editingCoupon.discountValue}
+                      onChange={(e) => setEditingCoupon({...editingCoupon, discountValue: Number(e.target.value)})}
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Min Order (₹)</label>
+                    <Input 
+                      type="number"
+                      value={editingCoupon.minOrderAmount}
+                      onChange={(e) => setEditingCoupon({...editingCoupon, minOrderAmount: Number(e.target.value)})}
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Max Discount (₹)</label>
+                    <Input 
+                      type="number"
+                      value={editingCoupon.maxDiscount}
+                      onChange={(e) => setEditingCoupon({...editingCoupon, maxDiscount: Number(e.target.value)})}
+                      className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Expiry Date</label>
+                  <Input 
+                    type="date"
+                    value={editingCoupon.expiryDate}
+                    onChange={(e) => setEditingCoupon({...editingCoupon, expiryDate: e.target.value})}
+                    className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-xl focus:ring-primary/20 focus:border-primary/50 font-bold text-xs uppercase tracking-widest"
+                  />
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex gap-4">
+                <Button 
+                  variant="ghost" 
+                  className="flex-1 h-12 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200" 
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20" 
+                  onClick={handleEditCoupon}
+                >
+                  Update Coupon
                 </Button>
               </div>
             </motion.div>

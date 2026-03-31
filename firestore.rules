@@ -1,77 +1,57 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Document ID: {userId}
-    // Fields:
-    //   - name: string (required)
-    //   - email: string (required, email format)
-    //   - role: string (optional, enum: admin, user, viewer)
-    //   - phone: string (optional)
-    //
-    // Collection: appointments
-    // Document ID: {appointmentId}
-    // Fields:
-    //   - userId: string (required)
-    //   - serviceTitle: string (required)
-    //   - date: string (required, date format)
-    //   - status: string (optional, enum: pending, confirmed, completed, cancelled)
-    //
-    // ===============================================================
-
-    // ===============================================================
     // Helper Functions
-    // ===============================================================
-    
     function isAuthenticated() {
       return request.auth != null;
     }
-
+    
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-
+    
     function isAdmin() {
       return isAuthenticated() && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
          (request.auth.token.email == "carmechstechlabs@gmail.com" && request.auth.token.email_verified == true));
     }
 
-    function isValidUser(data) {
-      return data.keys().hasAll(['name', 'email']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    function isMechanic() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'mechanic';
     }
 
-    function isValidAppointment(data) {
-      return data.keys().hasAll(['userId', 'serviceTitle', 'date']) &&
-             data.userId is string && data.userId == request.auth.uid &&
-             data.serviceTitle is string && data.serviceTitle.size() > 0 &&
-             data.date is string;
-    }
-
-    // ===============================================================
-    // Rules
-    // ===============================================================
-
+    // Users
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
-                      (!('role' in request.resource.data) || request.resource.data.role == 'user');
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
-                      (request.resource.data.role == resource.data.role || isAdmin());
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
     }
 
-    match /appointments/{appointmentId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && isValidAppointment(request.resource.data);
-      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && 
-                      isValidAppointment(request.resource.data);
-      allow delete: if isAdmin();
+    // Services
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.ownerId || 
+        request.auth.uid == resource.data.mechanicId || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.ownerId || 
+        request.auth.uid == resource.data.mechanicId || 
+        isAdmin()
+      );
     }
   }
 }

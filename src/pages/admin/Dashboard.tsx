@@ -24,7 +24,7 @@ export function Dashboard() {
     users, brands, settings, uiSettings, updateUiSettings, 
     locations, updateLocations, inventory, reviews, categories, coupons,
     vehicles, missingTables, updateServices, updateCarModels, updateFuelTypes,
-    technicians, updateTechnicians
+    technicians, updateTechnicians, pushAllToSupabase
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
@@ -394,6 +394,13 @@ export function Dashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm flex items-center gap-2"
+              onClick={pushAllToSupabase}
+            >
+              <Database className="h-3 w-3 text-primary" /> Sync DB
+            </Button>
             <Button variant="outline" className="bg-card border-border text-muted-foreground hover:bg-accent rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
               <a href="/admin/workshop"><Activity className="mr-2 h-3 w-3" /> Workshop</a>
             </Button>
@@ -429,7 +436,7 @@ export function Dashboard() {
                 { label: "System Logs", icon: Activity, path: "/admin/dashboard", color: "bg-cyan-500/10 text-cyan-600" },
               ].map((action, idx) => (
                 <Link 
-                  key={`${action.label}-${idx}`} 
+                  key={`action-${action.label}-${idx}`} 
                   to={action.path}
                   className="flex flex-col items-center justify-center p-6 rounded-2xl bg-accent/50 border border-border hover:border-primary/30 hover:bg-accent transition-all group"
                 >
@@ -457,7 +464,7 @@ export function Dashboard() {
                 { label: "Socket.io Server", status: "Active", active: true },
                 { label: "Mail Protocol", status: "Ready", active: true },
               ].map((item, idx) => (
-                <div key={`${item.label}-${idx}`} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                <div key={`health-item-${item.label}-${idx}`} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{item.label}</span>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-[9px] font-bold uppercase", item.active ? "text-emerald-400" : "text-primary")}>{item.status}</span>
@@ -477,7 +484,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
           <motion.div
-            key={`${stat.title}-${idx}`}
+            key={`stat-${stat.title}-${idx}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -581,8 +588,8 @@ export function Dashboard() {
                   dataKey="value"
                   stroke="none"
                 >
-                  {acquisitionData.map((entry) => (
-                    <Cell key={`cell-${entry.name}`} fill={entry.color} fillOpacity={0.8} />
+                  {acquisitionData.map((entry, idx) => (
+                    <Cell key={`cell-acquisition-${entry.name}-${idx}`} fill={entry.color} fillOpacity={0.8} />
                   ))}
                 </Pie>
                 <RechartsTooltip 
@@ -1074,9 +1081,9 @@ export function Dashboard() {
                               value={selectedMakeForModel}
                               onChange={(e) => setSelectedMakeForModel(e.target.value)}
                             >
-                              <option value="">Choose Make...</option>
-                              {carMakes.map(make => (
-                                <option key={make.id} value={make.name}>{make.name}</option>
+                              <option key="default-make" value="">Choose Make...</option>
+                              {carMakes.map((make, idx) => (
+                                <option key={make.id || `make-${make.name}-${idx}`} value={make.name}>{make.name}</option>
                               ))}
                             </select>
                           </div>
@@ -1129,8 +1136,8 @@ export function Dashboard() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                              {carModels.map(model => (
-                                <tr key={model.id} className="hover:bg-accent/50 transition-colors">
+                              {carModels.map((model, idx) => (
+                                <tr key={model.id || `model-${model.name}-${idx}`} className="hover:bg-accent/50 transition-colors">
                                   <td className="px-6 py-3">
                                     <span className="text-[10px] font-black uppercase text-primary">{model.make}</span>
                                   </td>
@@ -1143,10 +1150,8 @@ export function Dashboard() {
                                       size="icon" 
                                       className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                                       onClick={() => {
-                                        if (confirm(`Delete ${model.name}?`)) {
-                                          updateCarModels(carModels.filter(m => m.id !== model.id));
-                                          toast.success("Model removed");
-                                        }
+                                        updateCarModels(carModels.filter(m => m.id !== model.id));
+                                        toast.success(`${model.name} removed`);
                                       }}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
@@ -1206,8 +1211,8 @@ export function Dashboard() {
                     <div className="space-y-4">
                       <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Active Fuel Types</h3>
                       <div className="grid grid-cols-1 gap-3">
-                        {fuelTypes.map(fuel => (
-                          <div key={fuel.id} className="flex items-center justify-between p-4 bg-accent/30 border border-border rounded-2xl hover:border-primary/30 transition-all group">
+                        {fuelTypes.map((fuel, idx) => (
+                          <div key={fuel.id || `fuel-${fuel.name}-${idx}`} className="flex items-center justify-between p-4 bg-accent/30 border border-border rounded-2xl hover:border-primary/30 transition-all group">
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                                 <Zap className="h-4 w-4 text-primary" />
@@ -1222,10 +1227,8 @@ export function Dashboard() {
                               size="icon" 
                               className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={() => {
-                                if (confirm(`Delete ${fuel.name}?`)) {
-                                  updateFuelTypes(fuelTypes.filter(f => f.id !== fuel.id));
-                                  toast.success("Fuel type removed");
-                                }
+                                updateFuelTypes(fuelTypes.filter(f => f.id !== fuel.id));
+                                toast.success(`${fuel.name} removed`);
                               }}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -1260,9 +1263,9 @@ export function Dashboard() {
                           }
                         }}
                       >
-                        <option value="">Select Service to Configure...</option>
-                        {services.map(s => (
-                          <option key={s.id} value={s.id}>{s.title}</option>
+                        <option key="default-service" value="">Select Service to Configure...</option>
+                        {services.map((s, idx) => (
+                          <option key={s.id || `service-${idx}`} value={s.id}>{s.title}</option>
                         ))}
                       </select>
                     </div>
@@ -1283,8 +1286,8 @@ export function Dashboard() {
                             </Button>
                           </div>
                           <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
-                            {carMakes.map(make => (
-                              <label key={make.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                            {carMakes.map((make, idx) => (
+                              <label key={make.id || `make-check-${make.name}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
                                 <input 
                                   type="checkbox" 
                                   className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
@@ -1319,8 +1322,8 @@ export function Dashboard() {
                             </Button>
                           </div>
                           <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
-                            {carModels.map(model => (
-                              <label key={model.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                            {carModels.map((model, idx) => (
+                              <label key={model.id || `model-check-${model.name}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
                                 <input 
                                   type="checkbox" 
                                   className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
@@ -1358,8 +1361,8 @@ export function Dashboard() {
                             </Button>
                           </div>
                           <div className="bg-accent/30 rounded-2xl border border-border p-4 max-h-[300px] overflow-y-auto space-y-2">
-                            {fuelTypes.map(fuel => (
-                              <label key={fuel.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
+                            {fuelTypes.map((fuel, idx) => (
+                              <label key={fuel.id || `fuel-check-${fuel.name}-${idx}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors cursor-pointer group">
                                 <input 
                                   type="checkbox" 
                                   className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"

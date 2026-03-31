@@ -219,6 +219,9 @@ export function UiSettingsPage() {
                 <TabsTrigger value="seo-defaults" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <Search className="h-4 w-4 mr-2" /> SEO Defaults
                 </TabsTrigger>
+                <TabsTrigger value="footer" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
+                  <Layout className="h-4 w-4 mr-2" /> Footer UI
+                </TabsTrigger>
                 <TabsTrigger value="locations" className="rounded-xl px-6 data-[state=active]:bg-primary data-[state=active]:text-white">
                   <MapPin className="h-4 w-4 mr-2" /> Locations
                 </TabsTrigger>
@@ -255,20 +258,39 @@ export function UiSettingsPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Brand Color</label>
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="color" 
-                            value={formData.primaryColor} 
-                            onChange={(e) => setFormData({...formData, primaryColor: e.target.value})}
-                            className="h-14 w-14 rounded-2xl border-none cursor-pointer shadow-inner"
-                          />
-                          <Input 
-                            value={formData.primaryColor} 
-                            onChange={(e) => setFormData({...formData, primaryColor: e.target.value})}
-                            className="h-14 rounded-xl font-mono text-lg"
-                          />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Brand Color</label>
+                          <div className="flex items-center gap-4">
+                            <input 
+                              type="color" 
+                              value={formData.primaryColor} 
+                              onChange={(e) => setFormData({...formData, primaryColor: e.target.value})}
+                              className="h-14 w-14 rounded-2xl border-none cursor-pointer shadow-inner"
+                            />
+                            <Input 
+                              value={formData.primaryColor} 
+                              onChange={(e) => setFormData({...formData, primaryColor: e.target.value})}
+                              className="h-14 rounded-xl font-mono text-lg"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Secondary Brand Color</label>
+                          <div className="flex items-center gap-4">
+                            <input 
+                              type="color" 
+                              value={formData.secondaryColor || "#10b981"} 
+                              onChange={(e) => setFormData({...formData, secondaryColor: e.target.value})}
+                              className="h-14 w-14 rounded-2xl border-none cursor-pointer shadow-inner"
+                            />
+                            <Input 
+                              value={formData.secondaryColor || "#10b981"} 
+                              onChange={(e) => setFormData({...formData, secondaryColor: e.target.value})}
+                              className="h-14 rounded-xl font-mono text-lg"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -912,83 +934,107 @@ export function UiSettingsPage() {
               </TabsContent>
 
               <TabsContent value="social" className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Social Media Links</h2>
-                    <p className="text-sm text-slate-500 font-medium">Connect your profiles to the footer section.</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-[2rem] border-slate-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <Globe className="h-5 w-5 text-primary" /> Main Social Profiles
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Facebook URL</label>
+                          <Input 
+                            value={formData.facebookUrl || ""} 
+                            onChange={(e) => setFormData({...formData, facebookUrl: e.target.value})}
+                            className="h-12 rounded-xl font-bold"
+                            placeholder="https://facebook.com/yourprofile"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Twitter URL</label>
+                          <Input 
+                            value={formData.twitterUrl || ""} 
+                            onChange={(e) => setFormData({...formData, twitterUrl: e.target.value})}
+                            className="h-12 rounded-xl font-bold"
+                            placeholder="https://twitter.com/yourprofile"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Instagram URL</label>
+                          <Input 
+                            value={formData.instagramUrl || ""} 
+                            onChange={(e) => setFormData({...formData, instagramUrl: e.target.value})}
+                            className="h-12 rounded-xl font-bold"
+                            placeholder="https://instagram.com/yourprofile"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Additional Social Links</h2>
+                        <p className="text-sm text-slate-500 font-medium">Connect other profiles to the footer section.</p>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          const newLink = { id: `link_${Date.now()}`, platform: "Other", url: "https://", iconName: "Globe" };
+                          setFormData({...formData, socialLinks: [...(formData.socialLinks || []), newLink]});
+                        }} 
+                        className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add Link
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      {(formData.socialLinks || []).map((link, idx) => (
+                        <Card key={idx} className="rounded-2xl border-slate-200 shadow-sm overflow-hidden group">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-4">
+                              <div className="h-10 w-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 flex-shrink-0">
+                                <Globe className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 flex-grow">
+                                <Input 
+                                  value={link.platform} 
+                                  onChange={(e) => {
+                                    const newLinks = [...formData.socialLinks];
+                                    newLinks[idx].platform = e.target.value;
+                                    setFormData({...formData, socialLinks: newLinks});
+                                  }}
+                                  className="h-10 rounded-lg font-bold text-xs"
+                                  placeholder="Platform"
+                                />
+                                <Input 
+                                  value={link.url} 
+                                  onChange={(e) => {
+                                    const newLinks = [...formData.socialLinks];
+                                    newLinks[idx].url = e.target.value;
+                                    setFormData({...formData, socialLinks: newLinks});
+                                  }}
+                                  className="h-10 rounded-lg text-xs"
+                                  placeholder="URL"
+                                />
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setFormData({...formData, socialLinks: formData.socialLinks.filter((_, i) => i !== idx)})}
+                                className="text-slate-300 hover:text-primary rounded-lg flex-shrink-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
-                  <Button 
-                    onClick={() => {
-                      const newLink = { id: `link_${Date.now()}`, platform: "Facebook", url: "https://facebook.com", iconName: "Facebook" };
-                      setFormData({...formData, socialLinks: [...(formData.socialLinks || []), newLink]});
-                    }} 
-                    className="bg-primary hover:bg-primary/90 text-white font-bold rounded-xl"
-                  >
-                    <Plus className="h-4 w-4 mr-2" /> Add Social Link
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(formData.socialLinks || []).map((link, idx) => (
-                    <Card key={idx} className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden group">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="h-12 w-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100">
-                            <Globe className="h-6 w-6 text-primary" />
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setFormData({...formData, socialLinks: formData.socialLinks.filter((_, i) => i !== idx)})}
-                            className="text-slate-300 hover:text-primary rounded-xl"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Platform</label>
-                              <Input 
-                                value={link.platform} 
-                                onChange={(e) => {
-                                  const newLinks = [...formData.socialLinks];
-                                  newLinks[idx].platform = e.target.value;
-                                  setFormData({...formData, socialLinks: newLinks});
-                                }}
-                                className="h-12 rounded-xl font-bold"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Icon Name (Lucide)</label>
-                              <Input 
-                                value={link.iconName} 
-                                onChange={(e) => {
-                                  const newLinks = [...formData.socialLinks];
-                                  newLinks[idx].iconName = e.target.value;
-                                  setFormData({...formData, socialLinks: newLinks});
-                                }}
-                                className="h-12 rounded-xl font-mono text-xs"
-                              />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Profile URL</label>
-                            <Input 
-                              value={link.url} 
-                              onChange={(e) => {
-                                const newLinks = [...formData.socialLinks];
-                                newLinks[idx].url = e.target.value;
-                                setFormData({...formData, socialLinks: newLinks});
-                              }}
-                              className="h-12 rounded-xl"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
                 </div>
               </TabsContent>
 
@@ -1056,6 +1102,32 @@ export function UiSettingsPage() {
                       ogImage={formData.seo.ogImage}
                     />
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="footer" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card className="rounded-[2rem] border-slate-200 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                        <Layout className="h-5 w-5 text-primary" /> Footer Configuration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Footer Description</label>
+                          <Textarea 
+                            value={formData.footerDescription || ""} 
+                            onChange={(e) => setFormData({...formData, footerDescription: e.target.value})}
+                            className="h-32 rounded-xl font-medium"
+                            placeholder="Brief description of your business for the footer."
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">This appears in the main footer section below the logo.</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 
@@ -1289,6 +1361,7 @@ export function UiSettingsPage() {
                               <option value="cta">CTA</option>
                               <option value="faq-list">FAQ List</option>
                               <option value="contact-form">Contact Form</option>
+                              <option value="service-packages">Service Packages</option>
                             </select>
                           </div>
                           <div className="space-y-1">
@@ -1434,6 +1507,30 @@ export function UiSettingsPage() {
                                   <div className="flex-1">
                                     <div className="h-4 w-32 bg-slate-200 rounded mb-2" />
                                     <div className="h-3 w-48 bg-slate-100 rounded" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {section.type === 'cta' && (
+                          <div className="py-12 px-10 text-center text-white" style={{ backgroundColor: formData.secondaryColor }}>
+                            <h3 className="text-2xl font-black uppercase tracking-tight mb-4">{section.title}</h3>
+                            <p className="text-sm opacity-80 mb-6">{section.content}</p>
+                            <div className="h-10 w-32 bg-white/20 rounded-xl mx-auto" />
+                          </div>
+                        )}
+                        {section.type === 'service-packages' && (
+                          <div className="py-16 px-10 bg-slate-50">
+                            <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-tight mb-10 text-center">{section.title}</h3>
+                            <div className="grid grid-cols-2 gap-6">
+                              {[1,2].map(i => (
+                                <div key={i} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                                  <div className="h-32 bg-slate-200" />
+                                  <div className="p-4 space-y-3">
+                                    <div className="h-4 w-24 bg-slate-200 rounded" />
+                                    <div className="h-3 w-full bg-slate-100 rounded" />
+                                    <div className="h-8 bg-primary/10 rounded-lg" />
                                   </div>
                                 </div>
                               ))}

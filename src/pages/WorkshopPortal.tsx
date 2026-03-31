@@ -65,11 +65,11 @@ const WorkshopPortal: React.FC = () => {
     toast.success("Workshop profile updated!");
   };
 
-  const handleAddCustomService = (e: React.FormEvent) => {
+  const handleAddCustomService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!myWorkshop) return;
 
-    const service = addService({
+    const service = await addService({
       ...newService,
       basePrice: parseInt(newService.price.replace(/[^0-9]/g, '')) || 0,
       estimatedPrice: parseInt(newService.price.replace(/[^0-9]/g, '')) || 0,

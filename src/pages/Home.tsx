@@ -714,95 +714,114 @@ export function Home() {
         </div>
       </section>
 
-      {/* Quick Vehicle Check Section */}
+      {/* Quick Booking Section */}
       <section className="relative z-30 -mt-24 mb-20 container mx-auto px-4">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="bg-card rounded-[3rem] shadow-2xl border border-border p-8 lg:p-12"
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="bg-card rounded-[3rem] shadow-2xl border border-border p-8 lg:p-12 overflow-hidden relative"
         >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] -z-10" />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-4 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
-                <Car className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Quick Config</span>
+            <div className="lg:col-span-4 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <Zap className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary">Instant Access</span>
               </div>
-              <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter leading-none">Pre-fill Your <br />Booking</h3>
-              <p className="text-muted-foreground text-sm font-medium">Enter your vehicle details to jumpstart the booking process.</p>
+              <h3 className="text-4xl lg:text-5xl font-black text-foreground uppercase tracking-tighter leading-none">
+                Quick <br /><span className="text-primary">Booking</span>
+              </h3>
+              <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+                Configure your service parameters in seconds. Select your vehicle and preferred schedule to get started.
+              </p>
             </div>
             
             <div className="lg:col-span-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Make & Model</label>
-                  <div className="flex gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Vehicle Configuration</label>
                     <select 
-                      className="flex-1 h-14 px-4 rounded-xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                      className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                      value={`${quickVehicle.make}|${quickVehicle.model}`}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        const [make, model] = val.split('|');
+                        const [make, model] = e.target.value.split('|');
                         setQuickVehicle(prev => ({ ...prev, make: make || "", model: model || "" }));
                       }}
                     >
-                      <option value="" className="bg-background">Select Vehicle</option>
-                      <option value="Toyota|Corolla" className="bg-background">Toyota Corolla</option>
-                      <option value="Honda|Civic" className="bg-background">Honda Civic</option>
-                      <option value="BMW|3 Series" className="bg-background">BMW 3 Series</option>
-                      <option value="Mercedes|C-Class" className="bg-background">Mercedes C-Class</option>
-                      <option value="Audi|A4" className="bg-background">Audi A4</option>
-                      <option value="Hyundai|Creta" className="bg-background">Hyundai Creta</option>
-                      <option value="Tata|Nexon" className="bg-background">Tata Nexon</option>
-                      <option value="Mahindra|Thar" className="bg-background">Mahindra Thar</option>
+                      <option value="|" className="bg-background">Select Make & Model</option>
+                      {carMakes.map(make => (
+                        <optgroup key={make.id} label={make.name} className="bg-background">
+                          {carModels.filter(m => m.make === make.name).map(model => (
+                            <option key={model.id} value={`${make.name}|${model.name}`} className="bg-background">
+                              {make.name} {model.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Fuel Type</label>
-                  <select 
-                    className="w-full h-14 px-4 rounded-xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
-                    onChange={(e) => setQuickVehicle(prev => ({ ...prev, fuel: e.target.value }))}
-                  >
-                    <option value="" className="bg-background">Select Fuel</option>
-                    <option value="Petrol" className="bg-background">Petrol</option>
-                    <option value="Diesel" className="bg-background">Diesel</option>
-                    <option value="Electric" className="bg-background">Electric</option>
-                    <option value="CNG" className="bg-background">CNG</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Year & Plate</label>
-                  <div className="flex gap-2">
-                    <input 
-                      placeholder="Year" 
-                      className="w-20 h-14 px-4 rounded-xl border border-border bg-accent/50 font-bold text-xs focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
-                      onChange={(e) => setQuickVehicle(prev => ({ ...prev, year: e.target.value }))}
-                    />
-                    <input 
-                      placeholder="Plate No." 
-                      className="flex-1 h-14 px-4 rounded-xl border border-border bg-accent/50 font-bold text-xs uppercase focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
-                      onChange={(e) => setQuickVehicle(prev => ({ ...prev, licensePlate: e.target.value }))}
-                    />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Fuel Type</label>
+                      <select 
+                        className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                        value={quickVehicle.fuel}
+                        onChange={(e) => setQuickVehicle(prev => ({ ...prev, fuel: e.target.value }))}
+                      >
+                        <option value="" className="bg-background">Fuel</option>
+                        {fuelTypes.map(f => <option key={f.id} value={f.name} className="bg-background">{f.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Plate No.</label>
+                      <input 
+                        placeholder="KA 01 AB 1234" 
+                        className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                        value={quickVehicle.licensePlate}
+                        onChange={(e) => setQuickVehicle(prev => ({ ...prev, licensePlate: e.target.value.toUpperCase() }))}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end">
-                <Button 
-                  onClick={() => {
-                    if (!quickVehicle.make || !quickVehicle.model || !quickVehicle.fuel) {
-                      toast.error("Please fill in the basic vehicle details");
-                      return;
-                    }
-                    toast.success("Vehicle details saved for booking!");
-                    navigate("/services");
-                  }}
-                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-white border-none"
-                >
-                  Apply & Browse Services
-                </Button>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Preferred Date</label>
+                      <input 
+                        type="date"
+                        className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Time Slot</label>
+                      <select className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground">
+                        <option className="bg-background">09:00 AM</option>
+                        <option className="bg-background">11:00 AM</option>
+                        <option className="bg-background">02:00 PM</option>
+                        <option className="bg-background">04:00 PM</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => {
+                      if (!quickVehicle.make || !quickVehicle.model || !quickVehicle.fuel) {
+                        toast.error("Please select your vehicle details first");
+                        return;
+                      }
+                      navigate(`/book?make=${quickVehicle.make}&model=${quickVehicle.model}&fuel=${quickVehicle.fuel}`);
+                    }}
+                    className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-white border-none shadow-xl shadow-primary/20"
+                  >
+                    Proceed to Booking <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -1217,23 +1236,78 @@ export function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {(uiSettings.features || features).slice(0, 3).map((feature, index) => (
-              <motion.div 
-                key={index} 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="flex flex-col items-center text-center p-12 rounded-[3.5rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
-              >
-                <div className="bg-primary/10 p-8 rounded-3xl group-hover:scale-110 transition-transform mb-8">
-                  {'iconName' in feature ? getLucideIcon(feature.iconName) : (feature as any).icon}
+          <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-6 h-auto md:h-[700px]">
+            {/* Main Feature - Master Technicians */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="md:col-span-2 md:row-span-2 p-12 rounded-[3.5rem] bg-slate-900 text-white relative overflow-hidden group flex flex-col justify-end"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/30 transition-colors" />
+              <div className="relative z-10">
+                <div className="bg-primary/20 p-6 rounded-3xl w-fit mb-8 group-hover:scale-110 transition-transform">
+                  <Users className="h-10 w-10 text-primary" />
                 </div>
-                <h4 className="font-bold uppercase tracking-tight text-2xl mb-4">{feature.title}</h4>
-                <p className="text-base text-slate-500 font-medium leading-relaxed">{feature.description}</p>
-              </motion.div>
-            ))}
+                <h3 className="text-4xl font-black uppercase tracking-tighter leading-none mb-6">
+                  Certified <br />Master <br /><span className="text-primary">Technicians</span>
+                </h3>
+                <p className="text-white/60 font-medium text-lg leading-relaxed max-w-md">
+                  Every operator in our network undergoes rigorous technical validation and continuous performance monitoring.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Feature 2 - Express Service */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="md:col-span-2 p-10 rounded-[3rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all group flex items-center gap-8"
+            >
+              <div className="bg-primary/10 p-6 rounded-2xl group-hover:rotate-12 transition-transform shrink-0">
+                <Zap className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-black uppercase tracking-tight text-xl mb-2">90-Min Express Service</h4>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">Precision maintenance protocols optimized for maximum efficiency without compromise.</p>
+              </div>
+            </motion.div>
+
+            {/* Feature 3 - Zero Hidden Costs */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="p-10 rounded-[3rem] bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-all group flex flex-col justify-between"
+            >
+              <div className="bg-primary/10 p-5 rounded-2xl w-fit group-hover:scale-110 transition-transform">
+                <ShieldCheck className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-black uppercase tracking-tight text-lg mb-2">Zero Hidden Costs</h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">Upfront pricing with detailed digital breakdowns for every component and labor hour.</p>
+              </div>
+            </motion.div>
+
+            {/* Feature 4 - Genuine Parts */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="p-10 rounded-[3rem] bg-primary text-white hover:bg-primary/90 transition-all group flex flex-col justify-between"
+            >
+              <div className="bg-white/20 p-5 rounded-2xl w-fit group-hover:rotate-12 transition-transform">
+                <Package className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h4 className="font-black uppercase tracking-tight text-lg mb-2">100% Genuine Parts</h4>
+                <p className="text-xs text-white/70 font-medium leading-relaxed">Direct manufacturer sourcing ensures peak performance and longevity for your machine.</p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

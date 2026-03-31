@@ -2,8 +2,11 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { onAuthStateChanged, signOut, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirebaseAuth, getFirebaseConfig } from '../lib/firebase';
-import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase } from '../services/supabaseService';
+import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase, toSnakeCase } from '../services/supabaseService';
 import { ApiKeys } from '../types';
+import { toast } from 'sonner';
+
+import { generateServiceImage } from '../services/aiService';
 
 // Types
 export interface Service {
@@ -139,6 +142,7 @@ export interface Settings {
   address: string;
   whatsapp: string;
   referralRewardAmount: number;
+  referralSignupBonus: number;
   facebook?: string;
   instagram?: string;
   twitter?: string;
@@ -147,6 +151,7 @@ export interface Settings {
   privacyPolicyUrl?: string;
   termsOfServiceUrl?: string;
   googleMapsApiKey?: string;
+  domainName?: string;
 }
 
 export interface Appointment {
@@ -164,8 +169,9 @@ export interface Appointment {
   licensePlate?: string;
   date: string;
   time: string;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'accepted' | 'in-progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
+  userId?: string;
   paymentMethod?: 'razorpay' | 'paytm' | 'pay_after_service';
   paymentStatus?: 'pending' | 'paid' | 'failed';
   amount?: number;
@@ -198,6 +204,8 @@ export interface Technician {
   reviewCount?: number;
   bio?: string;
   avatar?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ServiceRequest {
@@ -213,6 +221,8 @@ export interface ServiceRequest {
   preferredTime: string;
   location: string;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  technicianId?: string;
+  assignedTechnician?: Technician;
   createdAt: string;
 }
 
@@ -279,7 +289,7 @@ export interface Feature {
 
 export interface PageSection {
   id: string;
-  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands' | 'faq-list' | 'contact-form' | 'gallery' | 'core-services' | 'location';
+  type: 'hero' | 'features' | 'content' | 'cta' | 'faq' | 'contact' | 'services' | 'brands' | 'faq-list' | 'contact-form' | 'gallery' | 'core-services' | 'location' | 'service-packages';
   title?: string;
   subtitle?: string;
   content?: string;
@@ -352,6 +362,7 @@ export interface NavigationItem {
   isActive: boolean;
   isExternal: boolean;
   adminOnly?: boolean;
+  group?: 'Dashboard' | 'Operations' | 'Inventory' | 'Customers' | 'Marketing' | 'Settings' | 'Content' | 'Services';
 }
 
 export interface UiSettings {
@@ -361,6 +372,10 @@ export interface UiSettings {
   heroVideoUrl?: string;
   heroBgOpacity?: number;
   primaryColor: string;
+  secondaryColor: string;
+  facebookUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
   whyChooseTitle: string;
   whyChooseDescription: string;
   whyChooseImage: string;
@@ -375,6 +390,7 @@ export interface UiSettings {
   pages: Page[];
   seo: SeoSettings;
   darkMode: boolean;
+  footerDescription?: string;
 }
 
 export interface ContactSubmission {
@@ -394,7 +410,7 @@ export interface Task {
   description: string;
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
-  completed: boolean;
+  status: 'todo' | 'in-progress' | 'completed';
   assignedTo?: string;
   createdAt: string;
 }
@@ -452,10 +468,10 @@ interface DataContextType {
   updateWorkshops: (workshops: Workshop[]) => void;
   updateWorkshop: (workshopId: string, updates: Partial<Workshop>) => void;
   updateAppointment: (appointmentId: string, updates: Partial<Appointment>) => void;
-  addService: (service: Omit<Service, 'id'>) => Service;
+  addService: (service: Omit<Service, 'id'>) => Promise<Service>;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'status'> & { status?: Task['status'] }) => void;
   deleteTask: (id: string) => void;
   addReview: (review: Omit<Review, 'id' | 'createdAt' | 'isPublished'>) => void;
   deleteReview: (id: string) => void;
@@ -468,19 +484,21 @@ interface DataContextType {
   updateVehicle: (vehicleId: string, updates: Partial<Vehicle>) => void;
   removeVehicle: (id: string) => void;
   updateWalletBalance: (userId: string, amount: number) => void;
-  processReferral: (referralCode: string, newUserId: string) => void;
+  processReferral: (referralCode: string, newUserId: string) => { success: boolean; message: string };
   updateTechnicianStatus: (technicianId: string, status: 'available' | 'busy' | 'off') => void;
+  updateTechnicianLocation: (technicianId: string, latitude: number, longitude: number) => void;
   isAdminLoggedIn: boolean;
   adminRole: 'admin' | 'viewer' | null;
   loginAdmin: (role?: 'admin' | 'viewer') => void;
   logoutAdmin: () => void;
   currentUser: FirebaseUser | null;
   login: (email: string, password: string) => Promise<any>;
-  signup: (email: string, password: string, name: string, phone: string) => Promise<any>;
+  signup: (email: string, password: string, name: string, phone: string, role?: User['role'], referralCode?: string) => Promise<any>;
   logout: () => Promise<void>;
   updateTechnicians: (technicians: Technician[]) => void;
   updateServiceRequests: (requests: ServiceRequest[]) => void;
   addServiceRequest: (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => void;
+  pushAllToSupabase: () => Promise<void>;
   isLoading: boolean;
   missingTables: string[];
 }
@@ -736,8 +754,10 @@ const initialSettings: Settings = {
   address: "",
   whatsapp: "",
   referralRewardAmount: 500,
+  referralSignupBonus: 200,
   privacyPolicyUrl: "/privacy",
   termsOfServiceUrl: "/terms",
+  domainName: "carmechs.in",
 };
 const initialUsers: User[] = [
   {
@@ -775,7 +795,8 @@ const initialCategories: ServiceCategory[] = [
   { id: "cat_3", name: "Body & Paint", description: "Dent removal, scratch repair, and full body repainting services.", iconName: "PaintBucket" },
   { id: "cat_4", name: "Tires & Wheels", description: "Wheel alignment, balancing, and tire replacement services.", iconName: "Disc" },
   { id: "cat_5", name: "Deep Cleaning", description: "Interior detailing, exterior polishing, and engine bay cleaning.", iconName: "Sparkles" },
-  { id: "cat_6", name: "Wheel Alignment & Balancing", description: "Precision alignment and balancing for smooth driving.", iconName: "Disc" }
+  { id: "cat_6", name: "Wheel Alignment & Balancing", description: "Precision alignment and balancing for smooth driving.", iconName: "Disc" },
+  { id: "cat_7", name: "Diagnostics", description: "Computerized scanning and electronic system troubleshooting", iconName: "Cpu" }
 ];
 
 const initialUiSettings: UiSettings = {
@@ -785,6 +806,10 @@ const initialUiSettings: UiSettings = {
   heroVideoUrl: "https://cdn.pixabay.com/video/2020/09/24/50923-463863484_large.mp4",
   heroBgOpacity: 0.5,
   primaryColor: "#3b82f6",
+  secondaryColor: "#10b981",
+  facebookUrl: "https://facebook.com",
+  twitterUrl: "https://twitter.com",
+  instagramUrl: "https://instagram.com",
   whyChooseTitle: "Why Choose CarMechs?",
   whyChooseDescription: "We are committed to providing the best car service experience. With our team of expert mechanics and state-of-the-art workshops, your car is in safe hands.",
   whyChooseImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
@@ -877,7 +902,8 @@ const initialUiSettings: UiSettings = {
       ]
     }
   ],
-  darkMode: false
+  darkMode: false,
+  footerDescription: "Experience the next generation of car maintenance with radical transparency and technical excellence. We provide premium automotive care with expert mechanics and state-of-the-art diagnostic tools."
 };
 const initialApiKeys: ApiKeys = {
   googleClientId: "",
@@ -903,29 +929,30 @@ const initialNavigationItems: NavigationItem[] = [
   { id: "6", label: "Contact", path: "/contact", order: 7, isActive: true, isExternal: false },
   { id: "7", label: "FAQs", path: "/faq", order: 8, isActive: true, isExternal: false },
   // Admin Links
-  { id: "admin_1", label: "Overview", path: "/admin/dashboard", order: 100, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_2", label: "Workshop", path: "/admin/workshop", order: 101, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_3", label: "Tasks", path: "/admin/tasks", order: 102, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_4", label: "Bookings", path: "/admin/appointments", order: 103, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_5", label: "Inventory", path: "/admin/inventory", order: 104, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_6", label: "Services", path: "/admin/services", order: 105, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_12", label: "Bundles", path: "/admin/service-packages", order: 106, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_13", label: "Brands", path: "/admin/brands", order: 107, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_14", label: "Cities", path: "/admin/locations", order: 108, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_15", label: "Navigation", path: "/admin/navigation", order: 109, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_16", label: "Categories", path: "/admin/categories", order: 110, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_7", label: "Coupons", path: "/admin/coupons", order: 111, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_8", label: "Reviews", path: "/admin/reviews", order: 112, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_17", label: "Testimonials", path: "/admin/testimonials", order: 113, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_18", label: "Car DB", path: "/admin/cars", order: 114, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_19", label: "Vehicle Config", path: "/admin/vehicle-config", order: 115, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_20", label: "Smart Diagnostic", path: "/admin/smart-diagnostic", order: 116, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_9", label: "Customers", path: "/admin/customers", order: 117, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_10", label: "Staff", path: "/admin/users", order: 118, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_21", label: "Interface", path: "/admin/ui-settings", order: 119, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_22", label: "SEO Engine", path: "/admin/seo", order: 120, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_23", label: "Integrations", path: "/admin/api-keys", order: 121, isActive: true, isExternal: false, adminOnly: true },
-  { id: "admin_11", label: "System", path: "/admin/settings", order: 122, isActive: true, isExternal: false, adminOnly: true },
+  { id: "admin_1", label: "Overview", path: "/admin/dashboard", order: 100, isActive: true, isExternal: false, adminOnly: true, group: 'Dashboard' },
+  { id: "admin_2", label: "Workshop", path: "/admin/workshop", order: 101, isActive: true, isExternal: false, adminOnly: true, group: 'Operations' },
+  { id: "admin_3", label: "Tasks", path: "/admin/tasks", order: 102, isActive: true, isExternal: false, adminOnly: true, group: 'Operations' },
+  { id: "admin_4", label: "Bookings", path: "/admin/appointments", order: 103, isActive: true, isExternal: false, adminOnly: true, group: 'Operations' },
+  { id: "admin_5", label: "Inventory", path: "/admin/inventory", order: 104, isActive: true, isExternal: false, adminOnly: true, group: 'Inventory' },
+  { id: "admin_6", label: "Services", path: "/admin/services", order: 105, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_12", label: "Bundles", path: "/admin/service-packages", order: 106, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_13", label: "Brands", path: "/admin/brands", order: 107, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_14", label: "Cities", path: "/admin/locations", order: 108, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_15", label: "Navigation", path: "/admin/navigation", order: 109, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_16", label: "Categories", path: "/admin/categories", order: 110, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_7", label: "Coupons", path: "/admin/coupons", order: 111, isActive: true, isExternal: false, adminOnly: true, group: 'Marketing' },
+  { id: "admin_8", label: "Reviews", path: "/admin/reviews", order: 112, isActive: true, isExternal: false, adminOnly: true, group: 'Content' },
+  { id: "admin_17", label: "Testimonials", path: "/admin/testimonials", order: 113, isActive: true, isExternal: false, adminOnly: true, group: 'Content' },
+  { id: "admin_18", label: "Car DB", path: "/admin/cars", order: 114, isActive: true, isExternal: false, adminOnly: true, group: 'Inventory' },
+  { id: "admin_19", label: "Vehicle Config", path: "/admin/vehicle-config", order: 115, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_20", label: "Smart Diagnostic", path: "/admin/smart-diagnostic", order: 116, isActive: true, isExternal: false, adminOnly: true, group: 'Services' },
+  { id: "admin_9", label: "Customers", path: "/admin/customers", order: 117, isActive: true, isExternal: false, adminOnly: true, group: 'Customers' },
+  { id: "admin_10", label: "Staff", path: "/admin/users", order: 118, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_21", label: "Interface", path: "/admin/ui-settings", order: 119, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_22", label: "SEO Engine", path: "/admin/seo", order: 120, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_23", label: "Integrations", path: "/admin/api-keys", order: 121, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
+  { id: "admin_24", label: "Notifications", path: "/admin/notifications", order: 122, isActive: true, isExternal: false, adminOnly: true, group: 'Marketing' },
+  { id: "admin_11", label: "System", path: "/admin/settings", order: 123, isActive: true, isExternal: false, adminOnly: true, group: 'Settings' },
 ];
 
 const initialLocations: Location[] = [
@@ -1116,7 +1143,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     throw new Error("Firebase not configured");
   };
 
-  const signup = async (email: string, password: string, name: string, phone: string) => {
+  const signup = async (email: string, password: string, name: string, phone: string, role: User['role'] = 'user', referralCode?: string) => {
     const config = getFirebaseConfig(apiKeys);
     if (config.apiKey && config.projectId) {
       const auth = getFirebaseAuth(apiKeys);
@@ -1130,7 +1157,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           name: name,
           email: email,
           phone: phone,
-          role: 'user',
+          role: role,
           verified: false,
           blocked: false,
           walletBalance: 0,
@@ -1138,11 +1165,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
           referralsCount: 0,
           createdAt: new Date().toISOString()
         };
+        
         setUsers(prev => {
           const updatedUsers = [...prev, newUser];
           updateTable('users', updatedUsers);
           return updatedUsers;
         });
+
+        // Process referral if code provided
+        if (referralCode) {
+          processReferral(referralCode, result.user.uid);
+        }
       }
       return result;
     }
@@ -1308,6 +1341,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
+    newSocket.on('technician_location_updated', ({ technicianId, latitude, longitude }) => {
+      setTechnicians(prev => prev.map(t => t.id === technicianId ? { ...t, latitude, longitude } : t));
+    });
+
     newSocket.on('services_updated', (newServices) => setServices(newServices));
     newSocket.on('car_makes_updated', (newMakes) => setCarMakes(newMakes));
     newSocket.on('car_models_updated', (newModels) => setCarModels(newModels));
@@ -1446,11 +1483,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addTask = (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => {
+  const addTask = (task: Omit<Task, 'id' | 'createdAt' | 'status'> & { status?: Task['status'] }) => {
     const newTask: Task = {
       ...task,
       id: Math.random().toString(36).substring(2, 9),
-      completed: false,
+      status: task.status || 'todo',
       createdAt: new Date().toISOString()
     };
     const updatedTasks = [newTask, ...tasks];
@@ -1542,6 +1579,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         last_service_date: vehicle.lastServiceDate,
         created_at: new Date().toISOString()
       };
+      if (!supabase) throw new Error("Supabase not configured");
       const { error } = await supabase.from('vehicles').insert([newVehicle]);
       if (error) throw error;
       setVehicles(prev => [...prev, { ...vehicle, id, createdAt: newVehicle.created_at }]);
@@ -1553,6 +1591,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const removeVehicle = async (id: string) => {
     try {
+      if (!supabase) throw new Error("Supabase not configured");
       const { error } = await supabase.from('vehicles').delete().eq('id', id);
       if (error) throw error;
       setVehicles(prev => prev.filter(v => v.id !== id));
@@ -1573,6 +1612,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updates.vin) dbUpdates.vin = updates.vin;
       if (updates.lastServiceDate) dbUpdates.last_service_date = updates.lastServiceDate;
 
+      if (!supabase) throw new Error("Supabase not configured");
       const { error } = await supabase.from('vehicles').update(dbUpdates).eq('id', id);
       if (error) throw error;
       setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
@@ -1635,6 +1675,39 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateReviews = (newReviews: Review[]) => {
     setReviews(newReviews);
+    
+    // Update technician ratings based on published reviews
+    const techRatings: Record<string, { total: number, count: number }> = {};
+    newReviews.filter(r => r.isPublished && r.technicianId).forEach(r => {
+      if (r.technicianId) {
+        if (!techRatings[r.technicianId]) techRatings[r.technicianId] = { total: 0, count: 0 };
+        techRatings[r.technicianId].total += r.rating;
+        techRatings[r.technicianId].count += 1;
+      }
+    });
+
+    if (Object.keys(techRatings).length > 0) {
+      const updatedTechnicians = technicians.map(tech => {
+        if (techRatings[tech.id]) {
+          return {
+            ...tech,
+            rating: Number((techRatings[tech.id].total / techRatings[tech.id].count).toFixed(1)),
+            reviewCount: techRatings[tech.id].count
+          };
+        }
+        return tech;
+      });
+      
+      if (JSON.stringify(updatedTechnicians) !== JSON.stringify(technicians)) {
+        setTechnicians(updatedTechnicians);
+        if (socket?.connected) {
+          socket.emit('update_technicians', updatedTechnicians);
+        } else {
+          updateTable('technicians', updatedTechnicians);
+        }
+      }
+    }
+
     if (socket?.connected) {
       socket.emit('update_reviews', newReviews);
     } else {
@@ -1705,7 +1778,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     if (socket?.connected) {
       socket.emit('update_users', updatedUsers);
-    } else {
+    } else if (supabase) {
       // Direct Supabase update for reliability
       try {
         const { error } = await supabase
@@ -1724,30 +1797,69 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const processReferral = (referralCode: string, newUserId: string) => {
+  const processReferral = (referralCode: string, newUserId: string): { success: boolean; message: string } => {
+    const user = users.find(u => u.id === newUserId);
+    if (!user) return { success: false, message: "User not found" };
+    
+    if (user.referredBy) {
+      return { success: false, message: "You have already applied a referral code" };
+    }
+
     const referrer = users.find(u => u.referralCode === referralCode);
-    if (!referrer) return;
+    if (!referrer) {
+      return { success: false, message: "Invalid referral code" };
+    }
+
+    if (referrer.id === newUserId) {
+      return { success: false, message: "You cannot refer yourself" };
+    }
+
+    const rewardAmount = settings.referralRewardAmount || 500;
+    const signupBonus = settings.referralSignupBonus || 200;
 
     const updatedUsers = users.map(u => {
       if (u.id === referrer.id) {
         return { 
           ...u, 
-          walletBalance: (u.walletBalance || 0) + settings.referralRewardAmount,
+          walletBalance: (u.walletBalance || 0) + rewardAmount,
           referralsCount: (u.referralsCount || 0) + 1
         };
       }
       if (u.id === newUserId) {
-        return { ...u, referredBy: referrer.id };
+        return { 
+          ...u, 
+          referredBy: referrer.id,
+          walletBalance: (u.walletBalance || 0) + signupBonus
+        };
       }
       return u;
     });
 
     setUsers(updatedUsers);
+    
+    // Notify Referrer
+    addNotification({
+      userId: referrer.id,
+      title: 'Referral Reward!',
+      message: `You earned ₹${rewardAmount} because ${user.name} joined using your code!`,
+      type: 'success'
+    });
+
+    // Notify New User
+    addNotification({
+      userId: newUserId,
+      title: 'Welcome Bonus!',
+      message: `You received ₹${signupBonus} for using a referral code!`,
+      type: 'success'
+    });
+
     if (socket?.connected) {
       socket.emit('update_users', updatedUsers);
     } else {
       updateTable('users', updatedUsers);
     }
+
+    return { success: true, message: `Referral code applied! You received ₹${signupBonus} bonus.` };
   };
 
   const updateContactSubmissions = (newSubmissions: ContactSubmission[]) => {
@@ -1819,6 +1931,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateTechnicianLocation = (technicianId: string, latitude: number, longitude: number) => {
+    // Update local state
+    setTechnicians(prev => prev.map(t => t.id === technicianId ? { ...t, latitude, longitude } : t));
+    
+    // Broadcast via socket
+    if (socket?.connected) {
+      socket.emit('update_technician_location', { technicianId, latitude, longitude });
+    }
+  };
+
   const updateServiceRequests = (newRequests: ServiceRequest[]) => {
     setServiceRequests(newRequests);
     if (socket?.connected) {
@@ -1829,17 +1951,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addServiceRequest = (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => {
-    const newRequest: ServiceRequest = {
-      ...request,
-      id: Math.random().toString(36).substring(2, 9),
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    const updatedRequests = [newRequest, ...serviceRequests];
-    setServiceRequests(updatedRequests);
     if (socket?.connected) {
-      socket.emit('update_service_requests', updatedRequests);
+      socket.emit('add_service_request', request);
     } else {
+      const newRequest: ServiceRequest = {
+        ...request,
+        id: Math.random().toString(36).substring(2, 9),
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      const updatedRequests = [newRequest, ...serviceRequests];
+      setServiceRequests(updatedRequests);
       updateTable('service_requests', updatedRequests);
     }
   };
@@ -1855,6 +1977,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateAppointment = (appointmentId: string, updates: Partial<Appointment>) => {
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (appointment && updates.status && updates.status !== appointment.status) {
+      // Status has changed, notify the user
+      const targetUserId = appointment.userId || users.find(u => u.email === appointment.email)?.id;
+      
+      if (targetUserId) {
+        addNotification({
+          userId: targetUserId,
+          title: "Appointment Status Updated",
+          message: `Your appointment for ${appointment.service} has been marked as ${updates.status}.`,
+          type: updates.status === 'completed' ? 'success' : updates.status === 'cancelled' ? 'error' : 'info'
+        });
+      }
+    }
+
     const updatedAppointments = appointments.map(a => a.id === appointmentId ? { ...a, ...updates } : a);
     setAppointments(updatedAppointments);
     if (socket?.connected) {
@@ -1864,9 +2001,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addService = (service: Omit<Service, 'id'>) => {
+  const addService = async (service: Omit<Service, 'id'>) => {
+    let iconUrl = service.iconUrl;
+    if (!iconUrl) {
+      iconUrl = await generateServiceImage(service.title, service.description) || undefined;
+    }
+
     const newService: Service = { 
       ...service, 
+      iconUrl,
       id: `ser_${Date.now()}`,
       features: service.features || [],
       checks: service.checks || [],
@@ -1957,6 +2100,63 @@ export function DataProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('adminRole');
   };
 
+  const pushAllToSupabase = async () => {
+    if (!supabase) {
+      toast.error("Supabase not initialized");
+      return;
+    }
+
+    const toastId = toast.loading("Pushing all data to Supabase...");
+    try {
+      const dataToPush = [
+        { table: 'services', data: services },
+        { table: 'car_makes', data: carMakes },
+        { table: 'car_models', data: carModels },
+        { table: 'fuel_types', data: fuelTypes },
+        { table: 'brands', data: brands },
+        { table: 'locations', data: locations },
+        { table: 'inventory', data: inventory },
+        { table: 'categories', data: categories },
+        { table: 'coupons', data: coupons },
+        { table: 'reviews', data: reviews },
+        { table: 'notifications', data: notifications },
+        { table: 'service_packages', data: servicePackages },
+        { table: 'vehicles', data: vehicles },
+        { table: 'users', data: users },
+        { table: 'appointments', data: appointments },
+        { table: 'tasks', data: tasks },
+        { table: 'technicians', data: technicians },
+        { table: 'testimonials', data: testimonials },
+        { table: 'navigation_items', data: navigationItems },
+        { table: 'workshops', data: workshops },
+        { table: 'service_requests', data: serviceRequests },
+        { table: 'contact_submissions', data: contactSubmissions }
+      ];
+
+      for (const item of dataToPush) {
+        if (item.data && item.data.length > 0) {
+          const { error } = await supabase
+            .from(item.table)
+            .upsert(item.data.map(d => toSnakeCase(d)));
+          
+          if (error) {
+            console.error(`Error pushing ${item.table}:`, error);
+            throw error;
+          }
+        }
+      }
+
+      // Also push site_config
+      await supabase.from('site_config').upsert([toSnakeCase({ id: 'settings', ...settings })]);
+      await supabase.from('site_config').upsert([toSnakeCase({ id: 'ui_settings', ...uiSettings })]);
+
+      toast.success("All data pushed to Supabase successfully!", { id: toastId });
+    } catch (error) {
+      console.error("Failed to push data to Supabase:", error);
+      toast.error("Failed to push data to Supabase. Check console for details.", { id: toastId });
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       services,
@@ -2011,6 +2211,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateWorkshops,
       updateTechnicians,
       updateTechnicianStatus,
+      updateTechnicianLocation,
       updateServiceRequests,
       addServiceRequest,
       updateWorkshop,
@@ -2040,6 +2241,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       login,
       signup,
       logout,
+      pushAllToSupabase,
       isLoading,
       missingTables
     }}>

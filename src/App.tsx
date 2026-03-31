@@ -16,7 +16,11 @@ import { NotFound } from "@/pages/NotFound";
 import { useData } from "./context/DataContext";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import MechanicTracker from "./components/MechanicTracker";
+import MechanicDashboard from "@/pages/MechanicDashboard";
+import ServiceBooking from "@/pages/ServiceBooking";
 import { AnimatePresence } from "motion/react";
+import { AuthProvider } from "./context/AuthContext";
 
 // Admin
 import { AdminLogin } from "@/pages/admin/AdminLogin";
@@ -43,6 +47,7 @@ import { Workshop as AdminWorkshop } from "@/pages/admin/Workshop";
 import { VehicleConfig as AdminVehicleConfig } from "@/pages/admin/VehicleConfig";
 import { SmartDiagnostic as AdminSmartDiagnostic } from "@/pages/admin/SmartDiagnostic";
 import { TaskManager as AdminTasks } from "@/pages/admin/TaskManager";
+import { Notifications as AdminNotifications } from "@/pages/admin/Notifications";
 import NavigationManager from "@/pages/admin/NavigationManager";
 import WorkshopPortal from "@/pages/WorkshopPortal";
 
@@ -51,8 +56,18 @@ import { motion } from "motion/react";
 import { DevImages } from "@/pages/DevImages";
 
 function AppRoutes() {
-  const { isAdminLoggedIn } = useData();
+  const { isAdminLoggedIn, uiSettings } = useData();
   const location = useLocation();
+
+  useEffect(() => {
+    // Inject dynamic colors
+    if (uiSettings.primaryColor) {
+      document.documentElement.style.setProperty('--primary', uiSettings.primaryColor);
+    }
+    if (uiSettings.secondaryColor) {
+      document.documentElement.style.setProperty('--secondary', uiSettings.secondaryColor);
+    }
+  }, [uiSettings.primaryColor, uiSettings.secondaryColor]);
 
   return (
     <AnimatePresence mode="wait">
@@ -80,6 +95,9 @@ function AppRoutes() {
             <Route path="mechanics/:id" element={<MechanicProfile />} />
             <Route path="request-service" element={<ServiceRequest />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="mechanic-dashboard" element={<MechanicDashboard />} />
+            <Route path="track-mechanic/:technicianId/:requestId" element={<MechanicTracker />} />
+            <Route path="service-booking" element={<ServiceBooking />} />
             <Route path="workshop-portal" element={<WorkshopPortal />} />
             <Route path="dev/images" element={<DevImages />} />
             <Route path="404" element={<NotFound />} />
@@ -98,6 +116,7 @@ function AppRoutes() {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="workshop" element={<AdminWorkshop />} />
               <Route path="tasks" element={<AdminTasks />} />
+              <Route path="notifications" element={<AdminNotifications />} />
               <Route path="appointments" element={<AdminAppointments />} />
               <Route path="customers" element={<AdminCustomers />} />
               <Route path="services" element={<AdminServices />} />
@@ -136,12 +155,18 @@ function ThemeInjector() {
       document.documentElement.style.setProperty('--primary', '#e31e24');
     }
 
+    if (uiSettings.secondaryColor) {
+      document.documentElement.style.setProperty('--secondary', uiSettings.secondaryColor);
+    } else {
+      document.documentElement.style.setProperty('--secondary', '#1e293b');
+    }
+
     if (uiSettings.darkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [uiSettings.primaryColor, uiSettings.darkMode]);
+  }, [uiSettings.primaryColor, uiSettings.secondaryColor, uiSettings.darkMode]);
 
   return null;
 }
@@ -149,11 +174,13 @@ function ThemeInjector() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeInjector />
-      <BrowserRouter>
-        <Toaster position="top-center" richColors />
-        <AppRoutes />
-      </BrowserRouter>
+      <AuthProvider>
+        <ThemeInjector />
+        <BrowserRouter>
+          <Toaster position="top-center" richColors />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

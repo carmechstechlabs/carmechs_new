@@ -334,6 +334,7 @@ export function Booking() {
 
       addAppointment({
         ...formData,
+        userId: user?.id,
         service: serviceTitle,
         serviceId: serviceId,
         amount: totalPrice,
@@ -385,10 +386,18 @@ export function Booking() {
   };
 
   const handleNext = () => {
+    if (currentStep === 1 && (formData.packageId || formData.service)) {
+      setCurrentStep(3);
+      return;
+    }
     if (currentStep < 6) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
+    if (currentStep === 3 && (formData.packageId || formData.service)) {
+      setCurrentStep(1);
+      return;
+    }
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
@@ -528,6 +537,7 @@ export function Booking() {
         {/* Form Content */}
         <div className="bg-white rounded-[3.5rem] shadow-2xl shadow-black/5 border border-slate-100 p-10 md:p-16 min-h-[500px] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 -z-10" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 -z-10" />
           
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
@@ -542,6 +552,35 @@ export function Booking() {
                   <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Vehicle Config</h2>
                   <p className="text-slate-500 font-medium">Specify your machine's parameters for accurate pricing.</p>
                 </div>
+
+                {(formData.service || formData.packageId) && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 bg-emerald-50 border border-emerald-100 rounded-3xl flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
+                        {formData.packageId ? <Package className="h-6 w-6" /> : <Zap className="h-6 w-6" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Pre-Selected Protocol</p>
+                        <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                          {formData.packageId 
+                            ? servicePackages.find(p => p.id === formData.packageId)?.title 
+                            : services.find(s => s.id === formData.service)?.title}
+                        </h3>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setFormData(prev => ({ ...prev, service: "", packageId: "" }))}
+                      className="text-emerald-600 hover:bg-emerald-100 font-black uppercase tracking-widest text-[10px]"
+                    >
+                      Change
+                    </Button>
+                  </motion.div>
+                )}
                 
                 <div className="space-y-8">
                   <div>
@@ -934,173 +973,186 @@ export function Booking() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-10"
+                className="space-y-12"
               >
                 <div>
-                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Scheduling</h2>
-                  <p className="text-slate-400 font-medium">Define your temporal coordinates and contact details.</p>
+                  <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-2">Service Schedule</h2>
+                  <p className="text-slate-500 font-medium">Finalize your contact details and temporal parameters.</p>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Full Name</label>
-                      <Input 
-                        placeholder="Operator Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
-                      />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="space-y-8">
+                    <div className="space-y-6">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Contact Information</p>
+                      <div className="grid grid-cols-1 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Full Name</label>
+                          <Input 
+                            placeholder="Operator Name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold focus:ring-primary/20"
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone Number</label>
+                            <Input 
+                              placeholder="+91 XXXXX XXXXX"
+                              value={formData.phone}
+                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                              className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold focus:ring-primary/20"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
+                            <Input 
+                              placeholder="operator@domain.com"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold focus:ring-primary/20"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone Uplink</label>
-                      <Input 
-                        placeholder="+91 XXXXX XXXXX"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</label>
-                      <Input 
-                        placeholder="operator@domain.com"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="h-16 px-6 rounded-2xl border-slate-100 bg-slate-50 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Service City</label>
-                      <select 
-                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        value={locations.find(l => l.id === formData.locationId)?.city || ""}
-                        onChange={(e) => {
-                          const city = e.target.value;
-                          const firstLocInCity = locations.find(l => l.city === city);
-                          setFormData({ ...formData, locationId: firstLocInCity?.id || "" });
-                        }}
-                      >
-                        <option value="">Select City</option>
-                        {Array.from(new Set(locations.map(l => l.city))).map(city => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Service Hub</label>
-                      <select 
-                        className="w-full h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        value={formData.locationId}
-                        onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
-                        disabled={!locations.find(l => l.id === formData.locationId)?.city && !Array.from(new Set(locations.map(l => l.city))).length}
-                      >
-                        <option value="">Select Service Center</option>
-                        {locations
-                          .filter(loc => !locations.find(l => l.id === formData.locationId)?.city || loc.city === locations.find(l => l.id === formData.locationId)?.city)
-                          .map(loc => (
-                          <option key={loc.id} value={loc.id}>{loc.name}</option>
-                        ))}
-                      </select>
+
+                    <div className="space-y-6">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Location & Hub</p>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <select 
+                            className="h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            value={locations.find(l => l.id === formData.locationId)?.city || ""}
+                            onChange={(e) => {
+                              const city = e.target.value;
+                              const firstLocInCity = locations.find(l => l.city === city);
+                              setFormData({ ...formData, locationId: firstLocInCity?.id || "" });
+                            }}
+                          >
+                            <option value="">Select City</option>
+                            {Array.from(new Set(locations.map(l => l.city))).map(city => (
+                              <option key={city} value={city}>{city}</option>
+                            ))}
+                          </select>
+                          <select 
+                            className="h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            value={formData.locationId}
+                            onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
+                            disabled={!locations.find(l => l.id === formData.locationId)?.city && !Array.from(new Set(locations.map(l => l.city))).length}
+                          >
+                            <option value="">Select Service Center</option>
+                            {locations
+                              .filter(loc => !locations.find(l => l.id === formData.locationId)?.city || loc.city === locations.find(l => l.id === formData.locationId)?.city)
+                              .map(loc => (
+                              <option key={loc.id} value={loc.id}>{loc.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        {/* Map Integration Placeholder */}
+                        <div className="h-48 bg-slate-100 rounded-3xl border border-slate-200 relative overflow-hidden group cursor-pointer">
+                          <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/map/800/400')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
+                          <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                            <MapPin className="h-3 w-3 text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Select on Map</span>
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="bg-primary text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
+                              Open Interactive Map
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Target Date</label>
-                      <div className="relative">
-                        <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                        <input 
-                          type="date" 
-                          className="w-full h-16 pl-14 pr-6 rounded-2xl border border-slate-100 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
-                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                          value={formData.date}
-                        />
+                  <div className="space-y-10">
+                    <div className="space-y-6">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Temporal Parameters</p>
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Preferred Date</label>
+                          <div className="relative">
+                            <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <input 
+                              type="date" 
+                              className="w-full h-16 pl-14 pr-6 rounded-2xl border border-slate-100 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20 font-bold"
+                              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                              value={formData.date}
+                              min={new Date().toISOString().split('T')[0]}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Available Time Slots</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {["08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM", "07:00 PM"].map((time) => (
+                              <button
+                                key={time}
+                                onClick={() => setFormData({ ...formData, time })}
+                                className={cn(
+                                  "h-14 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all",
+                                  formData.time === time 
+                                    ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
+                                    : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
+                                )}
+                              >
+                                {time}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Time Slot</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM"].map((time) => (
+
+                    {/* Mechanic Selection (Moved inside Step 5 for better flow) */}
+                    <div className="space-y-6 pt-10 border-t border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <Users className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black tracking-tight uppercase">Expert Mechanic</h3>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Choose a specialist</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {technicians.slice(0, 4).map((tech) => (
                           <button
-                            key={time}
-                            onClick={() => setFormData({ ...formData, time })}
+                            key={tech.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, technicianId: tech.id })}
                             className={cn(
-                              "h-14 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all",
-                              formData.time === time 
-                                ? "border-primary bg-primary text-white shadow-lg shadow-primary/20" 
-                                : "border-slate-100 bg-slate-50 text-slate-500 hover:border-primary/30"
+                              "p-4 rounded-2xl border text-left transition-all group relative overflow-hidden",
+                              formData.technicianId === tech.id
+                                ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
+                                : "border-slate-100 bg-slate-50/50 hover:border-primary/30"
                             )}
                           >
-                            {time}
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-colors",
+                                formData.technicianId === tech.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:text-primary shadow-sm"
+                              )}>
+                                {tech.name.charAt(0)}
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-xs font-black tracking-tight">{tech.name}</h4>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{tech.specialty}</p>
+                              </div>
+                              {formData.technicianId === tech.id && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </div>
                           </button>
                         ))}
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Mechanic Selection */}
-                <div className="space-y-6 pt-10 border-t border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-xl">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black tracking-tight uppercase">Select Expert Mechanic</h3>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Choose a specialist for your vehicle</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {technicians.map((tech) => (
-                      <button
-                        key={tech.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, technicianId: tech.id })}
-                        className={cn(
-                          "p-5 rounded-3xl border-2 text-left transition-all duration-300 group relative overflow-hidden",
-                          formData.technicianId === tech.id
-                            ? "border-primary bg-primary/5 shadow-xl shadow-primary/10"
-                            : "border-slate-50 bg-slate-50/50 hover:border-primary/30 hover:bg-slate-50"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "h-12 w-12 rounded-2xl flex items-center justify-center font-black text-lg transition-colors",
-                            formData.technicianId === tech.id ? "bg-primary text-white" : "bg-white text-slate-400 group-hover:bg-primary/10 group-hover:text-primary shadow-sm"
-                          )}>
-                            {tech.name.charAt(0)}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-sm font-black tracking-tight">{tech.name}</h4>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tech.specialty}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className={cn(
-                                "h-1.5 w-1.5 rounded-full",
-                                tech.status === 'available' ? "bg-emerald-500" :
-                                tech.status === 'busy' ? "bg-amber-500" : "bg-rose-500"
-                              )} />
-                              <span className={cn(
-                                "text-[8px] font-black uppercase tracking-widest",
-                                tech.status === 'available' ? "text-emerald-600" :
-                                tech.status === 'busy' ? "text-amber-600" : "text-rose-600"
-                              )}>
-                                {tech.status === 'off' ? 'offline' : tech.status}
-                              </span>
-                            </div>
-                          </div>
-                          {formData.technicianId === tech.id && (
-                            <div className="bg-primary text-white p-1 rounded-full">
-                              <Check className="h-3 w-3" />
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
                   </div>
                 </div>
 

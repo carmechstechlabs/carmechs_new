@@ -2,37 +2,103 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile data",
+      "description": "Represents a car owner or a mechanic.",
       "type": "object",
       "properties": {
-        "name": { "type": "string", "description": "Full name" },
-        "email": { "type": "string", "format": "email", "description": "Email address" },
-        "role": { "type": "string", "enum": ["admin", "user", "viewer"], "description": "User role" },
-        "phone": { "type": "string", "description": "Phone number" }
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "mechanic", "admin"] },
+        "photoURL": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" },
+            "address": { "type": "string" }
+          }
+        },
+        "mechanicDetails": {
+          "type": "object",
+          "properties": {
+            "specialties": { "type": "array", "items": { "type": "string" } },
+            "rating": { "type": "number" },
+            "isAvailable": { "type": "boolean" }
+          }
+        }
       },
-      "required": ["name", "email"]
+      "required": ["uid", "email", "role"]
     },
-    "Appointment": {
-      "title": "Appointment",
-      "description": "Service appointment booking",
+    "Service": {
+      "title": "Service",
+      "description": "A maintenance or repair service offered.",
       "type": "object",
       "properties": {
-        "userId": { "type": "string", "description": "Reference to user" },
-        "serviceTitle": { "type": "string", "description": "Name of the service" },
-        "date": { "type": "string", "format": "date", "description": "Appointment date" },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"], "description": "Current status" }
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "commonIssues": { "type": "array", "items": { "type": "string" } },
+        "recommendedCheckups": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["userId", "serviceTitle", "date"]
+      "required": ["title", "description", "category"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "A category of services.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["name", "icon"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "A service request from an owner to a mechanic.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "mechanicId": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "completed", "cancelled"] },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" },
+            "address": { "type": "string" }
+          }
+        },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["ownerId", "serviceId", "status", "date", "time"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "User profile documents"
+      "description": "User profiles for owners and mechanics."
     },
-    "/appointments/{appointmentId}": {
-      "schema": "Appointment",
-      "description": "Appointment booking documents"
+    "/services/{serviceId}": {
+      "schema": "Service",
+      "description": "Catalog of available services."
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Service categories."
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Service booking records."
     }
   }
 }

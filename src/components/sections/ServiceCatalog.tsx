@@ -79,16 +79,17 @@ export function ServiceCatalog() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{service.estimatedDuration || service.duration}</span>
-                  </div>
-                  <Button asChild variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/10 rounded-xl">
-                    <Link to={`/services/${service.id}`}>
-                      View Details <ArrowRight className="ml-2 h-3 w-3" />
-                    </Link>
-                  </Button>
+                <div className="flex items-center gap-2 pt-6 border-t border-slate-200">
+                  <Link to={`/book?serviceId=${service.id}`} className="flex-1">
+                    <Button className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+                      Book Now
+                    </Button>
+                  </Link>
+                  <Link to={`/services/${service.id}`}>
+                    <Button variant="outline" className="h-12 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] border-slate-100 hover:bg-slate-50">
+                      Details
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             );

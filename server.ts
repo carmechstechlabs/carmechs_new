@@ -794,6 +794,46 @@ async function startServer() {
       await updateTable('service_requests', requests);
     });
 
+    socket.on("add_service_request", async (request) => {
+      const newRequest = {
+        ...request,
+        id: Math.random().toString(36).substring(2, 9),
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      currentState.serviceRequests = [newRequest, ...currentState.serviceRequests];
+      saveLocalState(currentState);
+      io.emit("service_requests_updated", currentState.serviceRequests);
+      await updateTable('service_requests', currentState.serviceRequests);
+
+      // Simulate real-time matching process
+      setTimeout(async () => {
+        const updatedRequests = currentState.serviceRequests.map((r: any) => {
+          if (r.id === newRequest.id) {
+            // Find a random available technician
+            const availableTechs = currentState.technicians.filter((t: any) => t.status === 'available');
+            const assignedTech = availableTechs.length > 0 
+              ? availableTechs[Math.floor(Math.random() * availableTechs.length)]
+              : currentState.technicians[0];
+
+            return { 
+              ...r, 
+              status: 'accepted',
+              technicianId: assignedTech.id,
+              assignedTechnician: assignedTech
+            };
+          }
+          return r;
+        });
+
+        currentState.serviceRequests = updatedRequests;
+        saveLocalState(currentState);
+        io.emit("service_requests_updated", currentState.serviceRequests);
+        await updateTable('service_requests', currentState.serviceRequests);
+      }, 5000); // 5 second matching simulation
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });

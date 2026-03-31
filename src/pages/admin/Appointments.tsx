@@ -110,6 +110,7 @@ export function Appointments() {
     switch (status) {
       case 'pending': return 'text-amber-600 bg-amber-50 border-amber-100';
       case 'confirmed': return 'text-blue-600 bg-blue-50 border-blue-100';
+      case 'in-progress': return 'text-indigo-600 bg-indigo-50 border-indigo-100';
       case 'completed': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
       case 'cancelled': return 'text-primary bg-primary/5 border-primary/10';
       default: return 'text-slate-400 bg-slate-50 border-slate-100';
@@ -183,6 +184,7 @@ export function Appointments() {
                 <option value="all" className="bg-white">All Status</option>
                 <option value="pending" className="bg-white">Pending</option>
                 <option value="confirmed" className="bg-white">Confirmed</option>
+                <option value="in-progress" className="bg-white">In Progress</option>
                 <option value="completed" className="bg-white">Completed</option>
                 <option value="cancelled" className="bg-white">Cancelled</option>
                 <option value="overdue" className="bg-white">Overdue</option>
@@ -403,12 +405,13 @@ export function Appointments() {
                                 <SelectTrigger className="h-12 bg-slate-50 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] focus:ring-primary/20 shadow-sm">
                                   <SelectValue placeholder="Update Status" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white border-slate-200 text-slate-900">
-                                  <SelectItem value="pending" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Pending</SelectItem>
-                                  <SelectItem value="confirmed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Confirmed</SelectItem>
-                                  <SelectItem value="completed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Completed</SelectItem>
-                                  <SelectItem value="cancelled" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Cancelled</SelectItem>
-                                </SelectContent>
+                                  <SelectContent className="bg-white border-slate-200 text-slate-900">
+                                    <SelectItem value="pending" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Pending</SelectItem>
+                                    <SelectItem value="confirmed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Confirmed</SelectItem>
+                                    <SelectItem value="in-progress" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">In Progress</SelectItem>
+                                    <SelectItem value="completed" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Completed</SelectItem>
+                                    <SelectItem value="cancelled" className="text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary">Cancelled</SelectItem>
+                                  </SelectContent>
                               </Select>
                             </div>
                           </div>

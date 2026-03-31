@@ -93,6 +93,7 @@ export function AdminLayout() {
     "FAQs": Globe,
     "Cities": MapPin,
     "Navigation": Navigation,
+    "Notifications": Bell,
     "Staff": Users,
     "Interface": Palette,
     "SEO Engine": Globe,
@@ -107,15 +108,23 @@ export function AdminLayout() {
       path: item.path,
       label: item.label,
       icon: iconMap[item.label] || LayoutGrid,
-      adminOnly: true // They are already filtered by adminOnly
+      group: item.group || 'Other'
     }));
 
-  const navGroups = [
-    {
-      title: "Menu",
-      items: dynamicAdminItems
-    }
-  ].filter(group => group.items.length > 0);
+  const groups = ['Dashboard', 'Operations', 'Inventory', 'Services', 'Customers', 'Marketing', 'Content', 'Settings'];
+  const navGroups = groups.map(group => ({
+    title: group,
+    items: dynamicAdminItems.filter(item => item.group === group)
+  })).filter(group => group.items.length > 0);
+
+  // Add any items that don't belong to the predefined groups
+  const otherItems = dynamicAdminItems.filter(item => !groups.includes(item.group as string));
+  if (otherItems.length > 0) {
+    navGroups.push({
+      title: "Other",
+      items: otherItems
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background flex relative font-sans text-foreground selection:bg-primary/20">
@@ -143,8 +152,14 @@ export function AdminLayout() {
         )}
       >
         {/* Sidebar Header */}
-        <div className="p-6 flex items-center justify-between shrink-0 border-b border-border h-20">
-          <div className="flex items-center gap-3 overflow-hidden">
+        <div className={cn(
+          "p-6 flex items-center justify-between shrink-0 border-b border-border h-20",
+          !isSidebarOpen && "lg:justify-center lg:px-0"
+        )}>
+          <div className={cn(
+            "flex items-center gap-3 overflow-hidden",
+            !isSidebarOpen && "lg:justify-center"
+          )}>
             <div className={cn(
               "rounded-xl flex items-center justify-center transition-all shrink-0",
               settings.logoUrl ? "h-12 w-auto" : "h-10 w-10 bg-primary shadow-lg shadow-primary/20"
@@ -168,9 +183,11 @@ export function AdminLayout() {
               </motion.div>
             )}
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-accent rounded-xl transition-colors text-muted-foreground">
-            <X className="h-5 w-5" />
-          </button>
+          {isSidebarOpen && (
+            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 hover:bg-accent rounded-xl transition-colors text-muted-foreground">
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
         
         {/* Navigation */}
@@ -190,10 +207,11 @@ export function AdminLayout() {
                       key={item.path}
                       to={item.path}
                       className={cn(
-                        "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group relative overflow-hidden",
+                        "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all group relative",
                         isActive 
-                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          ? "bg-primary text-primary-foreground shadow-xl shadow-primary/30 ring-1 ring-primary/50" 
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                        !isSidebarOpen && "lg:justify-center lg:px-0"
                       )}
                     >
                       <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
@@ -205,6 +223,17 @@ export function AdminLayout() {
                         >
                           {item.label}
                         </motion.span>
+                      )}
+                      {isActive && (
+                        <motion.div 
+                          layoutId="active-glow"
+                          className="absolute inset-0 bg-primary/20 blur-xl -z-10"
+                        />
+                      )}
+                      {!isSidebarOpen && (
+                        <div className="absolute left-full ml-4 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-white/10">
+                          {item.label}
+                        </div>
                       )}
                     </Link>
                   );
@@ -222,10 +251,18 @@ export function AdminLayout() {
               toast.success("Logged out successfully");
               navigate("/admin");
             }}
-            className="flex items-center gap-4 px-4 py-4 text-muted-foreground hover:text-primary hover:bg-primary/5 w-full transition-all rounded-2xl text-xs font-black uppercase tracking-widest group"
+            className={cn(
+              "flex items-center gap-4 px-4 py-4 text-muted-foreground hover:text-primary hover:bg-primary/5 w-full transition-all rounded-2xl text-xs font-black uppercase tracking-widest group relative",
+              !isSidebarOpen && "justify-center px-0"
+            )}
           >
             <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
             {isSidebarOpen && <span>Logout</span>}
+            {!isSidebarOpen && (
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-white/10">
+                Logout
+              </div>
+            )}
           </button>
         </div>
       </aside>
