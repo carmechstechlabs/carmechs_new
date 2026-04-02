@@ -2,33 +2,71 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "Represents a car owner or a mechanic.",
+      "description": "Represents a car owner, mechanic, or admin.",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
+        "id": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "displayName": { "type": "string" },
-        "role": { "type": "string", "enum": ["owner", "mechanic", "admin"] },
-        "photoURL": { "type": "string" },
-        "phoneNumber": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "mechanic", "admin", "workshop_owner", "viewer"] },
+        "avatar": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "blocked": { "type": "boolean" },
+        "walletBalance": { "type": "number" },
+        "referralCode": { "type": "string" },
+        "referredBy": { "type": "string" },
+        "referralsCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "A vehicle owned by a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "make": { "type": "string" },
+        "model": { "type": "string" },
+        "year": { "type": "string" },
+        "fuelType": { "type": "string" },
+        "licensePlate": { "type": "string" },
+        "vin": { "type": "string" },
+        "lastServiceDate": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "make", "model", "year", "fuelType"]
+    },
+    "Workshop": {
+      "title": "Workshop",
+      "description": "A service workshop.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "description": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "servicesOffered": { "type": "array", "items": { "type": "string" } },
+        "isVerified": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "inactive", "pending"] },
+        "ownerId": { "type": "string" },
         "location": {
           "type": "object",
           "properties": {
             "lat": { "type": "number" },
-            "lng": { "type": "number" },
-            "address": { "type": "string" }
+            "lng": { "type": "number" }
           }
         },
-        "mechanicDetails": {
-          "type": "object",
-          "properties": {
-            "specialties": { "type": "array", "items": { "type": "string" } },
-            "rating": { "type": "number" },
-            "isAvailable": { "type": "boolean" }
-          }
-        }
+        "createdAt": { "type": "string" }
       },
-      "required": ["uid", "email", "role"]
+      "required": ["id", "name", "ownerId"]
     },
     "Service": {
       "title": "Service",
@@ -81,12 +119,64 @@
         "createdAt": { "type": "string" }
       },
       "required": ["ownerId", "serviceId", "status", "date", "time"]
+    },
+    "Technician": {
+      "title": "Technician",
+      "description": "A mechanic profile.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "specialty": { "type": "string" },
+        "experience": { "type": "string" },
+        "hourlyRate": { "type": "number" },
+        "certifications": { "type": "array", "items": { "type": "string" } },
+        "servicesOffered": { "type": "array", "items": { "type": "string" } },
+        "availability": { "type": "string" },
+        "serviceArea": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "busy", "off"] },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "bio": { "type": "string" },
+        "avatar": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["id", "userId", "name", "specialty"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A review for a service or mechanic.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "technicianId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "isPublished": { "type": "boolean" }
+      },
+      "required": ["userId", "rating", "comment", "createdAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles for owners and mechanics."
+    },
+    "/vehicles/{vehicleId}": {
+      "schema": "Vehicle",
+      "description": "User vehicles."
+    },
+    "/workshops/{workshopId}": {
+      "schema": "Workshop",
+      "description": "Service workshops."
     },
     "/services/{serviceId}": {
       "schema": "Service",
@@ -99,6 +189,14 @@
     "/bookings/{bookingId}": {
       "schema": "Booking",
       "description": "Service booking records."
+    },
+    "/technicians/{technicianId}": {
+      "schema": "Technician",
+      "description": "Mechanic profiles."
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Service and mechanic reviews."
     }
   }
 }

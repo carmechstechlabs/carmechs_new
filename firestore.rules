@@ -27,6 +27,21 @@ service cloud.firestore {
       allow update: if isOwner(userId) || isAdmin();
     }
 
+    // Vehicles
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+
+    // Workshops
+    match /workshops/{workshopId} {
+      allow read: if true;
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.ownerId);
+      allow create: if isAuthenticated();
+    }
+
     // Services
     match /services/{serviceId} {
       allow read: if true;
@@ -52,6 +67,21 @@ service cloud.firestore {
         request.auth.uid == resource.data.mechanicId || 
         isAdmin()
       );
+    }
+
+    // Technicians
+    match /technicians/{technicianId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      allow delete: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
     }
   }
 }

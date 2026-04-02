@@ -35,6 +35,8 @@ import {
   Camera,
   Map,
   ExternalLink,
+  Users,
+  Package,
   Activity,
   Info,
   Scale
@@ -424,7 +426,9 @@ export function Home() {
     model: "",
     fuel: "",
     year: "",
-    licensePlate: ""
+    licensePlate: "",
+    date: "",
+    time: ""
   });
 
   const calculateCalculatedPrice = (service: any) => {
@@ -796,11 +800,18 @@ export function Home() {
                         type="date"
                         className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
                         min={new Date().toISOString().split('T')[0]}
+                        value={quickVehicle.date}
+                        onChange={(e) => setQuickVehicle(prev => ({ ...prev, date: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Time Slot</label>
-                      <select className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground">
+                      <select 
+                        className="w-full h-14 px-4 rounded-2xl border border-border bg-accent/50 font-bold text-xs uppercase tracking-widest focus:ring-2 focus:ring-primary/20 outline-none text-foreground"
+                        value={quickVehicle.time}
+                        onChange={(e) => setQuickVehicle(prev => ({ ...prev, time: e.target.value }))}
+                      >
+                        <option value="" className="bg-background">Select Time</option>
                         <option className="bg-background">09:00 AM</option>
                         <option className="bg-background">11:00 AM</option>
                         <option className="bg-background">02:00 PM</option>
@@ -815,7 +826,9 @@ export function Home() {
                         toast.error("Please select your vehicle details first");
                         return;
                       }
-                      navigate(`/book?make=${quickVehicle.make}&model=${quickVehicle.model}&fuel=${quickVehicle.fuel}`);
+                      const dateParam = quickVehicle.date ? `&date=${quickVehicle.date}` : '';
+                      const timeParam = quickVehicle.time ? `&time=${quickVehicle.time}` : '';
+                      navigate(`/book?make=${quickVehicle.make}&model=${quickVehicle.model}&fuel=${quickVehicle.fuel}${dateParam}${timeParam}`);
                     }}
                     className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-white border-none shadow-xl shadow-primary/20"
                   >
@@ -907,19 +920,26 @@ export function Home() {
                           <span className="text-sm text-muted-foreground line-through font-bold">₹{Math.round(pkg.basePrice / (1 - pkg.discountPercentage / 100))}</span>
                         </div>
                       </div>
-                      <Button 
-                        onClick={() => {
-                          setBookingService({
-                            id: pkg.id,
-                            title: pkg.title,
-                            basePrice: pkg.basePrice,
-                            isPackage: true
-                          });
-                        }}
-                        className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white border-none"
-                      >
-                        Book Now
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          onClick={() => {
+                            setBookingService({
+                              id: pkg.id,
+                              title: pkg.title,
+                              basePrice: pkg.basePrice,
+                              isPackage: true
+                            });
+                          }}
+                          className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white border-none flex-1"
+                        >
+                          Book Now
+                        </Button>
+                        <Link to={`/services/${pkg.id}`}>
+                          <Button variant="outline" className="h-14 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border-border hover:bg-accent text-foreground">
+                            Details
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

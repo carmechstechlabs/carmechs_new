@@ -431,3 +431,49 @@ ALTER PUBLICATION supabase_realtime ADD TABLE testimonials;
 ALTER PUBLICATION supabase_realtime ADD TABLE navigation_items;
 ALTER PUBLICATION supabase_realtime ADD TABLE workshops;
 ALTER PUBLICATION supabase_realtime ADD TABLE service_requests;
+
+-- Update Periodic Maintenance service details
+UPDATE services 
+SET 
+  description = 'Comprehensive multi-point inspection and oil change service to ensure optimal engine performance and longevity.',
+  features = '["Engine Oil Change", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Check", "Battery Water Top-up"]'::jsonb,
+  checks = '["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Spark Plug Cleaning", "Brake Pad Cleaning", "Exterior Wash", "Interior Vacuuming"]'::jsonb
+WHERE id = 'ser_1';
+
+-- Update Car Spa & Cleaning (ser_5)
+UPDATE services
+SET
+  title = 'Car Spa & Cleaning',
+  description = 'Detailed interior and exterior cleaning process for a spotless, showroom-like finish.',
+  features = '["Interior Vacuuming", "Dashboard Polishing", "Upholstery Cleaning", "Exterior Foam Wash", "Tyre Dressing"]'::jsonb,
+  checks = '["Stain Removal", "Odor Elimination", "Glass Clarity", "Paint Shine"]'::jsonb
+WHERE id = 'ser_5';
+
+-- Ensure missing columns exist (Fix for schema cache errors)
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='services' AND column_name='applicable_fuel_types') THEN
+        ALTER TABLE services ADD COLUMN applicable_fuel_types JSONB DEFAULT '[]';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='car_makes' AND column_name='price') THEN
+        ALTER TABLE car_makes ADD COLUMN price NUMERIC DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='car_models' AND column_name='make') THEN
+        ALTER TABLE car_models ADD COLUMN make TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fuel_types' AND column_name='price') THEN
+        ALTER TABLE fuel_types ADD COLUMN price NUMERIC DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='service_packages' AND column_name='base_price') THEN
+        ALTER TABLE service_packages ADD COLUMN base_price NUMERIC DEFAULT 0;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='technicians' AND column_name='availability') THEN
+        ALTER TABLE technicians ADD COLUMN availability TEXT;
+    END IF;
+END $$;
+

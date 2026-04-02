@@ -13,7 +13,7 @@ import { useEffect, useState, useMemo } from "react";
 
 export function ServiceDetail() {
   const { id } = useParams();
-  const { services, categories, reviews, addReview, currentUser, carMakes, carModels, fuelTypes } = useData();
+  const { services, servicePackages, categories, reviews, addReview, currentUser, carMakes, carModels, fuelTypes } = useData();
   const navigate = useNavigate();
   const [service, setService] = useState<any>(null);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
@@ -81,12 +81,23 @@ export function ServiceDetail() {
 
   useEffect(() => {
     if (id) {
-      const found = services.find(s => s.id === id);
-      if (found) {
-        setService(found);
+      const foundService = services.find(s => s.id === id);
+      const foundPackage = servicePackages.find(p => p.id === id);
+      
+      if (foundService) {
+        setService(foundService);
+      } else if (foundPackage) {
+        // Convert package to service-like object for display
+        setService({
+          ...foundPackage,
+          price: foundPackage.basePrice,
+          duration: "3-5 Hours", // Default for packages
+          checks: foundPackage.features,
+          isPackage: true
+        });
       }
     }
-  }, [id, services]);
+  }, [id, services, servicePackages]);
 
   if (!service) {
     return (

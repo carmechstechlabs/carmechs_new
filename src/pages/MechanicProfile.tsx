@@ -9,12 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 const MechanicProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { technicians, reviews, currentUser, users, isAdminLoggedIn, updateTechnicianStatus, addReview } = useData();
+  const { technicians, reviews, currentUser, users, isAdminLoggedIn, updateTechnicianStatus, updateTechnician, addReview } = useData();
   const tech = technicians.find(t => t.id === id);
   const userProfile = users.find(u => u.id === currentUser?.uid);
   const isMechanicOwner = currentUser?.uid === tech?.userId;
@@ -23,6 +26,18 @@ const MechanicProfile = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: tech?.name || '',
+    specialty: tech?.specialty || '',
+    experience: tech?.experience || '',
+    bio: tech?.bio || '',
+    availability: tech?.availability || '',
+    serviceArea: tech?.serviceArea || '',
+    hourlyRate: tech?.hourlyRate || 500,
+    certifications: tech?.certifications?.join(', ') || '',
+    servicesOffered: tech?.servicesOffered?.join(', ') || ''
+  });
 
   if (!tech) {
     return (
@@ -82,6 +97,25 @@ const MechanicProfile = () => {
     }
   };
 
+  const handleSaveProfile = () => {
+    if (!tech) return;
+    
+    updateTechnician(tech.id, {
+      name: editForm.name,
+      specialty: editForm.specialty,
+      experience: editForm.experience,
+      bio: editForm.bio,
+      availability: editForm.availability,
+      serviceArea: editForm.serviceArea,
+      hourlyRate: Number(editForm.hourlyRate),
+      certifications: editForm.certifications.split(',').map(c => c.trim()).filter(c => c !== ''),
+      servicesOffered: editForm.servicesOffered.split(',').map(s => s.trim()).filter(s => s !== '')
+    });
+    
+    setIsEditing(false);
+    toast.success("Profile updated successfully!");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -98,6 +132,104 @@ const MechanicProfile = () => {
                     </AvatarFallback>
                   </Avatar>
                 </div>
+                {isMechanicOwner && (
+                  <div className="absolute top-4 right-4">
+                    <Dialog open={isEditing} onOpenChange={setIsEditing}>
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" size="sm" className="rounded-full bg-white/20 backdrop-blur-md border-white/10 text-white hover:bg-white/30">
+                          Edit Profile
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-black uppercase tracking-tight">Edit Mechanic Profile</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Full Name</Label>
+                            <Input 
+                              value={editForm.name} 
+                              onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Specialty</Label>
+                            <Input 
+                              value={editForm.specialty} 
+                              onChange={(e) => setEditForm({...editForm, specialty: e.target.value})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Experience</Label>
+                            <Input 
+                              value={editForm.experience} 
+                              onChange={(e) => setEditForm({...editForm, experience: e.target.value})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Hourly Rate (₹)</Label>
+                            <Input 
+                              type="number"
+                              value={editForm.hourlyRate} 
+                              onChange={(e) => setEditForm({...editForm, hourlyRate: Number(e.target.value)})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bio</Label>
+                            <Textarea 
+                              value={editForm.bio} 
+                              onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                              className="rounded-xl"
+                              rows={3}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Availability</Label>
+                            <Input 
+                              value={editForm.availability} 
+                              onChange={(e) => setEditForm({...editForm, availability: e.target.value})}
+                              className="rounded-xl"
+                              placeholder="e.g. Mon-Sat, 9 AM - 6 PM"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Service Area</Label>
+                            <Input 
+                              value={editForm.serviceArea} 
+                              onChange={(e) => setEditForm({...editForm, serviceArea: e.target.value})}
+                              className="rounded-xl"
+                              placeholder="e.g. Kolkata, Howrah"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Certifications (comma separated)</Label>
+                            <Input 
+                              value={editForm.certifications} 
+                              onChange={(e) => setEditForm({...editForm, certifications: e.target.value})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Services Offered (comma separated)</Label>
+                            <Input 
+                              value={editForm.servicesOffered} 
+                              onChange={(e) => setEditForm({...editForm, servicesOffered: e.target.value})}
+                              className="rounded-xl"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setIsEditing(false)} className="rounded-xl">Cancel</Button>
+                          <Button onClick={handleSaveProfile} className="rounded-xl bg-primary text-white">Save Changes</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
               </div>
               
               <CardContent className="pt-16 pb-8 px-8">
@@ -141,6 +273,10 @@ const MechanicProfile = () => {
                   <div className="flex items-center gap-3 text-slate-600">
                     <Clock className="h-5 w-5 text-primary" />
                     <span className="text-sm font-medium">{tech.availability || 'Available Mon-Sat'}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium">{tech.serviceArea || 'Kolkata & Howrah'}</span>
                   </div>
                   <div className="flex items-center gap-3 text-slate-600">
                     <ShieldCheck className="h-5 w-5 text-primary" />

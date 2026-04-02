@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "motion/react";
-import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera, Building2, MapPin, Star, Users } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Car, Wrench, Info, Search, Wallet, CreditCard, Loader2, Clock, ShieldAlert, ShieldCheck, Zap, ArrowRight, Sparkles, Package, Camera, Building2, MapPin, Star, Users, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -56,6 +56,7 @@ export function Booking() {
     phone: "",
     email: "",
     locationId: "",
+    address: "",
     workshopId: "",
     technicianId: "",
     issuePhotos: [] as string[],
@@ -141,6 +142,8 @@ export function Booking() {
     const qMake = params.get('make');
     const qModel = params.get('model');
     const qFuel = params.get('fuel');
+    const qDate = params.get('date');
+    const qTime = params.get('time');
 
     if (location.state?.serviceId || qServiceId) {
       setFormData(prev => ({ ...prev, service: location.state?.serviceId || qServiceId || "" }));
@@ -158,6 +161,8 @@ export function Booking() {
         licensePlate: location.state?.vehicleDetails?.licensePlate || ""
       }));
     }
+    if (qDate) setFormData(prev => ({ ...prev, date: qDate }));
+    if (qTime) setFormData(prev => ({ ...prev, time: qTime }));
   }, [location.state, location.search]);
 
   const calculatePrice = (basePrice: number) => {
@@ -406,7 +411,7 @@ export function Booking() {
     if (currentStep === 2) return formData.service || formData.packageId;
     if (currentStep === 3) return true; // Visual Diagnostics is optional
     if (currentStep === 4) return formData.workshopId;
-    if (currentStep === 5) return formData.date && formData.time && formData.name && formData.phone && formData.locationId;
+    if (currentStep === 5) return formData.date && formData.time && formData.name && formData.phone && (formData.locationId || formData.address);
     if (currentStep === 6) return formData.paymentMethod;
     return false;
   };
@@ -1020,7 +1025,7 @@ export function Booking() {
 
                     <div className="space-y-6">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Location & Hub</p>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <select 
                             className="h-16 px-6 rounded-2xl border border-slate-100 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -1050,18 +1055,48 @@ export function Booking() {
                             ))}
                           </select>
                         </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Preferred Service Address</label>
+                          <div className="relative">
+                            <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input 
+                              placeholder="Enter your full address for doorstep service"
+                              value={formData.address}
+                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              className="h-16 pl-14 pr-32 rounded-2xl border-slate-100 bg-slate-50 font-bold focus:ring-primary/20"
+                            />
+                            <Button 
+                              variant="ghost" 
+                              onClick={() => {
+                                if (navigator.geolocation) {
+                                  toast.info("Detecting location...");
+                                  navigator.geolocation.getCurrentPosition((pos) => {
+                                    setFormData(prev => ({ ...prev, address: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)} (Detected Location)` }));
+                                    toast.success("Location detected!");
+                                  }, () => {
+                                    toast.error("Failed to detect location");
+                                  });
+                                }
+                              }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 h-12 px-4 rounded-xl text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/5"
+                            >
+                              Detect
+                            </Button>
+                          </div>
+                        </div>
                         
                         {/* Map Integration Placeholder */}
                         <div className="h-48 bg-slate-100 rounded-3xl border border-slate-200 relative overflow-hidden group cursor-pointer">
                           <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/map/800/400')] bg-cover bg-center opacity-40 group-hover:scale-105 transition-transform duration-700" />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
                           <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                            <MapPin className="h-3 w-3 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Select on Map</span>
+                            <MapIcon className="h-3 w-3 text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Interactive Map Selection</span>
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="bg-primary text-white px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
-                              Open Interactive Map
+                              Open Map Interface
                             </div>
                           </div>
                         </div>

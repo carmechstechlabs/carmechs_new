@@ -1,7 +1,20 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { onAuthStateChanged, signOut, User as FirebaseUser, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { getFirebaseAuth, getFirebaseConfig } from '../lib/firebase';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  deleteDoc, 
+  updateDoc, 
+  getDocs,
+  getDocFromServer
+} from 'firebase/firestore';
+import { getFirebaseAuth, getFirebaseConfig, db } from '../lib/firebase';
 import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase, toSnakeCase } from '../services/supabaseService';
 import { ApiKeys } from '../types';
 import { toast } from 'sonner';
@@ -184,6 +197,7 @@ export interface Appointment {
   carModel?: string; // For workshop portal compatibility
   totalPrice?: number; // For workshop portal compatibility
   issuePhotos?: string[];
+  address?: string;
   createdAt: string;
 }
 
@@ -199,6 +213,7 @@ export interface Technician {
   certifications?: string[];
   servicesOffered?: string[];
   availability?: string;
+  serviceArea?: string;
   status: 'available' | 'busy' | 'off';
   rating?: number;
   reviewCount?: number;
@@ -441,6 +456,9 @@ interface DataContextType {
   contactSubmissions: ContactSubmission[];
   navigationItems: NavigationItem[];
   workshops: Workshop[];
+  nearbyWorkshops: Workshop[];
+  userLocation: { lat: number; lng: number } | null;
+  findNearbyWorkshops: () => Promise<void>;
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -496,6 +514,7 @@ interface DataContextType {
   signup: (email: string, password: string, name: string, phone: string, role?: User['role'], referralCode?: string) => Promise<any>;
   logout: () => Promise<void>;
   updateTechnicians: (technicians: Technician[]) => void;
+  updateTechnician: (technicianId: string, updates: Partial<Technician>) => void;
   updateServiceRequests: (requests: ServiceRequest[]) => void;
   addServiceRequest: (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => void;
   pushAllToSupabase: () => Promise<void>;
@@ -510,7 +529,7 @@ const initialServices: Service[] = [
   {
     id: "ser_1",
     title: "Periodic Maintenance",
-    description: "Comprehensive oil change, filter replacement, and 60-point safety inspection.",
+    description: "Comprehensive multi-point inspection and oil change service to ensure optimal engine performance and longevity.",
     price: "₹1,499",
     duration: "90 Mins",
     basePrice: 1499,
@@ -519,10 +538,10 @@ const initialServices: Service[] = [
     iconName: "Wrench",
     categoryId: "cat_1",
     applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
-    imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1000",
-    iconUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=100",
-    features: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection", "Tyre Rotation"],
-    checks: ["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn", "Suspension Check"],
+    imageUrl: "https://images.unsplash.com/photo-1635437536607-b8572f443763?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1635437536607-b8572f443763?q=80&w=100",
+    features: ["Engine Oil Change", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Check", "Battery Water Top-up"],
+    checks: ["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Spark Plug Cleaning", "Brake Pad Cleaning", "Exterior Wash", "Interior Vacuuming"],
     commonIssues: ["Low Engine Oil", "Dirty Air Filter", "Coolant Leakage"],
     recommendedCheckups: ["Every 10,000 KM", "Before Long Trips"]
   },
@@ -537,8 +556,8 @@ const initialServices: Service[] = [
     estimatedDuration: "2 Hours",
     iconName: "Zap",
     categoryId: "cat_2",
-    imageUrl: "https://images.unsplash.com/photo-1621905252507-b354bcadcabc?q=80&w=1000",
-    iconUrl: "https://images.unsplash.com/photo-1621905252507-b354bcadcabc?q=80&w=100",
+    imageUrl: "https://images.unsplash.com/photo-1597762137734-59461bb44bc2?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1597762137734-59461bb44bc2?q=80&w=100",
     applicableFuelTypes: ["Petrol", "Diesel", "CNG"],
     features: ["AC Gas Refill", "Condenser Cleaning", "Cooling Coil Inspection", "Cabin Filter Cleaning", "Compressor Oil Top-up"],
     checks: ["Vent Temperature", "Gas Pressure", "Compressor Noise", "Leakage Test", "Belt Tension"],
@@ -575,7 +594,8 @@ const initialServices: Service[] = [
     iconName: "Disc",
     categoryId: "cat_4",
     applicableModels: ["Corolla", "City", "Creta", "Seltos"],
-    imageUrl: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=2000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=100",
     features: ["3D Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Nitrogen Inflation"],
     checks: ["Alignment Angles", "Wheel Runout", "Tyre Tread Depth", "Suspension Play"],
     commonIssues: ["Vehicle Pulling", "Uneven Tyre Wear", "Steering Vibration"],
@@ -583,20 +603,21 @@ const initialServices: Service[] = [
   },
   {
     id: "ser_5",
-    title: "Ceramic Coating",
-    description: "9H Nano-ceramic coating for ultimate paint protection and mirror-like shine.",
-    price: "₹14,999",
-    duration: "2 Days",
-    basePrice: 14999,
-    estimatedPrice: 14999,
-    estimatedDuration: "2 Days",
+    title: "Car Spa & Cleaning",
+    description: "Detailed interior and exterior cleaning process for a spotless, showroom-like finish.",
+    price: "₹1,499",
+    duration: "4 Hours",
+    basePrice: 1499,
+    estimatedPrice: 1499,
+    estimatedDuration: "4 Hours",
     iconName: "Sparkles",
     categoryId: "cat_5",
-    imageUrl: "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=2000&auto=format&fit=crop",
-    features: ["Surface Decontamination", "Multi-stage Paint Correction", "9H Ceramic Application", "Interior Protection", "Glass Coating"],
-    checks: ["Paint Thickness", "Surface Smoothness", "Hydrophobic Effect", "Gloss Level"],
-    commonIssues: ["Swirl Marks", "Dull Paint", "Water Spots"],
-    recommendedCheckups: ["New Car Purchase", "Post-Paint Correction"]
+    imageUrl: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?q=80&w=100",
+    features: ["Interior Vacuuming", "Dashboard Polishing", "Upholstery Cleaning", "Exterior Foam Wash", "Tyre Dressing"],
+    checks: ["Stain Removal", "Odor Elimination", "Glass Clarity", "Paint Shine"],
+    commonIssues: ["Dirty Interior", "Bad Odor", "Dull Exterior"],
+    recommendedCheckups: ["Every 3 Months", "After Long Trips"]
   },
   {
     id: "ser_6",
@@ -626,8 +647,8 @@ const initialServices: Service[] = [
     estimatedDuration: "24 Hours",
     iconName: "PaintBucket",
     categoryId: "cat_5",
-    imageUrl: "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=1000",
-    iconUrl: "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=100",
+    imageUrl: "https://images.unsplash.com/photo-1615906650591-8216ac092a40?q=80&w=1000",
+    iconUrl: "https://images.unsplash.com/photo-1615906650591-8216ac092a40?q=80&w=100",
     features: ["Panel Dent Removal", "Surface Preparation", "Computerized Paint Matching", "Clear Coat Application", "Polishing"],
     checks: ["Surface Uniformity", "Color Match", "Paint Thickness", "Dust Particles"],
     commonIssues: ["Scratches", "Dents", "Paint Fading"],
@@ -1022,7 +1043,9 @@ const initialTechnicians: Technician[] = [
     rating: 4.9,
     reviewCount: 124,
     avatar: "https://i.pravatar.cc/150?u=tech1",
-    servicesOffered: ["ser_1", "ser_6"],
+    servicesOffered: ["ser_1", "ser_6", "ser_8"],
+    serviceArea: "Kolkata Central, Salt Lake, New Town",
+    availability: "Mon-Sat, 9:00 AM - 7:00 PM",
     bio: "Master technician with expertise in high-performance engines and complex overhauls."
   },
   {
@@ -1035,7 +1058,9 @@ const initialTechnicians: Technician[] = [
     rating: 4.7,
     reviewCount: 89,
     avatar: "https://i.pravatar.cc/150?u=tech2",
-    servicesOffered: ["ser_2"],
+    servicesOffered: ["ser_2", "ser_8"],
+    serviceArea: "Howrah, Shibpur, Liluah",
+    availability: "Mon-Fri, 10:00 AM - 6:00 PM",
     bio: "Specialist in automotive climate control and advanced electrical diagnostics."
   },
   {
@@ -1049,9 +1074,25 @@ const initialTechnicians: Technician[] = [
     reviewCount: 210,
     avatar: "https://i.pravatar.cc/150?u=tech3",
     servicesOffered: ["ser_7", "ser_5"],
+    serviceArea: "South Kolkata, Garia, Jadavpur",
+    availability: "Tue-Sun, 9:00 AM - 8:00 PM",
     bio: "Expert in precision denting and high-quality paint finishing."
   }
 ];
+
+// Helper for distance calculation (Haversine formula)
+const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return d;
+};
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = React.useState<Socket | null>(null);
@@ -1076,12 +1117,50 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [servicePackages, setServicePackages] = React.useState<ServicePackage[]>(initialServicePackages);
   const [technicians, setTechnicians] = React.useState<Technician[]>([]);
   const [serviceRequests, setServiceRequests] = React.useState<ServiceRequest[]>([]);
+  const [nearbyWorkshops, setNearbyWorkshops] = React.useState<Workshop[]>([]);
+  const [userLocation, setUserLocation] = React.useState<{ lat: number; lng: number } | null>(null);
   const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
   const [contactSubmissions, setContactSubmissions] = React.useState<ContactSubmission[]>([]);
   const [navigationItems, setNavigationItems] = React.useState<NavigationItem[]>(initialNavigationItems);
   const [workshops, setWorkshops] = React.useState<Workshop[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [missingTables, setMissingTables] = React.useState<string[]>([]);
+
+  const findNearbyWorkshops = async () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        
+        // Filter workshops within 50km
+        const nearby = workshops.filter(workshop => {
+          if (!workshop.location) return false;
+          const dist = getDistance(latitude, longitude, workshop.location.lat, workshop.location.lng);
+          return dist <= 50; // 50km radius
+        }).sort((a, b) => {
+          const distA = getDistance(latitude, longitude, a.location!.lat, a.location!.lng);
+          const distB = getDistance(latitude, longitude, b.location!.lat, b.location!.lng);
+          return distA - distB;
+        });
+
+        setNearbyWorkshops(nearby);
+        if (nearby.length > 0) {
+          toast.success(`Found ${nearby.length} nearby workshops!`);
+        } else {
+          toast.info("No workshops found within 50km of your location.");
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast.error("Failed to get your location. Please check permissions.");
+      }
+    );
+  };
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(() => {
     return localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -1101,11 +1180,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
           setCurrentUser(user);
           if (user) {
-            // Check if user exists in our Supabase users table
-            setUsers(prev => {
-              const existingUser = prev.find(u => u.id === user.uid || u.email === user.email);
-              if (!existingUser) {
-                // Create user in Supabase if they don't exist
+            // Fetch user profile from Firestore
+            try {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists()) {
+                const userData = userDoc.data() as User;
+                setUsers(prev => {
+                  const existingIdx = prev.findIndex(u => u.id === user.uid);
+                  if (existingIdx >= 0) {
+                    const updated = [...prev];
+                    updated[existingIdx] = userData;
+                    return updated;
+                  }
+                  return [...prev, userData];
+                });
+              } else {
+                // Create user in Firestore if they don't exist
                 const newUser: User = {
                   id: user.uid,
                   name: user.displayName || user.email?.split('@')[0] || 'User',
@@ -1119,12 +1209,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
                   referralsCount: 0,
                   createdAt: new Date().toISOString()
                 };
-                const updatedUsers = [...prev, newUser];
-                updateTable('users', updatedUsers);
-                return updatedUsers;
+                await setDoc(doc(db, 'users', user.uid), newUser);
+                setUsers(prev => [...prev, newUser]);
               }
-              return prev;
-            });
+            } catch (error) {
+              console.error("Error fetching user profile from Firestore:", error);
+            }
+
+            // Fetch user vehicles from Firestore
+            try {
+              const vehiclesQuery = query(collection(db, 'vehicles'), where('userId', '==', user.uid));
+              const vehiclesSnapshot = await getDocs(vehiclesQuery);
+              const userVehicles = vehiclesSnapshot.docs.map(doc => doc.data() as Vehicle);
+              setVehicles(prev => {
+                // Merge with existing vehicles (avoid duplicates)
+                const otherVehicles = prev.filter(v => v.userId !== user.uid);
+                return [...otherVehicles, ...userVehicles];
+              });
+            } catch (error) {
+              console.error("Error fetching user vehicles from Firestore:", error);
+            }
           }
         });
         return unsubscribe;
@@ -1151,7 +1255,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (result.user) {
         await updateProfile(result.user, { displayName: name });
         
-        // Add to Supabase users table
+        // Add to Firestore users table
         const newUser: User = {
           id: result.user.uid,
           name: name,
@@ -1163,14 +1267,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
           walletBalance: 0,
           referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
           referralsCount: 0,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          referredBy: referralCode || undefined
         };
         
-        setUsers(prev => {
-          const updatedUsers = [...prev, newUser];
-          updateTable('users', updatedUsers);
-          return updatedUsers;
-        });
+        await setDoc(doc(db, 'users', result.user.uid), newUser);
+        setUsers(prev => [...prev, newUser]);
 
         // Process referral if code provided
         if (referralCode) {
@@ -1567,57 +1669,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addVehicle = async (vehicle: Omit<Vehicle, "id" | "createdAt">) => {
     try {
       const id = `veh_${Date.now()}`;
-      const newVehicle = {
+      const newVehicle: Vehicle = {
+        ...vehicle,
         id,
-        user_id: vehicle.userId,
-        make: vehicle.make,
-        model: vehicle.model,
-        year: vehicle.year,
-        fuel_type: vehicle.fuelType,
-        license_plate: vehicle.licensePlate,
-        vin: vehicle.vin,
-        last_service_date: vehicle.lastServiceDate,
-        created_at: new Date().toISOString()
+        createdAt: new Date().toISOString()
       };
-      if (!supabase) throw new Error("Supabase not configured");
-      const { error } = await supabase.from('vehicles').insert([newVehicle]);
-      if (error) throw error;
-      setVehicles(prev => [...prev, { ...vehicle, id, createdAt: newVehicle.created_at }]);
+      
+      await setDoc(doc(db, 'vehicles', id), newVehicle);
+      setVehicles(prev => [...prev, newVehicle]);
+      toast.success("Vehicle added successfully");
     } catch (error) {
       console.error("Error adding vehicle:", error);
+      toast.error("Failed to add vehicle");
       throw error;
     }
   };
 
   const removeVehicle = async (id: string) => {
     try {
-      if (!supabase) throw new Error("Supabase not configured");
-      const { error } = await supabase.from('vehicles').delete().eq('id', id);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'vehicles', id));
       setVehicles(prev => prev.filter(v => v.id !== id));
+      toast.success("Vehicle removed successfully");
     } catch (error) {
       console.error("Error removing vehicle:", error);
+      toast.error("Failed to remove vehicle");
       throw error;
     }
   };
 
   const updateVehicle = async (id: string, updates: Partial<Vehicle>) => {
     try {
-      const dbUpdates: any = {};
-      if (updates.make) dbUpdates.make = updates.make;
-      if (updates.model) dbUpdates.model = updates.model;
-      if (updates.year) dbUpdates.year = updates.year;
-      if (updates.fuelType) dbUpdates.fuel_type = updates.fuelType;
-      if (updates.licensePlate) dbUpdates.license_plate = updates.licensePlate;
-      if (updates.vin) dbUpdates.vin = updates.vin;
-      if (updates.lastServiceDate) dbUpdates.last_service_date = updates.lastServiceDate;
-
-      if (!supabase) throw new Error("Supabase not configured");
-      const { error } = await supabase.from('vehicles').update(dbUpdates).eq('id', id);
-      if (error) throw error;
+      await updateDoc(doc(db, 'vehicles', id), updates);
       setVehicles(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+      toast.success("Vehicle updated successfully");
     } catch (error) {
       console.error("Error updating vehicle:", error);
+      toast.error("Failed to update vehicle");
       throw error;
     }
   };
@@ -1921,6 +2008,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateTechnician = (technicianId: string, updates: Partial<Technician>) => {
+    const updatedTechnicians = technicians.map(t => t.id === technicianId ? { ...t, ...updates } : t);
+    setTechnicians(updatedTechnicians);
+    if (socket) {
+      socket.emit('update_technicians', updatedTechnicians);
+    }
+    updateTable('technicians', updatedTechnicians);
+  };
+
   const updateTechnicianStatus = (technicianId: string, status: 'available' | 'busy' | 'off') => {
     const updatedTechnicians = technicians.map(t => t.id === technicianId ? { ...t, status } : t);
     setTechnicians(updatedTechnicians);
@@ -2179,6 +2275,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       servicePackages,
       technicians,
       serviceRequests,
+      nearbyWorkshops,
+      userLocation,
+      findNearbyWorkshops,
       vehicles,
       testimonials,
       contactSubmissions,
@@ -2210,6 +2309,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       deleteNavigationItem,
       updateWorkshops,
       updateTechnicians,
+      updateTechnician,
       updateTechnicianStatus,
       updateTechnicianLocation,
       updateServiceRequests,

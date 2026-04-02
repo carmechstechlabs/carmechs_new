@@ -12,13 +12,22 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 2. Services
 INSERT INTO services (id, title, description, price, duration, base_price, estimated_price, estimated_duration, icon_name, category_id, features, checks) VALUES
-('ser_1', 'Periodic Maintenance', 'Comprehensive oil change, filter replacement, and 60-point safety inspection.', '₹1,499', '90 Mins', 1499, 1499, '90 Mins', 'Wrench', 'cat_1', '["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "60-Point Inspection"]', '["Engine Oil Level", "Brake Pad Wear", "Tyre Pressure", "Battery Health", "Fluid Levels", "Lights & Horn"]'),
+('ser_1', 'Periodic Maintenance', 'Comprehensive multi-point inspection and oil change service to ensure optimal engine performance and longevity.', '₹1,499', '90 Mins', 1499, 1499, '90 Mins', 'Wrench', 'cat_1', '["Engine Oil Change", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Check", "Battery Water Top-up"]', '["Engine Oil Replacement", "Oil Filter Replacement", "Air Filter Cleaning", "Coolant Top-up", "Brake Fluid Top-up", "Battery Water Top-up", "Spark Plug Cleaning", "Brake Pad Cleaning", "Exterior Wash", "Interior Vacuuming"]'),
 ('ser_2', 'AC Service & Repair', 'Cooling coil cleaning, gas refill, and compressor health check for maximum cooling.', '₹1,999', '2 Hours', 1999, 1999, '2 Hours', 'Zap', 'cat_2', '["AC Gas Refill", "Condenser Cleaning", "Cooling Coil Inspection", "Cabin Filter Cleaning", "Compressor Oil Top-up"]', '["Vent Temperature", "Gas Pressure", "Compressor Noise", "Leakage Test", "Belt Tension"]'),
 ('ser_3', 'Brake Maintenance', 'Brake pad replacement and disc resurfacing for ultimate stopping power.', '₹899', '60 Mins', 899, 899, '60 Mins', 'ShieldCheck', 'cat_1', '["Brake Pad Cleaning", "Disc Resurfacing", "Brake Fluid Top-up", "Caliper Greasing"]', '["Brake Pad Thickness", "Disc Condition", "Brake Line Integrity", "Pedal Feel"]'),
 ('ser_4', 'Wheel Care', 'Precision wheel alignment and balancing for a smoother, safer ride.', '₹699', '45 Mins', 699, 699, '45 Mins', 'Disc', 'cat_4', '["3D Wheel Alignment", "Wheel Balancing", "Tyre Rotation", "Nitrogen Inflation"]', '["Alignment Angles", "Wheel Runout", "Tyre Tread Depth", "Suspension Play"]'),
-('ser_5', 'Ceramic Coating', '9H Nano-ceramic coating for ultimate paint protection and mirror-like shine.', '₹14,999', '2 Days', 14999, 14999, '2 Days', 'Sparkles', 'cat_5', '["Surface Decontamination", "Multi-stage Paint Correction", "9H Ceramic Application", "Interior Protection", "Glass Coating"]', '["Paint Thickness", "Surface Smoothness", "Hydrophobic Effect", "Gloss Level"]'),
+('ser_5', 'Car Spa & Cleaning', 'Detailed interior and exterior cleaning process for a spotless, showroom-like finish.', '₹1,499', '4 Hours', 1499, 1499, '4 Hours', 'Sparkles', 'cat_5', '["Interior Vacuuming", "Dashboard Polishing", "Upholstery Cleaning", "Exterior Foam Wash", "Tyre Dressing"]', '["Stain Removal", "Odor Elimination", "Glass Clarity", "Paint Shine"]'),
 ('ser_6', 'Engine Overhaul', 'Complete engine disassembly, cleaning, and replacement of worn components.', '₹45,000', '7 Days', 45000, 45000, '7 Days', 'Settings', 'cat_1', '["Engine Block Honing", "Piston Ring Replacement", "Bearing Replacement", "Gasket Set Renewal", "Timing Chain/Belt Replacement"]', '["Compression Test", "Oil Pressure", "Cooling System Pressure", "Leakage Test"]')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  features = EXCLUDED.features,
+  checks = EXCLUDED.checks,
+  price = EXCLUDED.price,
+  duration = EXCLUDED.duration,
+  base_price = EXCLUDED.base_price,
+  estimated_price = EXCLUDED.estimated_price,
+  estimated_duration = EXCLUDED.estimated_duration;
 
 -- 3. Car Makes
 INSERT INTO car_makes (id, name, price) VALUES
