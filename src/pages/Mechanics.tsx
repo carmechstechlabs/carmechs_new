@@ -1,18 +1,32 @@
 import React, { useState } from 'react';
 import { useData } from '@/context/DataContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, Clock, Award, ChevronRight, Search, Filter, Wrench } from 'lucide-react';
+import { Star, MapPin, Clock, Award, ChevronRight, Search, Filter, Wrench, X, ExternalLink, Loader2 } from 'lucide-react';
+import { SearchResult } from '@/services/SearchService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import AddressInput from '@/components/AddressInput';
 
 const Mechanics = () => {
-  const { technicians, workshops, nearbyWorkshops, userLocation, findNearbyWorkshops } = useData();
+  const { technicians, workshops, nearbyWorkshops, userLocation, findNearbyWorkshops, searchGrounding } = useData();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   const [showNearbyOnly, setShowNearbyOnly] = useState(false);
+  const [searchAddress, setSearchAddress] = useState('');
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.length < 3) return;
+    setIsSearching(true);
+    const results = await searchGrounding(searchQuery);
+    setSearchResults(results);
+    setIsSearching(false);
+  };
 
   const specialties = ['All', ...Array.from(new Set(technicians.map(t => t.specialty)))];
 
@@ -47,38 +61,96 @@ const Mechanics = () => {
               : 'Choose from our highly skilled and certified technicians to get the best care for your luxury vehicle.'}
           </motion.p>
           
-          <div className="mt-8 flex justify-center gap-4">
-            <Button 
-              onClick={() => setShowNearbyOnly(false)}
-              variant={!showNearbyOnly ? "default" : "outline"}
-              className="rounded-full px-8"
-            >
-              All Mechanics
-            </Button>
-            <Button 
-              onClick={() => {
-                setShowNearbyOnly(true);
-                findNearbyWorkshops();
-              }}
-              variant={showNearbyOnly ? "default" : "outline"}
-              className="rounded-full px-8 flex items-center gap-2"
-            >
-              <MapPin className="h-4 w-4" />
-              Find Nearby
-            </Button>
+          <div className="mt-8 flex flex-col items-center gap-6">
+            <div className="flex justify-center gap-4">
+              <Button 
+                onClick={() => setShowNearbyOnly(false)}
+                variant={!showNearbyOnly ? "default" : "outline"}
+                className="rounded-full px-8"
+              >
+                All Mechanics
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowNearbyOnly(true);
+                  findNearbyWorkshops();
+                }}
+                variant={showNearbyOnly ? "default" : "outline"}
+                className="rounded-full px-8 flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                Find Nearby
+              </Button>
+            </div>
+
+            {showNearbyOnly && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md space-y-2"
+              >
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block text-center">Search by Address</label>
+                <AddressInput
+                  value={searchAddress}
+                  onChange={(val, loc) => {
+                    setSearchAddress(val);
+                    if (loc) findNearbyWorkshops(loc);
+                  }}
+                  placeholder="Enter location to find workshops..."
+                  className="h-12 rounded-2xl border-slate-200 bg-white shadow-sm"
+                />
+              </motion.div>
+            )}
           </div>
         </div>
 
         {!showNearbyOnly && (
           <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Search by name or specialty..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12 rounded-2xl border-slate-200 bg-white shadow-sm"
-              />
+              <form onSubmit={handleSearch} className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10">
+                  {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                </div>
+                <Input 
+                  placeholder="Search with AI..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 rounded-2xl border-slate-200 bg-white shadow-sm"
+                />
+              </form>
+
+              {/* Search Results Dropdown */}
+              <AnimatePresence>
+                {searchResults.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-full left-0 w-full mt-4 bg-white border border-slate-200 rounded-[2rem] shadow-2xl overflow-hidden z-50 p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between px-4 mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Search Results</span>
+                      <Button variant="ghost" size="sm" onClick={() => setSearchResults([])} className="h-6 w-6 p-0 rounded-full">
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {searchResults.map((result, i) => (
+                      <motion.div 
+                        key={i}
+                        whileHover={{ x: 5 }}
+                        className="p-4 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer group"
+                        onClick={() => result.url && window.open(result.url, '_blank')}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-slate-900 group-hover:text-primary transition-colors">{result.title}</h4>
+                          {result.url && <ExternalLink className="h-3 w-3 text-slate-400" />}
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">{result.description}</p>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             
             <div className="flex gap-2 overflow-x-auto pb-2 w-full md:w-auto no-scrollbar">

@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { supabase } from "@/services/supabaseService";
 
 export function Dashboard() {
   const { 
@@ -24,7 +23,7 @@ export function Dashboard() {
     users, brands, settings, uiSettings, updateUiSettings, 
     locations, updateLocations, inventory, reviews, categories, coupons,
     vehicles, missingTables, updateServices, updateCarModels, updateFuelTypes,
-    technicians, updateTechnicians, pushAllToSupabase
+    technicians, updateTechnicians
   } = useData();
   const [primaryColor, setPrimaryColor] = useState(uiSettings.primaryColor || "#e31e24");
   const [heroBgImage, setHeroBgImage] = useState(uiSettings.heroBgImage || "");
@@ -394,13 +393,6 @@ export function Dashboard() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              className="bg-slate-900 border-slate-800 text-white hover:bg-slate-800 rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm flex items-center gap-2"
-              onClick={pushAllToSupabase}
-            >
-              <Database className="h-3 w-3 text-primary" /> Sync DB
-            </Button>
             <Button variant="outline" className="bg-card border-border text-muted-foreground hover:bg-accent rounded-2xl px-4 h-12 font-black uppercase tracking-widest text-[9px] shadow-sm" asChild>
               <a href="/admin/workshop"><Activity className="mr-2 h-3 w-3" /> Workshop</a>
             </Button>
@@ -459,7 +451,8 @@ export function Dashboard() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               {[
-                { label: "Supabase Connection", status: supabase ? "Connected" : "Disconnected", active: !!supabase },
+                { label: "System Status", status: "Operational", active: true },
+                { label: "Storage Engine", status: "Local Storage", active: true },
                 { label: "Database Tables", status: missingTables.length === 0 ? "Synced" : `${missingTables.length} Missing`, active: missingTables.length === 0 },
                 { label: "Socket.io Server", status: "Active", active: true },
                 { label: "Mail Protocol", status: "Ready", active: true },

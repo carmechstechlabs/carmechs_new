@@ -9,6 +9,8 @@ import { useData } from "@/context/DataContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/ImageUpload";
+import AddressInput from "@/components/AddressInput";
+import { SearchResult } from "@/services/SearchService";
 
 const steps = [
   { id: 1, title: "Machine Config", icon: Car },
@@ -23,13 +25,27 @@ export function Booking() {
   const { 
     services, servicePackages, carMakes, carModels, fuelTypes, 
     addAppointment, users, updateWalletBalance, updateUser, locations,
-    currentUser, workshops, technicians, coupons
+    currentUser, workshops, technicians, coupons, searchGrounding
   } = useData();
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [useWallet, setUseWallet] = useState(false);
+  const [groundingResults, setGroundingResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleGroundingSearch = async (query: string) => {
+    setSearchTerm(query);
+    if (query.length < 3) {
+      setGroundingResults([]);
+      return;
+    }
+    setIsSearching(true);
+    const results = await searchGrounding(query);
+    setGroundingResults(results);
+    setIsSearching(false);
+  };
   
   // Use the actual logged in user from context
   const user = users.find(u => u.email === currentUser?.email) || (currentUser ? {
@@ -1060,10 +1076,10 @@ export function Booking() {
                           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Preferred Service Address</label>
                           <div className="relative">
                             <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <Input 
+                            <AddressInput 
                               placeholder="Enter your full address for doorstep service"
                               value={formData.address}
-                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              onChange={(val) => setFormData({ ...formData, address: val })}
                               className="h-16 pl-14 pr-32 rounded-2xl border-slate-100 bg-slate-50 font-bold focus:ring-primary/20"
                             />
                             <Button 

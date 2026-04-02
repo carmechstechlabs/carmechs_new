@@ -5,7 +5,6 @@ import { Lock, Loader2, Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react
 import { toast } from "sonner";
 import { useData } from "@/context/DataContext";
 import { motion } from "motion/react";
-import { supabase } from "@/services/supabaseService";
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -170,10 +169,10 @@ export function AdminLogin() {
             </div>
             
             {/* Connection Status Badge */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${supabase ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : isDarkBg ? 'bg-white/5 border-white/10 text-white/60' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-              <div className={`h-1.5 w-1.5 rounded-full animate-pulse ${supabase ? 'bg-emerald-500' : isDarkBg ? 'bg-white/40' : 'bg-slate-400'}`} />
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-500`}>
+              <div className={`h-1.5 w-1.5 rounded-full animate-pulse bg-emerald-500`} />
               <span className="text-[8px] font-black uppercase tracking-widest">
-                Terminal: {adminUi.loginTerminalId} | DB: {supabase ? 'Online' : 'Offline'}
+                Terminal: {adminUi.loginTerminalId} | System: Online
               </span>
             </div>
           </div>

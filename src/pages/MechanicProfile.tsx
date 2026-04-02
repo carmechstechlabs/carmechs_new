@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const MechanicProfile = () => {
   const { id } = useParams();
@@ -33,6 +34,15 @@ const MechanicProfile = () => {
     experience: tech?.experience || '',
     bio: tech?.bio || '',
     availability: tech?.availability || '',
+    availabilitySchedule: tech?.availabilitySchedule || {
+      'Monday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Tuesday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Wednesday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Thursday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Friday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Saturday': { enabled: true, slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'] },
+      'Sunday': { enabled: false, slots: [] }
+    },
     serviceArea: tech?.serviceArea || '',
     hourlyRate: tech?.hourlyRate || 500,
     certifications: tech?.certifications?.join(', ') || '',
@@ -106,6 +116,7 @@ const MechanicProfile = () => {
       experience: editForm.experience,
       bio: editForm.bio,
       availability: editForm.availability,
+      availabilitySchedule: editForm.availabilitySchedule,
       serviceArea: editForm.serviceArea,
       hourlyRate: Number(editForm.hourlyRate),
       certifications: editForm.certifications.split(',').map(c => c.trim()).filter(c => c !== ''),
@@ -115,6 +126,49 @@ const MechanicProfile = () => {
     setIsEditing(false);
     toast.success("Profile updated successfully!");
   };
+
+  const toggleDay = (day: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      availabilitySchedule: {
+        ...prev.availabilitySchedule,
+        [day]: {
+          ...prev.availabilitySchedule[day],
+          enabled: !prev.availabilitySchedule[day].enabled
+        }
+      }
+    }));
+  };
+
+  const toggleSlot = (day: string, slot: string) => {
+    setEditForm(prev => {
+      const currentSlots = prev.availabilitySchedule[day].slots;
+      const newSlots = currentSlots.includes(slot)
+        ? currentSlots.filter(s => s !== slot)
+        : [...currentSlots, slot].sort((a, b) => {
+            const timeA = new Date(`01/01/2000 ${a}`).getTime();
+            const timeB = new Date(`01/01/2000 ${b}`).getTime();
+            return timeA - timeB;
+          });
+      
+      return {
+        ...prev,
+        availabilitySchedule: {
+          ...prev.availabilitySchedule,
+          [day]: {
+            ...prev.availabilitySchedule[day],
+            slots: newSlots
+          }
+        }
+      };
+    });
+  };
+
+  const allTimeSlots = [
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', 
+    '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
+    '06:00 PM', '07:00 PM', '08:00 PM'
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8">
@@ -213,13 +267,59 @@ const MechanicProfile = () => {
                               className="rounded-xl"
                             />
                           </div>
-                          <div className="space-y-2 md:col-span-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Services Offered (comma separated)</Label>
-                            <Input 
-                              value={editForm.servicesOffered} 
-                              onChange={(e) => setEditForm({...editForm, servicesOffered: e.target.value})}
-                              className="rounded-xl"
-                            />
+                          <div className="space-y-4 md:col-span-2 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Weekly Availability Schedule</Label>
+                            <div className="space-y-6">
+                              {Object.entries(editForm.availabilitySchedule).map(([day, config]) => (
+                                <div key={day} className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleDay(day)}
+                                        className={cn(
+                                          "w-10 h-5 rounded-full transition-colors relative",
+                                          config.enabled ? "bg-primary" : "bg-slate-300"
+                                        )}
+                                      >
+                                        <div className={cn(
+                                          "absolute top-1 w-3 h-3 bg-white rounded-full transition-all",
+                                          config.enabled ? "left-6" : "left-1"
+                                        )} />
+                                      </button>
+                                      <span className={cn("text-xs font-bold uppercase tracking-wider", config.enabled ? "text-slate-900" : "text-slate-400")}>
+                                        {day}
+                                      </span>
+                                    </div>
+                                    {config.enabled && (
+                                      <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+                                        {config.slots.length} Slots Active
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {config.enabled && (
+                                    <div className="flex flex-wrap gap-2 pl-13">
+                                      {allTimeSlots.map(slot => (
+                                        <button
+                                          key={slot}
+                                          type="button"
+                                          onClick={() => toggleSlot(day, slot)}
+                                          className={cn(
+                                            "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                                            config.slots.includes(slot)
+                                              ? "bg-primary text-white shadow-md shadow-primary/20"
+                                              : "bg-white text-slate-400 border border-slate-200 hover:border-primary/50"
+                                          )}
+                                        >
+                                          {slot}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                         <DialogFooter>

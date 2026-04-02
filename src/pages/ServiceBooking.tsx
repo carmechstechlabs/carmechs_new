@@ -7,18 +7,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock, Car, MapPin, CreditCard, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Sparkles, ShieldCheck } from 'lucide-react';
+import { CalendarIcon, Clock, Car, MapPin, CreditCard, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Sparkles, ShieldCheck, Wrench, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
+
+import AddressInput from '@/components/AddressInput';
 
 const steps = [
   { id: 'vehicle', title: 'Vehicle', description: 'Select your car' },
   { id: 'service', title: 'Service', description: 'Choose maintenance' },
+  { id: 'mechanic', title: 'Mechanic', description: 'Expert technician' },
   { id: 'schedule', title: 'Schedule', description: 'Pick date & time' },
   { id: 'payment', title: 'Payment', description: 'Secure checkout' },
 ];
 
-const timeSlots = [
+const defaultTimeSlots = [
   "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
   "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", 
   "05:00 PM", "06:00 PM"
@@ -27,7 +30,7 @@ const timeSlots = [
 export default function ServiceBooking() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { services, currentUser, vehicles, addAppointment, servicePackages } = useData();
+  const { services, currentUser, vehicles, addAppointment, servicePackages, technicians } = useData();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +40,7 @@ export default function ServiceBooking() {
     vehicleId: '',
     serviceId: searchParams.get('serviceId') || '',
     packageId: searchParams.get('packageId') || '',
+    technicianId: '',
     date: new Date(),
     time: '',
     paymentMethod: 'pay_after_service' as Appointment['paymentMethod'],
@@ -46,6 +50,25 @@ export default function ServiceBooking() {
   const selectedService = services.find(s => s.id === bookingData.serviceId);
   const selectedPackage = servicePackages.find(p => p.id === bookingData.packageId);
   const selectedVehicle = vehicles.find(v => v.id === bookingData.vehicleId);
+  const selectedTechnician = technicians.find(t => t.id === bookingData.technicianId);
+
+  const getAvailableTimeSlots = () => {
+    if (!bookingData.technicianId) return defaultTimeSlots;
+    
+    const tech = technicians.find(t => t.id === bookingData.technicianId);
+    if (!tech || !tech.availabilitySchedule) return defaultTimeSlots;
+    
+    const date = bookingData.date;
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[date.getDay()];
+    
+    const dayConfig = tech.availabilitySchedule[dayName];
+    if (!dayConfig || !dayConfig.enabled) return [];
+    
+    return dayConfig.slots;
+  };
+
+  const availableSlots = getAvailableTimeSlots();
 
   const totalPrice = selectedPackage ? selectedPackage.basePrice : (selectedService ? selectedService.basePrice : 0);
 
@@ -58,7 +81,11 @@ export default function ServiceBooking() {
       toast.error("Please select a service or package");
       return;
     }
-    if (currentStep === 2 && (!bookingData.date || !bookingData.time || !bookingData.location)) {
+    if (currentStep === 2 && !bookingData.technicianId) {
+      toast.error("Please select a mechanic");
+      return;
+    }
+    if (currentStep === 3 && (!bookingData.date || !bookingData.time || !bookingData.location)) {
       toast.error("Please select date, time and location");
       return;
     }
@@ -93,6 +120,7 @@ export default function ServiceBooking() {
         paymentMethod: bookingData.paymentMethod,
         amount: totalPrice,
         locationName: bookingData.location,
+        technicianId: bookingData.technicianId,
       };
 
       await addAppointment(appointmentData);
@@ -265,6 +293,53 @@ export default function ServiceBooking() {
               )}
 
               {currentStep === 2 && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold flex items-center gap-3">
+                    <Wrench className="h-6 w-6 text-primary" />
+                    Select Mechanic
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    {technicians.map((tech) => (
+                      <div 
+                        key={tech.id}
+                        onClick={() => setBookingData({ ...bookingData, technicianId: tech.id })}
+                        className={`p-6 rounded-3xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                          bookingData.technicianId === tech.id 
+                            ? 'border-primary bg-primary/5 shadow-xl' 
+                            : 'border-border hover:border-primary/30 bg-card'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <img src={tech.avatar} alt={tech.name} className="h-16 w-16 rounded-2xl object-cover border-2 border-border" />
+                          <div>
+                            <h3 className="font-bold text-lg">{tech.name}</h3>
+                            <p className="text-sm text-primary font-bold">{tech.specialty}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center text-amber-500">
+                                <Star className="h-3 w-3 fill-current" />
+                                <span className="text-xs font-bold ml-1">{tech.rating}</span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">• {tech.experience} Exp</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={tech.status === 'available' ? 'default' : 'secondary'} className="rounded-lg">
+                            {tech.status}
+                          </Badge>
+                          {bookingData.technicianId === tech.id && (
+                            <div className="mt-2 flex justify-end">
+                              <CheckCircle2 className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 3 && (
                 <div className="space-y-8">
                   <h2 className="text-2xl font-bold flex items-center gap-3">
                     <Clock className="h-6 w-6 text-primary" />
@@ -288,42 +363,46 @@ export default function ServiceBooking() {
                     <div className="space-y-6">
                       <div className="space-y-4">
                         <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Select Time Slot</label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {timeSlots.map((slot) => (
-                            <button
-                              key={slot}
-                              onClick={() => setBookingData({ ...bookingData, time: slot })}
-                              className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
-                                bookingData.time === slot 
-                                  ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
-                                  : 'bg-card border-border hover:border-primary/30 text-foreground'
-                              }`}
-                            >
-                              {slot}
-                            </button>
-                          ))}
-                        </div>
+                        {availableSlots.length > 0 ? (
+                          <div className="grid grid-cols-3 gap-3">
+                            {availableSlots.map((slot) => (
+                              <button
+                                key={slot}
+                                onClick={() => setBookingData({ ...bookingData, time: slot })}
+                                className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
+                                  bookingData.time === slot 
+                                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                                    : 'bg-card border-border hover:border-primary/30 text-foreground'
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-8 rounded-2xl bg-amber-50 border border-amber-100 text-center">
+                            <Clock className="h-8 w-8 text-amber-500 mx-auto mb-3" />
+                            <p className="text-sm font-bold text-amber-700">No slots available for this date.</p>
+                            <p className="text-xs text-amber-600 mt-1">Please try another date or technician.</p>
+                          </div>
+                        )}
                       </div>
+                    </div>
 
-                      <div className="space-y-4">
-                        <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Service Location</label>
-                        <div className="relative group">
-                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                          <input
-                            type="text"
-                            value={bookingData.location}
-                            onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
-                            placeholder="Enter pickup address"
-                            className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                          />
-                        </div>
-                      </div>
+                    <div className="space-y-4">
+                      <label className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Service Location</label>
+                      <AddressInput
+                        value={bookingData.location}
+                        onChange={(value) => setBookingData({ ...bookingData, location: value })}
+                        placeholder="Enter pickup address"
+                        className="w-full bg-accent/50 border border-border rounded-2xl pl-12 pr-4 py-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {currentStep === 4 && (
                 <div className="space-y-8">
                   <h2 className="text-2xl font-bold flex items-center gap-3">
                     <CreditCard className="h-6 w-6 text-primary" />
@@ -455,6 +534,18 @@ export default function ServiceBooking() {
                   <div className="flex items-center gap-3">
                     <Sparkles className="h-5 w-5 text-primary" />
                     <span className="font-bold">{selectedPackage?.title || selectedService?.title}</span>
+                  </div>
+                </div>
+              )}
+
+              {selectedTechnician && (
+                <div className="space-y-2">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Mechanic</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-5 w-5 rounded-full overflow-hidden">
+                      <img src={selectedTechnician.avatar} alt="" className="h-full w-full object-cover" />
+                    </div>
+                    <span className="font-bold">{selectedTechnician.name}</span>
                   </div>
                 </div>
               )}

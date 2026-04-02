@@ -15,9 +15,11 @@ import {
   getDocFromServer
 } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseConfig, db } from '../lib/firebase';
-import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, supabase, toSnakeCase } from '../services/supabaseService';
+import { getInitialState, updateTable, updateConfig, addAppointment as dbAddAppointment, toSnakeCase } from '../services/localStorageService';
 import { ApiKeys } from '../types';
 import { toast } from 'sonner';
+import { handleError, AppError } from '../lib/error-handler';
+import { searchWithGrounding, SearchResult } from '../services/SearchService';
 
 import { generateServiceImage } from '../services/aiService';
 
@@ -212,7 +214,13 @@ export interface Technician {
   hourlyRate?: number;
   certifications?: string[];
   servicesOffered?: string[];
-  availability?: string;
+  availability?: string; // Legacy string description
+  availabilitySchedule?: {
+    [day: string]: {
+      enabled: boolean;
+      slots: string[];
+    };
+  };
   serviceArea?: string;
   status: 'available' | 'busy' | 'off';
   rating?: number;
@@ -458,7 +466,7 @@ interface DataContextType {
   workshops: Workshop[];
   nearbyWorkshops: Workshop[];
   userLocation: { lat: number; lng: number } | null;
-  findNearbyWorkshops: () => Promise<void>;
+  findNearbyWorkshops: (coords?: { lat: number; lng: number }) => Promise<void>;
   updateServices: (services: Service[]) => void;
   updateCarMakes: (makes: PricingItem[]) => void;
   updateCarModels: (models: CarModel[]) => void;
@@ -489,6 +497,7 @@ interface DataContextType {
   addService: (service: Omit<Service, 'id'>) => Promise<Service>;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
+  markNotificationAsRead: (id: string) => void;
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'status'> & { status?: Task['status'] }) => void;
   deleteTask: (id: string) => void;
   addReview: (review: Omit<Review, 'id' | 'createdAt' | 'isPublished'>) => void;
@@ -516,8 +525,9 @@ interface DataContextType {
   updateTechnicians: (technicians: Technician[]) => void;
   updateTechnician: (technicianId: string, updates: Partial<Technician>) => void;
   updateServiceRequests: (requests: ServiceRequest[]) => void;
+  updateServiceRequest: (id: string, updates: Partial<ServiceRequest>) => void;
   addServiceRequest: (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => void;
-  pushAllToSupabase: () => Promise<void>;
+  searchGrounding: (query: string) => Promise<SearchResult[]>;
   isLoading: boolean;
   missingTables: string[];
 }
@@ -1126,7 +1136,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [missingTables, setMissingTables] = React.useState<string[]>([]);
 
-  const findNearbyWorkshops = async () => {
+  const findNearbyWorkshops = async (coords?: { lat: number; lng: number }) => {
+    if (coords) {
+      const { lat, lng } = coords;
+      setUserLocation({ lat, lng });
+      
+      const nearby = workshops.filter(workshop => {
+        if (!workshop.location) return false;
+        const dist = getDistance(lat, lng, workshop.location.lat, workshop.location.lng);
+        return dist <= 50;
+      }).sort((a, b) => {
+        const distA = getDistance(lat, lng, a.location!.lat, a.location!.lng);
+        const distB = getDistance(lat, lng, b.location!.lat, b.location!.lng);
+        return distA - distB;
+      });
+
+      setNearbyWorkshops(nearby);
+      if (nearby.length > 0) {
+        toast.success(`Found ${nearby.length} workshops near your location!`);
+      } else {
+        toast.info("No workshops found within 50km of this location.");
+      }
+      return;
+    }
+
     if (!navigator.geolocation) {
       toast.error("Geolocation is not supported by your browser");
       return;
@@ -1135,25 +1168,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        
-        // Filter workshops within 50km
-        const nearby = workshops.filter(workshop => {
-          if (!workshop.location) return false;
-          const dist = getDistance(latitude, longitude, workshop.location.lat, workshop.location.lng);
-          return dist <= 50; // 50km radius
-        }).sort((a, b) => {
-          const distA = getDistance(latitude, longitude, a.location!.lat, a.location!.lng);
-          const distB = getDistance(latitude, longitude, b.location!.lat, b.location!.lng);
-          return distA - distB;
-        });
-
-        setNearbyWorkshops(nearby);
-        if (nearby.length > 0) {
-          toast.success(`Found ${nearby.length} nearby workshops!`);
-        } else {
-          toast.info("No workshops found within 50km of your location.");
-        }
+        findNearbyWorkshops({ lat: latitude, lng: longitude });
       },
       (error) => {
         console.error("Geolocation error:", error);
@@ -1351,43 +1366,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     fetchInitialData();
 
-    // 2. Setup Supabase Realtime Subscriptions (For Production/Vercel)
-    const setupSupabaseRealtime = () => {
-      if (!supabase) return;
-
-      const channel = supabase
-        .channel('db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'car_makes' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'car_models' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'fuel_types' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'site_config' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'brands' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'coupons' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'service_packages' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_submissions' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'technicians' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'testimonials' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'navigation_items' }, () => fetchInitialData())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'workshops' }, () => fetchInitialData())
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-
-    const cleanupSupabase = setupSupabaseRealtime();
-
     // 3. Setup Socket Connection for Real-time Updates (For Local/Persistent Server)
     const newSocket = io(); 
     setSocket(newSocket);
@@ -1474,7 +1452,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     return () => {
       newSocket.disconnect();
-      if (cleanupSupabase) cleanupSupabase();
     };
   }, []);
 
@@ -1803,14 +1780,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addReview = (review: Omit<Review, 'id' | 'createdAt' | 'isPublished'>) => {
-    const newReview: Review = {
-      ...review,
-      id: Math.random().toString(36).substring(2, 9),
-      isPublished: false,
-      createdAt: new Date().toISOString()
-    };
-    const updatedReviews = [newReview, ...reviews];
-    updateReviews(updatedReviews);
+    try {
+      const newReview: Review = {
+        ...review,
+        id: Math.random().toString(36).substring(2, 9),
+        isPublished: true, // Auto-publish for demo/local storage
+        createdAt: new Date().toISOString()
+      };
+      const updatedReviews = [newReview, ...reviews];
+      updateReviews(updatedReviews);
+      
+      // Update technician rating
+      if (review.technicianId) {
+        const tech = technicians.find(t => t.id === review.technicianId);
+        if (tech) {
+          const techReviews = updatedReviews.filter(r => r.technicianId === tech.id);
+          const avgRating = techReviews.reduce((acc, r) => acc + r.rating, 0) / techReviews.length;
+          updateTechnician(tech.id, { 
+            rating: Number(avgRating.toFixed(1)), 
+            reviewCount: techReviews.length 
+          });
+
+          // Notify Technician
+          if (tech.userId) {
+            addNotification({
+              userId: tech.userId,
+              title: 'New Review Received',
+              message: `A customer left you a ${review.rating}-star review.`,
+              type: 'info'
+            });
+          }
+        }
+      }
+
+      // Notify Admin
+      addNotification({
+        userId: 'admin',
+        title: 'New Review Received',
+        message: `${review.userName} left a ${review.rating}-star review.`,
+        type: 'info'
+      });
+    } catch (error) {
+      handleError(error, "addReview");
+    }
   };
 
   const deleteReview = (id: string) => {
@@ -1843,6 +1855,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const markNotificationAsRead = (id: string) => {
+    const updatedNotifs = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+    setNotifications(updatedNotifs);
+    if (socket?.connected) {
+      socket.emit('update_notifications', updatedNotifs);
+    } else {
+      updateTable('notifications', updatedNotifs);
+    }
+  };
+
   const updateServicePackages = (newPackages: ServicePackage[]) => {
     setServicePackages(newPackages);
     if (socket?.connected) {
@@ -1865,22 +1887,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     if (socket?.connected) {
       socket.emit('update_users', updatedUsers);
-    } else if (supabase) {
-      // Direct Supabase update for reliability
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ wallet_balance: newBalance })
-          .eq('id', userId);
-        
-        if (error) {
-          console.error("Error updating wallet in Supabase:", error);
-          // Fallback to updateTable if direct update fails
-          updateTable('users', updatedUsers);
-        }
-      } catch (e) {
-        updateTable('users', updatedUsers);
-      }
+    } else {
+      updateTable('users', updatedUsers);
     }
   };
 
@@ -2046,19 +2054,52 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateServiceRequest = (id: string, updates: Partial<ServiceRequest>) => {
+    try {
+      const request = serviceRequests.find(r => r.id === id);
+      if (!request) return;
+
+      if (updates.status && updates.status !== request.status) {
+        const targetUserId = request.userId;
+        
+        if (targetUserId) {
+          addNotification({
+            userId: targetUserId,
+            title: "Service Request Updated",
+            message: `Your service request for ${request.make} ${request.model} is now ${updates.status}.`,
+            type: updates.status === 'completed' ? 'success' : updates.status === 'cancelled' ? 'error' : 'info'
+          });
+        }
+      }
+
+      const updatedRequests = serviceRequests.map(r => r.id === id ? { ...r, ...updates } : r);
+      updateServiceRequests(updatedRequests);
+    } catch (error) {
+      handleError(error, "updateServiceRequest");
+    }
+  };
+
   const addServiceRequest = (request: Omit<ServiceRequest, 'id' | 'createdAt' | 'status'>) => {
+    const newRequest: ServiceRequest = {
+      ...request,
+      id: Math.random().toString(36).substring(2, 9),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    const updatedRequests = [newRequest, ...serviceRequests];
+    setServiceRequests(updatedRequests);
+    updateTable('service_requests', updatedRequests);
+
+    // Notify Admin
+    addNotification({
+      userId: 'admin',
+      title: 'New Service Request',
+      message: `From ${request.userName}: ${request.problemDescription.substring(0, 50)}...`,
+      type: 'info'
+    });
+
     if (socket?.connected) {
-      socket.emit('add_service_request', request);
-    } else {
-      const newRequest: ServiceRequest = {
-        ...request,
-        id: Math.random().toString(36).substring(2, 9),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      const updatedRequests = [newRequest, ...serviceRequests];
-      setServiceRequests(updatedRequests);
-      updateTable('service_requests', updatedRequests);
+      socket.emit('add_service_request', newRequest);
     }
   };
 
@@ -2073,27 +2114,47 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateAppointment = (appointmentId: string, updates: Partial<Appointment>) => {
-    const appointment = appointments.find(a => a.id === appointmentId);
-    if (appointment && updates.status && updates.status !== appointment.status) {
-      // Status has changed, notify the user
-      const targetUserId = appointment.userId || users.find(u => u.email === appointment.email)?.id;
-      
-      if (targetUserId) {
-        addNotification({
-          userId: targetUserId,
-          title: "Appointment Status Updated",
-          message: `Your appointment for ${appointment.service} has been marked as ${updates.status}.`,
-          type: updates.status === 'completed' ? 'success' : updates.status === 'cancelled' ? 'error' : 'info'
-        });
-      }
-    }
+    try {
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (!appointment) return;
 
-    const updatedAppointments = appointments.map(a => a.id === appointmentId ? { ...a, ...updates } : a);
-    setAppointments(updatedAppointments);
-    if (socket?.connected) {
-      socket.emit('update_appointments', updatedAppointments);
-    } else {
-      updateTable('appointments', updatedAppointments);
+      if (updates.status && updates.status !== appointment.status) {
+        // Status has changed, notify the user
+        const targetUserId = appointment.userId || users.find(u => u.email === appointment.email)?.id;
+        
+        if (targetUserId) {
+          addNotification({
+            userId: targetUserId,
+            title: "Appointment Status Updated",
+            message: `Your appointment for ${appointment.service} has been marked as ${updates.status}.`,
+            type: updates.status === 'completed' ? 'success' : updates.status === 'cancelled' ? 'error' : 'info'
+          });
+        }
+
+        // Notify Technician if assigned
+        const techId = updates.technicianId || appointment.technicianId;
+        if (techId) {
+          const tech = technicians.find(t => t.id === techId);
+          if (tech && tech.userId) {
+            addNotification({
+              userId: tech.userId,
+              title: "Appointment Update",
+              message: `Appointment for ${appointment.service} (${appointment.name}) is now ${updates.status}.`,
+              type: 'info'
+            });
+          }
+        }
+      }
+
+      const updatedAppointments = appointments.map(a => a.id === appointmentId ? { ...a, ...updates } : a);
+      setAppointments(updatedAppointments);
+      if (socket?.connected) {
+        socket.emit('update_appointments', updatedAppointments);
+      } else {
+        updateTable('appointments', updatedAppointments);
+      }
+    } catch (error) {
+      handleError(error, "updateAppointment");
     }
   };
 
@@ -2118,43 +2179,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return newService;
   };
 
-  const addAppointment = (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => {
-    // Ensure we have a service title if only ID was provided
-    let serviceTitle = appointment.service;
-    let serviceId = appointment.serviceId;
+  const addAppointment = async (appointment: Omit<Appointment, 'id' | 'createdAt' | 'status' | 'priority'>) => {
+    try {
+      // Ensure we have a service title if only ID was provided
+      let serviceTitle = appointment.service;
+      let serviceId = appointment.serviceId;
 
-    if (!serviceId && appointment.service.startsWith('cat_')) {
-      serviceId = appointment.service;
-      serviceTitle = services.find(s => s.id === serviceId)?.title || serviceId;
-    } else if (!serviceId && appointment.service.startsWith('pkg_')) {
-      serviceId = appointment.service;
-      serviceTitle = servicePackages.find(p => p.id === serviceId)?.title || serviceId;
-    }
+      if (!serviceId && appointment.service.startsWith('cat_')) {
+        serviceId = appointment.service;
+        serviceTitle = services.find(s => s.id === serviceId)?.title || serviceId;
+      } else if (!serviceId && appointment.service.startsWith('pkg_')) {
+        serviceId = appointment.service;
+        serviceTitle = servicePackages.find(p => p.id === serviceId)?.title || serviceId;
+      }
 
-    const newAppointment: Appointment = {
-      ...appointment,
-      service: serviceTitle,
-      serviceId: serviceId || 'unknown',
-      id: Math.random().toString(36).substring(2, 9),
-      status: 'pending',
-      priority: 'medium',
-      paymentStatus: appointment.paymentMethod === 'pay_after_service' ? 'pending' : 'paid',
-      createdAt: new Date().toISOString()
-    };
-    setAppointments(prev => [newAppointment, ...prev]);
-    
-    // Notify Admin
-    addNotification({
-      userId: 'admin', // Special ID for admin notifications
-      title: 'New Booking Received',
-      message: `${appointment.name} booked ${serviceTitle} for ${appointment.date} at ${appointment.time}.`,
-      type: 'info'
-    });
+      const newAppointment: Appointment = {
+        ...appointment,
+        service: serviceTitle,
+        serviceId: serviceId || 'unknown',
+        id: Math.random().toString(36).substring(2, 9),
+        status: 'pending',
+        priority: 'medium',
+        paymentStatus: appointment.paymentMethod === 'pay_after_service' ? 'pending' : 'paid',
+        createdAt: new Date().toISOString()
+      };
+      setAppointments(prev => [newAppointment, ...prev]);
+      
+      // Notify Admin
+      addNotification({
+        userId: 'admin', // Special ID for admin notifications
+        title: 'New Booking Received',
+        message: `${appointment.name} booked ${serviceTitle} for ${appointment.date} at ${appointment.time}.`,
+        type: 'info'
+      });
 
-    if (socket?.connected) {
-      socket.emit('add_appointment', newAppointment);
-    } else {
-      dbAddAppointment(newAppointment);
+      // Notify User
+      if (appointment.userId) {
+        addNotification({
+          userId: appointment.userId,
+          title: 'Booking Confirmed',
+          message: `Your booking for ${serviceTitle} on ${appointment.date} has been received.`,
+          type: 'success'
+        });
+      }
+
+      if (socket?.connected) {
+        socket.emit('add_appointment', newAppointment);
+      } else {
+        dbAddAppointment(newAppointment);
+      }
+      
+      toast.success("Appointment booked successfully!");
+      return newAppointment;
+    } catch (error) {
+      handleError(error, "addAppointment");
+      throw error;
     }
   };
 
@@ -2196,60 +2275,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('adminRole');
   };
 
-  const pushAllToSupabase = async () => {
-    if (!supabase) {
-      toast.error("Supabase not initialized");
-      return;
-    }
-
-    const toastId = toast.loading("Pushing all data to Supabase...");
+  const searchGrounding = async (query: string): Promise<SearchResult[]> => {
     try {
-      const dataToPush = [
-        { table: 'services', data: services },
-        { table: 'car_makes', data: carMakes },
-        { table: 'car_models', data: carModels },
-        { table: 'fuel_types', data: fuelTypes },
-        { table: 'brands', data: brands },
-        { table: 'locations', data: locations },
-        { table: 'inventory', data: inventory },
-        { table: 'categories', data: categories },
-        { table: 'coupons', data: coupons },
-        { table: 'reviews', data: reviews },
-        { table: 'notifications', data: notifications },
-        { table: 'service_packages', data: servicePackages },
-        { table: 'vehicles', data: vehicles },
-        { table: 'users', data: users },
-        { table: 'appointments', data: appointments },
-        { table: 'tasks', data: tasks },
-        { table: 'technicians', data: technicians },
-        { table: 'testimonials', data: testimonials },
-        { table: 'navigation_items', data: navigationItems },
-        { table: 'workshops', data: workshops },
-        { table: 'service_requests', data: serviceRequests },
-        { table: 'contact_submissions', data: contactSubmissions }
-      ];
-
-      for (const item of dataToPush) {
-        if (item.data && item.data.length > 0) {
-          const { error } = await supabase
-            .from(item.table)
-            .upsert(item.data.map(d => toSnakeCase(d)));
-          
-          if (error) {
-            console.error(`Error pushing ${item.table}:`, error);
-            throw error;
-          }
-        }
-      }
-
-      // Also push site_config
-      await supabase.from('site_config').upsert([toSnakeCase({ id: 'settings', ...settings })]);
-      await supabase.from('site_config').upsert([toSnakeCase({ id: 'ui_settings', ...uiSettings })]);
-
-      toast.success("All data pushed to Supabase successfully!", { id: toastId });
+      return await searchWithGrounding(query);
     } catch (error) {
-      console.error("Failed to push data to Supabase:", error);
-      toast.error("Failed to push data to Supabase. Check console for details.", { id: toastId });
+      handleError(error, "searchGrounding");
+      return [];
     }
   };
 
@@ -2313,6 +2344,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateTechnicianStatus,
       updateTechnicianLocation,
       updateServiceRequests,
+      updateServiceRequest,
       addServiceRequest,
       updateWorkshop,
       updateAppointment,
@@ -2328,6 +2360,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       deleteCoupon,
       addContactSubmission,
       addNotification,
+      markNotificationAsRead,
       addVehicle,
       removeVehicle,
       updateVehicle,
@@ -2341,7 +2374,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       login,
       signup,
       logout,
-      pushAllToSupabase,
+      searchGrounding,
       isLoading,
       missingTables
     }}>

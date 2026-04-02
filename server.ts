@@ -7,30 +7,6 @@ import { Server } from "socket.io";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { supabase, getInitialState, updateTable, updateConfig, addAppointment } from "./src/services/supabaseService";
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-// Configure Multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-});
-
 // Initial Data
 const initialServices = [
   {
@@ -505,130 +481,9 @@ async function startServer() {
     }
   });
 
-  // Try to load state from local file first, then Supabase, fallback to initial data
+  // Try to load state from local file first, fallback to initial data
   let currentState = loadLocalState() || { ...state };
   
-  try {
-    if (supabase) {
-      console.log("Supabase client initialized, fetching initial state...");
-      
-      // Ensure 'uploads' bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      if (bucketsError) {
-        console.error("Error listing buckets:", bucketsError);
-      } else {
-        const bucket = buckets.find(b => b.name === 'uploads');
-        if (!bucket) {
-          console.log("Creating 'uploads' bucket in Supabase storage...");
-          const { error: createError } = await supabase.storage.createBucket('uploads', {
-            public: true,
-            allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-            fileSizeLimit: 5242880 // 5MB
-          });
-          if (createError) {
-            console.error("Error creating 'uploads' bucket:", createError);
-          } else {
-            console.log("'uploads' bucket created successfully");
-          }
-        } else if (!bucket.public) {
-          console.log("Updating 'uploads' bucket to be public...");
-          await supabase.storage.updateBucket('uploads', { public: true });
-        }
-      }
-
-      const dbState = await getInitialState();
-      if (dbState) {
-        // Merge initialUsers with fetched users to ensure admin login always works
-        const fetchedUsers = dbState.users || [];
-        const mergedUsers = [...initialUsers];
-        fetchedUsers.forEach((u: any) => {
-          if (!mergedUsers.find(iu => iu.email.toLowerCase() === u.email.toLowerCase())) {
-            mergedUsers.push(u);
-          }
-        });
-
-        // Merge with current state, prioritizing DB data if it exists
-        currentState = {
-          ...currentState,
-          ...dbState,
-          // Only use DB data if it's not empty
-          services: dbState.services.length > 0 ? dbState.services : currentState.services,
-          carMakes: dbState.carMakes.length > 0 ? dbState.carMakes : currentState.carMakes,
-          carModels: dbState.carModels.length > 0 ? dbState.carModels : currentState.carModels,
-          fuelTypes: dbState.fuelTypes.length > 0 ? dbState.fuelTypes : currentState.fuelTypes,
-          settings: Object.keys(dbState.settings).length > 0 ? dbState.settings : currentState.settings,
-          uiSettings: Object.keys(dbState.uiSettings).length > 0 ? dbState.uiSettings : currentState.uiSettings,
-          brands: dbState.brands.length > 0 ? dbState.brands : currentState.brands,
-          locations: dbState.locations.length > 0 ? dbState.locations : currentState.locations,
-          servicePackages: dbState.servicePackages.length > 0 ? dbState.servicePackages : currentState.servicePackages,
-          appointments: dbState.appointments.length > 0 ? dbState.appointments : currentState.appointments,
-          inventory: dbState.inventory.length > 0 ? dbState.inventory : currentState.inventory,
-          reviews: dbState.reviews.length > 0 ? dbState.reviews : currentState.reviews,
-          users: mergedUsers,
-        };
-
-        // Seed empty tables
-        const tablesToSeed = [
-          { name: 'services', data: state.services, dbData: dbState.services },
-          { name: 'car_makes', data: state.carMakes, dbData: dbState.carMakes },
-          { name: 'car_models', data: state.carModels, dbData: dbState.carModels },
-          { name: 'fuel_types', data: state.fuelTypes, dbData: dbState.fuelTypes },
-          { name: 'settings', data: state.settings, dbData: dbState.settings, isConfig: true },
-          { name: 'ui_settings', data: state.uiSettings, dbData: dbState.uiSettings, isConfig: true },
-          { name: 'brands', data: state.brands, dbData: dbState.brands },
-          { name: 'locations', data: state.locations, dbData: dbState.locations },
-          { name: 'service_packages', data: state.servicePackages, dbData: dbState.servicePackages },
-          { name: 'categories', data: state.categories, dbData: dbState.categories },
-          { name: 'technicians', data: state.technicians, dbData: dbState.technicians },
-          { name: 'service_requests', data: state.serviceRequests, dbData: dbState.serviceRequests },
-        ];
-
-        for (const table of tablesToSeed) {
-          // Skip seeding if table is missing
-          const isTableMissing = dbState.missingTables?.includes(table.name) || 
-                                (table.isConfig && dbState.missingTables?.includes('site_config'));
-          
-          if (isTableMissing) {
-            console.warn(`Skipping seeding for missing table: ${table.name}`);
-            continue;
-          }
-
-          const isEmpty = table.isConfig 
-            ? Object.keys(table.dbData || {}).length === 0 
-            : (table.dbData || []).length === 0;
-          
-          if (isEmpty && table.data) {
-            console.log(`Seeding table ${table.name} with initial data...`);
-            if (table.isConfig) {
-              await updateConfig(table.name, table.data as any);
-            } else {
-              await updateTable(table.name, table.data as any[]);
-            }
-          }
-        }
-        
-        saveLocalState(currentState);
-        console.log("State synchronized with Supabase and persisted locally");
-
-        // Set up Realtime Subscriptions
-        supabase
-          .channel('db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
-            console.log('Change received from Supabase:', payload.table, payload.eventType);
-            const newState = await getInitialState();
-            if (newState) {
-              currentState = { ...currentState, ...newState };
-              saveLocalState(currentState);
-              io.emit("initial_state", currentState);
-            }
-          })
-          .subscribe();
-      }
-    }
-  } catch (error) {
-    console.error("Failed to load state from Supabase:", error);
-  }
-
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
     socket.emit("initial_state", currentState);
@@ -637,161 +492,138 @@ async function startServer() {
       currentState.services = services;
       saveLocalState(currentState);
       socket.broadcast.emit("services_updated", services);
-      await updateTable('services', services);
     });
 
     socket.on("update_car_makes", async (makes) => {
       currentState.carMakes = makes;
       saveLocalState(currentState);
       socket.broadcast.emit("car_makes_updated", makes);
-      await updateTable('car_makes', makes);
     });
 
     socket.on("update_car_models", async (models) => {
       currentState.carModels = models;
       saveLocalState(currentState);
       socket.broadcast.emit("car_models_updated", models);
-      await updateTable('car_models', models);
     });
 
     socket.on("update_fuel_types", async (fuels) => {
       currentState.fuelTypes = fuels;
       saveLocalState(currentState);
       socket.broadcast.emit("fuel_types_updated", fuels);
-      await updateTable('fuel_types', fuels);
     });
 
     socket.on("update_settings", async (settings) => {
       currentState.settings = settings;
       saveLocalState(currentState);
       socket.broadcast.emit("settings_updated", settings);
-      await updateConfig('settings', settings);
     });
 
     socket.on("update_appointments", async (appointments) => {
       currentState.appointments = appointments;
       saveLocalState(currentState);
       socket.broadcast.emit("appointments_updated", appointments);
-      await updateTable('appointments', appointments);
     });
 
     socket.on("update_tasks", async (tasks) => {
       currentState.tasks = tasks;
       saveLocalState(currentState);
       socket.broadcast.emit("tasks_updated", tasks);
-      await updateTable('tasks', tasks);
     });
 
     socket.on("add_appointment", async (appointment) => {
       currentState.appointments = [appointment, ...currentState.appointments];
       saveLocalState(currentState);
       io.emit("appointments_updated", currentState.appointments);
-      await addAppointment(appointment);
     });
 
     socket.on("add_task", async (task) => {
       currentState.tasks = [task, ...currentState.tasks];
       saveLocalState(currentState);
       io.emit("tasks_updated", currentState.tasks);
-      await updateTable('tasks', currentState.tasks);
     });
 
     socket.on("update_users", async (users) => {
       currentState.users = users;
       saveLocalState(currentState);
       socket.broadcast.emit("users_updated", users);
-      await updateTable('users', users);
     });
 
     socket.on("update_ui_settings", async (uiSettings) => {
       currentState.uiSettings = uiSettings;
       saveLocalState(currentState);
       socket.broadcast.emit("ui_settings_updated", uiSettings);
-      await updateConfig('ui_settings', uiSettings);
     });
 
     socket.on("update_api_keys", async (apiKeys) => {
       currentState.apiKeys = apiKeys;
       saveLocalState(currentState);
       socket.broadcast.emit("api_keys_updated", apiKeys);
-      await updateConfig('api_keys', apiKeys);
     });
 
     socket.on("update_brands", async (brands) => {
       currentState.brands = brands;
       saveLocalState(currentState);
       socket.broadcast.emit("brands_updated", brands);
-      await updateTable('brands', brands);
     });
 
     socket.on("update_locations", async (locations) => {
       currentState.locations = locations;
       saveLocalState(currentState);
       socket.broadcast.emit("locations_updated", locations);
-      await updateTable('locations', locations);
     });
 
     socket.on("update_inventory", async (inventory) => {
       currentState.inventory = inventory;
       saveLocalState(currentState);
       socket.broadcast.emit("inventory_updated", inventory);
-      await updateTable('inventory', inventory);
     });
 
     socket.on("update_categories", async (categories) => {
       currentState.categories = categories;
       saveLocalState(currentState);
       socket.broadcast.emit("categories_updated", categories);
-      await updateTable('categories', categories);
     });
 
     socket.on("update_coupons", async (coupons) => {
       currentState.coupons = coupons;
       saveLocalState(currentState);
       socket.broadcast.emit("coupons_updated", coupons);
-      await updateTable('coupons', coupons);
     });
 
     socket.on("update_reviews", async (reviews) => {
       currentState.reviews = reviews;
       saveLocalState(currentState);
       socket.broadcast.emit("reviews_updated", reviews);
-      await updateTable('reviews', reviews);
     });
 
     socket.on("update_notifications", async (notifications) => {
       currentState.notifications = notifications;
       saveLocalState(currentState);
       socket.broadcast.emit("notifications_updated", notifications);
-      await updateTable('notifications', notifications);
     });
 
     socket.on("update_service_packages", async (packages) => {
       currentState.servicePackages = packages;
       saveLocalState(currentState);
       socket.broadcast.emit("service_packages_updated", packages);
-      await updateTable('service_packages', packages);
     });
 
     socket.on("update_workshops", async (workshops) => {
       currentState.workshops = workshops;
       saveLocalState(currentState);
       socket.broadcast.emit("workshops_updated", workshops);
-      await updateTable('workshops', workshops);
     });
 
     socket.on("update_technicians", async (technicians) => {
       currentState.technicians = technicians;
       saveLocalState(currentState);
       socket.broadcast.emit("technicians_updated", technicians);
-      await updateTable('technicians', technicians);
     });
 
     socket.on("update_service_requests", async (requests) => {
       currentState.serviceRequests = requests;
       saveLocalState(currentState);
       socket.broadcast.emit("service_requests_updated", requests);
-      await updateTable('service_requests', requests);
     });
 
     socket.on("add_service_request", async (request) => {
@@ -805,7 +637,6 @@ async function startServer() {
       currentState.serviceRequests = [newRequest, ...currentState.serviceRequests];
       saveLocalState(currentState);
       io.emit("service_requests_updated", currentState.serviceRequests);
-      await updateTable('service_requests', currentState.serviceRequests);
 
       // Simulate real-time matching process
       setTimeout(async () => {
@@ -830,7 +661,6 @@ async function startServer() {
         currentState.serviceRequests = updatedRequests;
         saveLocalState(currentState);
         io.emit("service_requests_updated", currentState.serviceRequests);
-        await updateTable('service_requests', currentState.serviceRequests);
       }, 5000); // 5 second matching simulation
     });
 
@@ -840,101 +670,10 @@ async function startServer() {
   });
 
   app.use(express.json());
-  app.use("/uploads", express.static(uploadsDir));
 
   // API routes FIRST
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
-  });
-
-  app.get("/sitemap.xml", (req, res) => {
-    const pages = currentState.uiSettings.pages || [];
-    const baseUrl = process.env.APP_URL || "https://carmechs.run.app";
-    
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
-
-    // Add static pages or pages from uiSettings
-    pages.forEach((page: any) => {
-      if (page.isPublished && (page.seo?.enableIndexing !== false)) {
-        const url = `${baseUrl}${page.slug === "" || page.slug === "home" ? "" : "/" + page.slug}`;
-        xml += `
-  <url>
-    <loc>${url}</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>${page.slug === "" || page.slug === "home" ? "1.0" : "0.8"}</priority>
-  </url>`;
-      }
-    });
-
-    xml += `
-</urlset>`;
-
-    res.header("Content-Type", "application/xml");
-    res.send(xml);
-  });
-
-  app.post("/api/upload", upload.single("image"), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    // Try to upload to Supabase Storage if configured
-    if (supabase) {
-      try {
-        const fileContent = fs.readFileSync(req.file.path);
-        const fileName = `${Date.now()}-${req.file.originalname}`;
-        const { data, error } = await supabase.storage
-          .from('uploads')
-          .upload(fileName, fileContent, {
-            contentType: req.file.mimetype,
-            upsert: true
-          });
-
-        if (error) {
-          if (error.message.includes('Bucket not found')) {
-            console.log("Bucket 'uploads' not found during upload, attempting to create it...");
-            await supabase.storage.createBucket('uploads', { public: true });
-            // Retry upload
-            const { data: retryData, error: retryError } = await supabase.storage
-              .from('uploads')
-              .upload(fileName, fileContent, {
-                contentType: req.file.mimetype,
-                upsert: true
-              });
-            
-            if (!retryError) {
-              const { data: { publicUrl } } = supabase.storage
-                .from('uploads')
-                .getPublicUrl(fileName);
-              fs.unlinkSync(req.file.path);
-              return res.json({ url: publicUrl });
-            }
-          }
-          console.error("Supabase storage upload error:", error);
-          // Fallback to local URL if Supabase fails but file is saved locally
-          const localUrl = `/uploads/${req.file.filename}`;
-          return res.json({ url: localUrl });
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('uploads')
-          .getPublicUrl(fileName);
-
-        // Clean up local file after successful upload to Supabase
-        fs.unlinkSync(req.file.path);
-
-        return res.json({ url: publicUrl });
-      } catch (err) {
-        console.error("Unexpected error during Supabase upload:", err);
-      }
-    }
-
-    // Fallback to local storage
-    const imageUrl = `/uploads/${req.file.filename}`;
-    res.json({ url: imageUrl });
   });
 
   app.post("/api/send-confirmation", async (req, res) => {

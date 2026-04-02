@@ -35,6 +35,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import ServiceCard from "@/components/ServiceCard";
+import { SearchResult } from "@/services/SearchService";
 
 import * as LucideIcons from "lucide-react";
 
@@ -60,11 +61,13 @@ const getIcon = (service: any) => {
 };
 
 export function Services() {
-  const { services, servicePackages, carMakes, carModels, fuelTypes, categories } = useData();
+  const { services, servicePackages, carMakes, carModels, fuelTypes, categories, searchGrounding } = useData();
   const navigate = useNavigate();
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [selectedCheckups, setSelectedCheckups] = useState<string[]>([]);
@@ -102,6 +105,15 @@ export function Services() {
 
   const allCommonIssues = Array.from(new Set(services.flatMap(s => s.commonIssues || [])));
   const allRecommendedCheckups = Array.from(new Set(services.flatMap(s => s.recommendedCheckups || [])));
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.length < 3) return;
+    setIsSearching(true);
+    const results = await searchGrounding(searchQuery);
+    setSearchResults(results);
+    setIsSearching(false);
+  };
 
   const filteredServices = services
     .filter(s => {
@@ -471,14 +483,51 @@ export function Services() {
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16">
           <div className="relative max-w-md w-full">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search services..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-16 pl-14 pr-6 rounded-2xl border border-border bg-card text-foreground shadow-xl shadow-black/5 dark:shadow-black/20 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
-            />
+            <form onSubmit={handleSearch} className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10">
+                {isSearching ? <LucideIcons.Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search services with AI..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-16 pl-14 pr-6 rounded-2xl border border-border bg-card text-foreground shadow-xl shadow-black/5 dark:shadow-black/20 focus:outline-none focus:ring-2 focus:ring-primary/20 font-medium"
+              />
+            </form>
+
+            {/* Search Results Dropdown */}
+            <AnimatePresence>
+              {searchResults.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 w-full mt-4 bg-card border border-border rounded-[2rem] shadow-2xl overflow-hidden z-50 p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between px-4 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">AI Search Results</span>
+                    <Button variant="ghost" size="sm" onClick={() => setSearchResults([])} className="h-6 w-6 p-0 rounded-full">
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {searchResults.map((result, i) => (
+                    <motion.div 
+                      key={i}
+                      whileHover={{ x: 5 }}
+                      className="p-4 rounded-2xl hover:bg-accent transition-all cursor-pointer group"
+                      onClick={() => result.url && window.open(result.url, '_blank')}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{result.title}</h4>
+                        {result.url && <LucideIcons.ExternalLink className="h-3 w-3 text-muted-foreground" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.description}</p>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
             <div className="flex flex-wrap items-center gap-4">

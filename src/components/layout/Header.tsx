@@ -1,21 +1,25 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Wrench, Menu, X, User, LogOut, Shield, Zap, MapPin, Search, Check, ChevronDown, Phone, Mail } from "lucide-react";
+import { Wrench, Menu, X, User, LogOut, Shield, Zap, MapPin, Search, Check, ChevronDown, Phone, Mail, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useData } from "@/context/DataContext";
+import { useData, Notification } from "@/context/DataContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export function Header() {
-  const { settings, currentUser, logout, uiSettings, locations, navigationItems } = useData();
+  const { settings, currentUser, logout, uiSettings, locations, navigationItems, notifications, markNotificationAsRead } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
   const navigate = useNavigate();
+
+  const userNotifications = notifications.filter(n => n.userId === currentUser?.uid || n.userId === 'all');
+  const unreadCount = userNotifications.filter(n => !n.read).length;
 
   useEffect(() => {
     if (locations.length > 0 && !selectedLocation) {
@@ -218,6 +222,55 @@ export function Header() {
 
           {currentUser ? (
             <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative rounded-xl h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10">
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2 h-2 w-2 bg-primary rounded-full border-2 border-background" />
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0 rounded-2xl shadow-2xl border-border bg-card" align="end">
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <Badge variant="secondary" className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                        {unreadCount} New
+                      </Badge>
+                    )}
+                  </div>
+                  <ScrollArea className="h-[300px]">
+                    <div className="p-2 space-y-1">
+                      {userNotifications.length > 0 ? (
+                        userNotifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            className={cn(
+                              "p-3 rounded-xl transition-all cursor-pointer",
+                              notif.read ? "opacity-60 grayscale-[0.5]" : "bg-primary/5 border border-primary/10"
+                            )}
+                            onClick={() => markNotificationAsRead(notif.id)}
+                          >
+                            <h4 className="text-[11px] font-bold text-foreground mb-0.5">{notif.title}</h4>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">{notif.message}</p>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">
+                              {new Date(notif.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-12 text-center">
+                          <Bell className="h-8 w-8 text-muted-foreground/20 mx-auto mb-3" />
+                          <p className="text-xs font-bold text-muted-foreground">No notifications yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="flex items-center gap-2 rounded-xl font-bold bg-accent text-foreground hover:bg-accent/80 border border-border h-10">
                   <User className="h-4 w-4 text-muted-foreground" />

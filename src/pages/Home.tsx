@@ -57,6 +57,8 @@ import { LocationSection } from "@/components/sections/LocationSection";
 import { ServiceCatalog } from "@/components/sections/ServiceCatalog";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { BrandsCarousel } from "@/components/sections/BrandsCarousel";
+import { SearchResult } from "@/services/SearchService";
+import { Search } from "lucide-react";
 
 const BookingModal = ({ isOpen, onClose, service }: { isOpen: boolean, onClose: () => void, service: any }) => {
   const { carMakes, carModels, fuelTypes, locations, addAppointment, currentUser, vehicles } = useData();
@@ -414,13 +416,25 @@ const ComparisonModal = ({ isOpen, onClose, services }: { isOpen: boolean, onClo
 };
 
 export function Home() {
-  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading, settings, carMakes, carModels, fuelTypes, servicePackages } = useData();
+  const { uiSettings, services: dynamicServices, brands, reviews, addContactSubmission, categories, isLoading, settings, carMakes, carModels, fuelTypes, servicePackages, searchGrounding } = useData();
   const [selectedService, setSelectedService] = useState<any>(null);
   const [bookingService, setBookingService] = useState<any>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [compareList, setCompareList] = useState<any[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.length < 3) return;
+    setIsSearching(true);
+    const results = await searchGrounding(searchQuery);
+    setSearchResults(results);
+    setIsSearching(false);
+  };
   const [quickVehicle, setQuickVehicle] = useState({
     make: "",
     model: "",
@@ -631,7 +645,61 @@ export function Home() {
                 {uiSettings.heroSubtitle || "Experience the next generation of car maintenance with our expert door-step service and transparent digital tracking."}
               </p>
               
-              <div className="flex flex-wrap gap-6">
+              {/* Search Bar with Grounding */}
+              <div className="mt-12 max-w-xl relative group">
+                <form onSubmit={handleSearch} className="relative">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-primary z-10">
+                    {isSearching ? <Loader2 className="h-6 w-6 animate-spin" /> : <Search className="h-6 w-6" />}
+                  </div>
+                  <Input 
+                    placeholder="Search services, mechanics, or car issues..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-20 pl-16 pr-32 rounded-[2rem] border-border bg-card/80 backdrop-blur-xl text-lg font-bold shadow-2xl shadow-black/5 focus:ring-primary/20 transition-all"
+                  />
+                  <Button 
+                    type="submit"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                  >
+                    Search
+                  </Button>
+                </form>
+
+                {/* Search Results Dropdown */}
+                <AnimatePresence>
+                  {searchResults.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute top-full left-0 w-full mt-4 bg-card border border-border rounded-[2rem] shadow-2xl overflow-hidden z-50 p-4 space-y-2"
+                    >
+                      <div className="flex items-center justify-between px-4 mb-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Search Results</span>
+                        <Button variant="ghost" size="sm" onClick={() => setSearchResults([])} className="h-6 w-6 p-0 rounded-full">
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      {searchResults.map((result, i) => (
+                        <motion.div 
+                          key={i}
+                          whileHover={{ x: 5 }}
+                          className="p-4 rounded-2xl hover:bg-accent transition-all cursor-pointer group"
+                          onClick={() => result.url && window.open(result.url, '_blank')}
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-bold text-foreground group-hover:text-primary transition-colors">{result.title}</h4>
+                            {result.url && <ExternalLink className="h-3 w-3 text-muted-foreground" />}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{result.description}</p>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="mt-12 flex flex-wrap gap-6">
                 <Link to="/book">
                   <motion.div
                     whileHover={{ scale: 1.05, y: -5 }}

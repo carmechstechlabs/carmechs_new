@@ -40,7 +40,7 @@ export function ImageUpload({ value, onChange, onUpload, maxFiles = 1, label, cl
     setIsUploading(true);
 
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImage(file) as string;
       
       if (onUpload) {
         const newUrls = [...urls, url];
